@@ -1,0 +1,23 @@
+sequenceDiagram
+    actor Bob as Bob: User
+    participant Client
+    participant L2Ledger as L2Ledger: Layer1Contract
+    Bob->>Client: transfer_money
+    Client->>L2Ledger: deposit(user: Id, amount: Money)
+    L2Ledger->>L2Ledger: update_ledger(user: Id, amount: Money)
+    Client->>L2Ledger: get_ledger_state()
+    L2Ledger-->>Client: ledger_state: LedgerState
+    Client->>Client: create_zkp(secret_key: SecretKey, ledger_state: LedgerState, sender:User, receiver:User, amount: Money)
+    Client-->>Client: proof: Proof
+    Client->>+L2Ledger: transfer_money(sender: User, receiver: User, amount: Money, proof: Proof)
+    L2Ledger->>+L2Ledger: get_ledger_state()
+    L2Ledger-->>-L2Ledger: ledger_state: LedgerState
+    L2Ledger->>+L2Ledger: verify(sender: User, receiver: User, amount: Money, proof: Proof, ledger_state: LedgerState)
+    L2Ledger-->>-L2Ledger: result: Result
+    alt result is Ok
+    L2Ledger->>+L2Ledger: update_ledger_state(receiver: User, ledger_state[receiver] += amount: Money)
+    L2Ledger-->>-L2Ledger: 
+    L2Ledger-->>-Client: Ok
+    else result is Err
+    L2Ledger-->>Client: Err
+    end
