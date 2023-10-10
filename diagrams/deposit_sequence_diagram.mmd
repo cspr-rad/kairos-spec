@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor Bob as Bob :: User
+    participant WebClient
+    participant Wallet
+    participant ApiServer
+    participant Database
+    participant Proover
+    participant ValidiumStateContract
+    participant VerifierContract
+    participant Api as L2Ledger: Layer1Contract
+    Bob->>+WebClient: deposit(user: Bob :: User, amount :: Money)
+    WebClient ->>+ Wallet: account_put_deploy(deploy: Deploy)
+    Wallet ->>+ Bob: approve?
+    Bob -->>- Wallet: approved
+    Wallet ->> CasperNode: submit_transaction
+    Wallet -->>- WebClient: submitted
+    WebClient ->>+ ApiServer: notify_deposit(user: User, amount: Money)
+    ApiServer -->> WebClient: Ok
+    ApiServer ->>+ CasperChain: getValidiumStateContractBalance
+    CasperNode -->>- ApiServer: balance
+
