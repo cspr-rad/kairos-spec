@@ -1,7 +1,9 @@
 # Info
 
 Questions:
-- What exactly are validity proofs?
+- How do we create ZKVP (zero knowledge validium proofs) quickly? Do we need to
+  create parallelization "manually", through recursive proofs, or does RISC0
+  handle this for us?
 - What should be the structure of the spec? In what order should we figure
   things out and write them down? For figuring things out, I would propose
   1. goal
@@ -28,6 +30,7 @@ Notes:
 - Withdrawals can be done easily through L2, by the user submitting a request to
   withdraw to L2 and L2 including that into the L1 transaction it generates
   next. However, this relies on the L2 not denying you service.
+- "Validity proofs" are ZKPs rolled up into one
 
 Goal: Build a system to allow Casper payments with lower gas fees.
 
