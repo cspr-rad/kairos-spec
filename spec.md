@@ -1,32 +1,9 @@
 # KAIROS - A zk-validium for the Casper Blockchain
 
+Useful reference links:
 - https://ethereum.org/en/developers/docs/scaling/validium/
 - https://docs.starkware.co/starkex/overview.html
 - https://docs.starkware.co/starkex/architecture/solution-architecture.html
-
-## Motivation
-
-As an intermediate step towards building a zero-knowledge rollup for ACTUS contracts, the goal of this project - a zero-knowledge validium, is to explore the required changes that need to be made on the Casper node in order to create/ validate zero-knowledge proofs. Furthermore the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge prooving into production but also allows the team to collaborate and grow together by developing a production-grade solution.
-
-It is important to mention that a zero-knowledge validium is a layer 2 scaling solution which in comparison to a zero-knowledge rollup moves the data availability and computation off the chain.
-
-## Goal Definition
-
-A user of the validium will be able to deposit, withdraw and transfer CSPR token. In the following sections we will discuss the mandatory-, optional-, and delimination criteria we require for each of the aforementioned interactions.
-
-### Mandatory Criteria
-
-#### Deposit
-
-A user should be able to deposit CSPR token from the Casper chain to its validium account at any given time through a web user interface (UI), or through a command-line-interface (CLI).
-
-#### Withdraw
-
-A user should be able to withdraw CSPR token from his account to the Casper chain at any given time through a web UI, or through the CLI. This interaction should be made possible without the approval of the validium operator ([see](https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals))
-
-#### Transfer
-
-A user should be able to transfer CSPR token from his validium account to another users validium account at any given time through a web UI, or through the CLI.
 
 #### Account Balance
 
@@ -143,7 +120,6 @@ The end product will be a common client-server application.
 - [tag:DT03] Amount
 - [tag:DT04] Token-ID i.e. currency
 - [tag:DT05] Associated layer 1 blockhash
-
 
 ## Use-cases
 
