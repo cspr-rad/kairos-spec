@@ -1,5 +1,5 @@
 #let title = [
-  ZK Validium Proof of Concept
+  Kairos: Zero-knowledge Validium Proof of Concept
 ]
 #let time_format = "[weekday] [month repr:long] [day padding:none], [year]"
 #set page(
@@ -26,28 +26,25 @@
   title: "Contents",
   indent: auto,
 )
-
 #pagebreak()
 
 = Introduction
 
-The Casper Asscoiation has adopted the aim to establish ACTUS contracts on top of the Casper blockchain, thereby unlocking the potential to improve transparency and insights into TradFi without giving up scalability and privacy. As an intermediate step towards building a zero knowledge-based L2 for ACTUS contracts, the goal of this project is to explore the ZK L2-space through a smaller scope. The reason behind building a proof of concept is to focus the engineering effort and move forward productively, both in learning about Casper's L1 and how to integrate with it, building an L2, and generating and verifying ZK rollups. Furthermore the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge proving into production but also allows the team to collaborate and grow together by developing a production-grade solution.
+The Casper Asscoiation has adopted the aim to establish ACTUS contracts on top of the Casper blockchain, thereby unlocking the potential to improve transparency and insights into TradFi without giving up scalability and privacy. As an intermediate step towards building a zero-knowledge-based Layer2 for ACTUS contracts, the goal of this project is to explore the ZK L2-space through a smaller scope. The reason for building this proof of concept is to focus the engineering effort and move forward productively, both in learning about Casper's L1 and how to integrate with it, building an L2, and generating and verifying ZK rollups. Furthermore the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge proving into production but also allows the team to collaborate and grow together by developing a production-grade solution.
 
-The scope of the proof of concept is to build a zero knowledge validium which exclusively supports payment transfers on its L2. Here, a validium refers to the fact that we will store the L2 account balances off-chain, i.e. on L2 rather than L1, in order to both support scaling transaction input, the maximum number of L2 participants, and further reduce Casper's gas fees. In later steps, the project can grow to include ACTUS contracts. 
+The scope of the proof of concept is to build a zero knowledge validium which exclusively supports payment transfers on its L2. Here, a validium refers to the fact that the L2 account balances are stored off-chain, i.e. on L2 rather than L1. Enabling both a higher transaction throughput and reduced Casper gas fees. Afterwards, the project and gained knowledge can be used to include ACTUS contracts. 
 
 Note that this proof of concept also forms the first step both towards very cheap, frictionless systems such as NFT minting and transfers, to aid Casper in becoming _the_ blockchain to push the art industry forward, as well as pushing forward towards the ACTUS end-goal.
 
-The project itself contains very few basic interactions: Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the rest of this document, we will detail the requirements on such a system and how we plan to implement and test it.
+The project itself contains very few basic interactions: Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the remainder of this document, we will detail the requirements on such a system and how we plan to implement and test it.
 
-In section @criteria we dig through the criteria in describing our proof of concept, describing what should be end-to-end tested in section @requirements. After describing some UI/UX concerns, we dig into the high-level design in section @high-level-design, followed by the low-level design and testing concerns.
-
-In the following sections we will discuss the criteria for such a system, requirements to be end-to-end tested, UI/UX 
-
-mandatory-, optional-, and delimination criteria we require for each of the aforementioned interactions.
-
+In @criteria (Criteria) we specify the high-level interactions that the proof of concept will implement. Afterwards, in @requirements we determine requirements based on the specified interactions which will/ can be end-to-end tested. Next, we describe some UX/UI concerns in @uxui. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by the Low-Level Design in @low-level-design and lastly we discuss testing concerns in @testing.
+k
 = Criteria <criteria>
 
-== Interactions
+To have a common denominator on what the scope of the proof-of-concept is, this section describes the high-level mandatory-, optional-, and delimination criteria it has to fulfill.
+
+== Mandatory Criteria
 
 === Deposit money into L2 system
 
@@ -65,21 +62,19 @@ A user should be able to transfer CSPR token from his validium account to anothe
 
 A user should be able to query its validium account balance of available CSPR token at any given time through a web UI, or through the CLI.
 
-== Requirements
+=== Verification
 
-=== Verification: Each transfer must be verified by L1
-
-At any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through a web UI, the CLI, or through an application-programming-interface (API) i.e. a machine-readable way.
+Each transfer must be verified by L1. And at any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through a web UI, the CLI, or through an application-programming-interface (API) i.e. a machine-readable way.
 
 === Storage
 
-Common queries must be easy to make against the L2 node, such as checking account balances and listing all transactions related to a specific person. In addition, the storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid loss of data.
+At any given time anyone should be able to check account balances and list all transactions related to a specific account. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid loss of data.
 
 Due to the nature of validiums, transaction data will be stored off-chain. To ensure that deposit, withdraw, and transfer interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly at any given time. To reduce the complexity of the project, this data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/ machines. Moreover access to the transaction data should be available through an API.
 
-=== Which trust assumptions can we make?
+=== Trust Assumptions
 
-== Post-PoC features
+== Optional Criteria: Post-PoC features
 
 === The L2 node should be paid
 
@@ -101,20 +96,22 @@ Tooling:
 
 = Requirements <requirements>
 
+Based on the criteria defined in the previous section, this section aims to describe testable functional requirements the validium needs to fulfill.
+
 == Functional requirements
 
 === Start up web client
 
 - [tag:FRB00] Automatically connects to the users CSPR wallet
 
-=== Deposits
+=== Deposit money into L2 system
 
 - [tag:FRD00] Depositing an amount of `CSPR tokens`, where `CSPR tokens > 0` should be accounted correctly
 - [tag:FRD01] Depositing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
 - [tag:FRD02] A user depositing any valid amount to on its `validium account` should only succeed if the user has signed the deposit transaction
 - [tag:FRD03] A user depositing any valid amount with a proper signature to another users `validium account` should not be possible
 
-=== Withdrawals
+=== Withdraw money from L2 system
 
 - [tag:FRW00] Withdrawing an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
 - [tag:FRW01] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
@@ -123,11 +120,11 @@ Tooling:
 - [tag:FRW03] Withdrawing a valid amount from the users validium account should only succeed if the user has signed the withdraw transaction
 - [tag:FRW03] Withdrawing a valid amount from another users validium account should not be possible
 
-=== Withdrawals without requiring L2 approval
+=== Withdraw money from L2 system without requiring L2 approval
 
 This endpoint is necessary in order to avoid such a stringent trust assumption on the L2. Without it, we require L2's approval in order to withdraw our funds from the system in case we lose trust.
 
-=== Transfer
+=== Transfer money within the L2 system
 
 - [tag:FRT00] Transfering an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
 - [tag:FRT01] Transfering an amount of `CSPR tokens`, where `CSPR tokens =< 0` should not be executed at all
@@ -164,7 +161,7 @@ These are qualitative requirements, such as "it should be fast". Can be fulfille
 - [tag:NRB01] The application should not leak any private or sensitive informations like private keys
 - [tag:NRB01] The backend API needs to be designed in a way such that it's easy to swap out a web-UI implementation
 
-= UI/UX
+= UI/UX <uxui>
 
 Mockups written out + diagrams.
 
