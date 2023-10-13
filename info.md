@@ -17,14 +17,14 @@ Questions:
 - Does Risc0 support GPU acceleration? What about Lita's products?
 
 First steps:
-- Merge spec.md into spec.typ
 - Review & edit typst so Mark can use everything
 - Dig into casper node: What does a Casper transaction look like? Data limits?
-- How are ZKVPs generated? With parallelism?
 - Casper node environment: How to integrate ZK verifier?
 
 Next batch of steps:
 - Dig through todos
+- Risc0 PoC: Write a simple program to prove 10,000 times, see how quickly it
+  executes on a good machine
 - Dig through the remaining issues
 - Write the rest of the spec, including many diagrams for the responsibilities
   of each component, how they work internally and sequence diagrams

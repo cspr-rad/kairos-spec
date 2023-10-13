@@ -31,23 +31,21 @@
 
 = Introduction
 
-== Motivation
+The Casper Asscoiation has adopted the aim to establish ACTUS contracts on top of the Casper blockchain, thereby unlocking the potential to improve transparency and insights into TradFi without giving up scalability and privacy. As an intermediate step towards building a zero knowledge-based L2 for ACTUS contracts, the goal of this project is to explore the ZK L2-space through a smaller scope. The reason behind building a proof of concept is to focus the engineering effort and move forward productively, both in learning about Casper's L1 and how to integrate with it, building an L2, and generating and verifying ZK rollups. Furthermore the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge proving into production but also allows the team to collaborate and grow together by developing a production-grade solution.
 
-As an intermediate step towards building a zero-knowledge rollup for ACTUS contracts, the goal of this project - a zero-knowledge validium, is to explore the required changes that need to be made on the Casper node in order to create/ validate zero-knowledge proofs. Furthermore the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge prooving into production but also allows the team to collaborate and grow together by developing a production-grade solution.
+The scope of the proof of concept is to build a zero knowledge validium which exclusively supports payment transfers on its L2. Here, a validium refers to the fact that we will store the L2 account balances off-chain, i.e. on L2 rather than L1, in order to both support scaling transaction input, the maximum number of L2 participants, and further reduce Casper's gas fees. In later steps, the project can grow to include ACTUS contracts. 
 
-It is important to mention that a zero-knowledge validium is a layer 2 scaling solution which in comparison to a zero-knowledge rollup moves the data availability and computation off the chain.
+Note that this proof of concept also forms the first step both towards very cheap, frictionless systems such as NFT minting and transfers, to aid Casper in becoming _the_ blockchain to push the art industry forward, as well as pushing forward towards the ACTUS end-goal.
 
-== Goal
+The project itself contains very few basic interactions: Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the rest of this document, we will detail the requirements on such a system and how we plan to implement and test it.
 
-Build a system to allow Casper payments with lower gas fees.
+In section @criteria we dig through the criteria in describing our proof of concept, describing what should be end-to-end tested in section @requirements. After describing some UI/UX concerns, we dig into the high-level design in section @high-level-design, followed by the low-level design and testing concerns.
 
-TODO: Mention that this is the first step both towards a very cheap, frictionless NFT system (minting and transfering) so Casper can become _the_ art blockchain, and towards putting ACTUS on Casper.
+In the following sections we will discuss the criteria for such a system, requirements to be end-to-end tested, UI/UX 
 
-A user of the validium will be able to deposit, withdraw and transfer CSPR token. In the following sections we will discuss the mandatory-, optional-, and delimination criteria we require for each of the aforementioned interactions.
+mandatory-, optional-, and delimination criteria we require for each of the aforementioned interactions.
 
-== Why should you care?
-
-= Criteria
+= Criteria <criteria>
 
 == Interactions
 
@@ -101,7 +99,7 @@ Tooling:
 - The CLI client should run on any Linux distribution
 - The web client should run on any modern web-browser with JavaScript enabled
 
-= Requirements
+= Requirements <requirements>
 
 == Functional requirements
 
@@ -170,7 +168,7 @@ These are qualitative requirements, such as "it should be fast". Can be fulfille
 
 Mockups written out + diagrams.
 
-= High-level design
+= High-level design <high-level-design>
 
 - List the different components and their rough responsibilities briefly & add diagrams
 - List design decisions and why they are made
@@ -231,7 +229,7 @@ TODO: What can we do about these issues? To the extent that they remain, how can
 
 We don't really provide any increased privacy compared to L1. The reason for this is that we don't want to be TornadoCash 2.0.
 
-= Low-level design
+= Low-level design <low-level-design>
 
 Go through all components and describe in detail how they work. What does the
 ZKP prove? What does the smart contract design look like?
@@ -247,7 +245,7 @@ Transaction:
 - [tag:DT04] Token-ID i.e. currency
 - [tag:DT05] Associated layer 1 blockhash
 
-= Testing
+= Testing <testing>
 
 == E2E testing
 
