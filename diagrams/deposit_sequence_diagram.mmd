@@ -1,30 +1,55 @@
 sequenceDiagram
     actor Bob as Bob :: User
-    participant WebClient
     participant CasperWallet
+    box l2-stack
+    participant WebClient
     participant ApiServer
-    WebClient ->>+ CasperNode: subscribe(DeployProcessed)
+    participant Database
+    participant Prover
+    participant CasperNode
+    end
+    box on-chain
+    participant VerifyDepositSession
+    participant ValidiumContract
+    end
+    ApiServer ->>+ CasperNode: subscribe(DeployProcessed)
     Bob ->>+ WebClient: deposit(user: Bob :: User, amount :: Money)
-    WebClient ->>+ CasperWallet: sign(deploy: Deploy)
+
+    WebClient ->>+ ApiServer: POST /deposit/<user: Bob :: User, amount :: Money>
+    ApiServer ->>+ Prover: proove(deposit(user: Bob :: User, amount :: Money))
+    Prover -->>- ApiServer: (new_account_balances :: AccountBalances, proof ::  Proof)
+    %% what we create here is a deploy that will execute our deposit session,
+    %% which checks whether the token amount is equal to the amount that was
+    %% passed in as a public input to the zk-proof. (see further below VerifyDepositSession)
+    %% 1. The token amount needs to be equal to the public inputs token amount
+    %% 2. The proof validation only succeeds with the proper public input,
+    %% i.e. token amount and new account balances
+    %% 3. on success we transfer the amount to our contracts purse
+    ApiServer ->>+ ApiServer: create_verify_deposit_deploy(new_account_balances.root_hash() :: AccountBalanceStateHash, proof ::  Proof, user: Bob :: User, amount :: Money)
+    ApiServer -->>- ApiServer: verify_deposit_deploy :: Deploy
+    ApiServer -->>- WebClient: verify_deposit_deploy :: Deploy
+
+    WebClient ->>+ CasperWallet: sign(verify_deposit_deploy: Deploy)
     CasperWallet ->>+ Bob: approve?
     Bob -->>- CasperWallet: approve!
-    CasperWallet ->>- WebClient: signed_deploy :: SignedDeploy
-    WebClient ->>+ ApiServer: POST /deposit/<(signed_deploy :: SignedDeploy, user: Bob :: User, amount :: Money)>
-    ApiServer ->>+ CasperNode: account_put_deploy(signed_deploy :: SignedDeploy)
+    CasperWallet ->>- WebClient: signed_verify_deposit_deploy :: SignedDeploy
+
+    WebClient ->>+ ApiServer: POST /deploy/forward/(signed_verify_deposit_deploy :: SignedDeploy)
+    ApiServer ->>+ CasperNode: account_put_deploy(signed_verify_deposit_deploy :: SignedDeploy)
     CasperNode -->>- ApiServer: account_put_deploy_result
     ApiServer -->>- WebClient: account_put_deploy_result
     WebClient -->>- Bob: account_put_deploy_result
 
-    CasperNode ->>+ DepositSession: call()
-    DepositSession ->>+ DepositSession: transfer_from_purse_to_purse(user_purse, validium_purse, amount)
-    DepositSession -->>- DepositSession: Ok
-    DepositSession ->>+ ValidiumContract: get_state_entrypoint()
-    ValidiumContract -->>- DepositSession: state :: AccountBalanceState
-    DepositSession ->>+ DepositSession: update_state(state :: AccountBalanceState, user: Bob :: User, amount :: Money)
-    DepositSession -->>- DepositSession: updated_state :: AccountBalanceState
-    DepositSession ->>+ ValidiumContract: update_state_entrypoint(updated_state)
-    ValidiumContract -->>- DepositSession: Ok
-    DepositSession -->>- CasperNode: end call()
+    Note Over CasperNode,VerifyDepositSession: Here the deploy gets executed on-chain
+    CasperNode ->>+ VerifyDepositSession: call()
+    Note Over VerifyDepositSession, ValidiumContract: This is where we verify the proof, we obviously need to provide the public inputs
+    VerifyDepositSession ->>+ ValidiumContract: verify_entrypoint(new_account_balances.root_hash() :: AccountBalanceStateHash, proof ::  Proof, user: Bob :: User, amount :: Money)
+    ValidiumContract ->>+ ValidiumContract: if proof is Ok then update_state_entrypoint(new_account_balances.root_hash() :: AccountBalanceStateHash)
+    ValidiumContract -->>- ValidiumContract: Ok
+    ValidiumContract -->>- VerifyDepositSession: Ok 
+    VerifyDepositSession ->>+ VerifyDepositSession: transfer_from_purse_to_purse(user_purse, validium_purse, amount)
+    VerifyDepositSession -->>- VerifyDepositSession: Ok
+    VerifyDepositSession -->>- CasperNode: end call()
 
     CasperNode ->>+ ApiServer: DeployProcessed
     ApiServer ->>+ ApiServer: eventHandler(event :: DeployProcessed)
@@ -41,4 +66,4 @@ sequenceDiagram
     ApiServer -->>- WebClient: balance :: Balance
     WebClient ->> Bob: notify
     
-    CasperNode -->>- WebClient: ...
+    CasperNode -->>- ApiServer: ...
