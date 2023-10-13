@@ -1,5 +1,10 @@
 # Info
 
+Useful reference links:
+- https://ethereum.org/en/developers/docs/scaling/validium/
+- https://docs.starkware.co/starkex/overview.html
+- https://docs.starkware.co/starkex/architecture/solution-architecture.html
+
 Notes:
 - The validium smart contract stores the hash (i.e. root of the Merkle tree) of
   all the L2 account balances
@@ -7,6 +12,9 @@ Notes:
   withdraw to L2 and L2 including that into the L1 transaction it generates
   next. However, this relies on the L2 not denying you service.
 - "Validity proofs" are ZKPs rolled up into one
+
+Questions:
+- Does Risc0 support GPU acceleration? What about Lita's products?
 
 First steps:
 - Merge spec.md into spec.typ
@@ -26,17 +34,14 @@ To do:
   motivation, to build towards an ACTUS ZKR, and to please the Casper people who
   give us money and would like an NFT generating and transfering machine with
   low fees
-- Learn about the Casper node: Limit on data per L1 transaction etc.?
-- How to integrate a ZK verifier with the Casper node?
-- Dig into Merkle trees, and how they are used as cryptographic proofs of states
-  for validiums
-  * What are "Merkle proofs" in the context of Validium fund withdrawals?
-- Look into ZKVMs: Do we need to parallelize the ZKP generation "manually",
-  through recursive proofs, or does RISC0 handle this for us?
 - What exactly do the ZKPs prove?
 - How to avoid conflicts between L1 and L2 transactions?
   * L1 must get precedence, but we also need to avoid DoS attacks
 - How to assure being able to withdraw without needing the L2 node?
+  * One option is to add a "withdraw all request" endpoint to the L1 contract,
+    where someone can request to get all their funds back, and the L2 isn't
+    allowed to post anything until they either pay back this person's funds, or
+    show that this person has no funds on L2.
 - To what extend do we need to make the L2 node's interface compliant with the
   L1 node's interface, in terms of
   * What does an L2 transaction look like?

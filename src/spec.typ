@@ -71,9 +71,13 @@ A user should be able to query its validium account balance of available CSPR to
 
 === Verification: Each transfer must be verified by L1
 
+At any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through a web UI, the CLI, or through an application-programming-interface (API) i.e. a machine-readable way.
+
 === Storage
 
 Common queries must be easy to make against the L2 node, such as checking account balances and listing all transactions related to a specific person. In addition, the storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid loss of data.
+
+Due to the nature of validiums, transaction data will be stored off-chain. To ensure that deposit, withdraw, and transfer interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly at any given time. To reduce the complexity of the project, this data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/ machines. Moreover access to the transaction data should be available through an API.
 
 === Which trust assumptions can we make?
 
@@ -87,16 +91,39 @@ Anyone can query the transaction history based on certain filters, such as a spe
 
 == Usage
 
-- Use cases
-- What will run where, and by whom: Normal usage through website, plus CLI to interact with the system more. CLI should work on all Linux systems. CLI is only used by developers.
+- Use cases: This PoC allows users to benefit from faster and cheaper transactions on the Casper chain
+- Target audience: Anyone who wants to make payment transfers on Casper
+- Operating conditions: Our services will be ran on dedicated, powerful machines
+- Product environment: There are two end-products, a web client (ran in resource-low environments, both in terms of computation and connectivity) and a CLI client (ran in resource-high environments by developers)
+
+Tooling:
+- The server host-machine will run on NixOS. It will include a powerful CPU and, depending on the ZK proving system we choose, a powerful GPU to provide ZKP acceleration. In addition, all machines involved (host and clients) require a working internet connection.
+- The CLI client should run on any Linux distribution
+- The web client should run on any modern web-browser with JavaScript enabled
 
 = Requirements
 
 == Functional requirements
 
+=== Start up web client
+
+- [tag:FRB00] Automatically connects to the users CSPR wallet
+
 === Deposits
 
+- [tag:FRD00] Depositing an amount of `CSPR tokens`, where `CSPR tokens > 0` should be accounted correctly
+- [tag:FRD01] Depositing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
+- [tag:FRD02] A user depositing any valid amount to on its `validium account` should only succeed if the user has signed the deposit transaction
+- [tag:FRD03] A user depositing any valid amount with a proper signature to another users `validium account` should not be possible
+
 === Withdrawals
+
+- [tag:FRW00] Withdrawing an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
+- [tag:FRW01] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
+- [tag:FRW02] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens > users validium account balance` should not be possible
+- [tag:FRW03] Withdrawing a valid amount from the users validium account should be possible without the intermediary operator of the validium
+- [tag:FRW03] Withdrawing a valid amount from the users validium account should only succeed if the user has signed the withdraw transaction
+- [tag:FRW03] Withdrawing a valid amount from another users validium account should not be possible
 
 === Withdrawals without requiring L2 approval
 
@@ -104,21 +131,37 @@ This endpoint is necessary in order to avoid such a stringent trust assumption o
 
 === Transfer
 
+- [tag:FRT00] Transfering an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
+- [tag:FRT01] Transfering an amount of `CSPR tokens`, where `CSPR tokens =< 0` should not be executed at all
+- [tag:FRT02] Transfering an amount of `CSPR tokens`, where `CSPR tokens > users validium account` balance should not be possible
+- [tag:FRT03] Transfering a valid amount to another user that does not have a registered validium account yet should be possible.
+- [tag:FRT03] Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
+
 === Query account balance
 
-=== Query all transfers given filters
+- [tag:FRA00] The user should be able to see its validium account balance immediately when it's queried (either through the CLI or web-UI)
+
+=== Post-PoC: Query all transfers given filters
+
+- [tag:FRA01] The user should be able to see all the past transactions involving its validium account (TODO discuss whether we actually need this for this MVP)
 
 Filters could be that one party is involved (i.e. "give me all data related to this institution") or time-bounded.
 
 === Verification
 
+- [tag:FRV00] Anyone should be able to verify proofs of the validiums state changes caused by deposit/ withdraw/ transfer interactions at any given time
+
 === Storage
+
+- [tag:FRD00] Transaction data should be served read-only to anyone
+- [tag:FRD01] Transaction data should be available at any given time
+- [tag:FRD02] Transaction data should be written by known, verified entities only
+- [tag:FRD03] Transaction data should be written immediately after the successful verification of correct deposit/ withdraw/ transfer interactions
+- [tag:FRD04] Transaction data should not be written if the verification of the proof of the interactions fails
 
 == Non-functional requirements
 
 These are qualitative requirements, such as "it should be fast". Can be fulfilled with e.g. benchmarks.
-
-=== Base functionality
 
 - [tag:NRB01] The application should not leak any private or sensitive informations like private keys
 - [tag:NRB01] The backend API needs to be designed in a way such that it's easy to swap out a web-UI implementation
