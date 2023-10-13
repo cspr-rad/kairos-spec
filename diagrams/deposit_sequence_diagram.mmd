@@ -1,21 +1,44 @@
 sequenceDiagram
     actor Bob as Bob :: User
     participant WebClient
-    participant Wallet
+    participant CasperWallet
     participant ApiServer
-    participant Database
-    participant Proover
-    participant ValidiumStateContract
-    participant VerifierContract
-    participant Api as L2Ledger: Layer1Contract
-    Bob->>+WebClient: deposit(user: Bob :: User, amount :: Money)
-    WebClient ->>+ Wallet: account_put_deploy(deploy: Deploy)
-    Wallet ->>+ Bob: approve?
-    Bob -->>- Wallet: approved
-    Wallet ->> CasperNode: submit_transaction
-    Wallet -->>- WebClient: submitted
-    WebClient ->>+ ApiServer: notify_deposit(user: User, amount: Money)
-    ApiServer -->> WebClient: Ok
-    ApiServer ->>+ CasperChain: getValidiumStateContractBalance
-    CasperNode -->>- ApiServer: balance
+    WebClient ->>+ CasperNode: subscribe(DeployProcessed)
+    Bob ->>+ WebClient: deposit(user: Bob :: User, amount :: Money)
+    WebClient ->>+ CasperWallet: sign(deploy: Deploy)
+    CasperWallet ->>+ Bob: approve?
+    Bob -->>- CasperWallet: approve!
+    CasperWallet ->>- WebClient: signed_deploy :: SignedDeploy
+    WebClient ->>+ ApiServer: POST /deposit/<(signed_deploy :: SignedDeploy, user: Bob :: User, amount :: Money)>
+    ApiServer ->>+ CasperNode: account_put_deploy(signed_deploy :: SignedDeploy)
+    CasperNode -->>- ApiServer: account_put_deploy_result
+    ApiServer -->>- WebClient: account_put_deploy_result
+    WebClient -->>- Bob: account_put_deploy_result
 
+    CasperNode ->>+ DepositSession: call()
+    DepositSession ->>+ DepositSession: transfer_from_purse_to_purse(user_purse, validium_purse, amount)
+    DepositSession -->>- DepositSession: Ok
+    DepositSession ->>+ ValidiumContract: get_state_entrypoint()
+    ValidiumContract -->>- DepositSession: state :: AccountBalanceState
+    DepositSession ->>+ DepositSession: update_state(state :: AccountBalanceState, user: Bob :: User, amount :: Money)
+    DepositSession -->>- DepositSession: updated_state :: AccountBalanceState
+    DepositSession ->>+ ValidiumContract: update_state_entrypoint(updated_state)
+    ValidiumContract -->>- DepositSession: Ok
+    DepositSession -->>- CasperNode: end call()
+
+    CasperNode ->>+ ApiServer: DeployProcessed
+    ApiServer ->>+ ApiServer: eventHandler(event :: DeployProcessed)
+    ApiServer ->>+ CasperNode: query_balance()
+    CasperNode -->>- ApiServer: query_balance_result
+    ApiServer ->>+ Database: insert_deposit(user: Bob :: User, amount :: Money)
+    Database -->>- ApiServer: Ok
+    ApiServer ->> WebClient: trigger_refresh
+    ApiServer -->>- ApiServer: end eventHandler
+
+    WebClient ->>+ ApiServer: GET /balance
+    ApiServer ->>+ Database: get_balance(user: Bob :: User)
+    Database -->>- ApiServer: balance :: Balance
+    ApiServer -->>- WebClient: balance :: Balance
+    WebClient ->> Bob: notify
+    
+    CasperNode -->>- WebClient: ...
