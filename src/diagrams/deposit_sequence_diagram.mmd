@@ -16,7 +16,7 @@ sequenceDiagram
     Bob ->>+ WebClient: deposit(user: Bob :: User, amount :: Money)
 
     WebClient ->>+ ApiServer: POST /deposit/<user: Bob :: User, amount :: Money>
-    ApiServer ->>+ Prover: proove(deposit(user: Bob :: User, amount :: Money))
+    ApiServer ->>+ Prover: prove(deposit(user: Bob :: User, amount :: Money))
     Prover -->>- ApiServer: (new_account_balances :: AccountBalances, proof ::  Proof)
     %% what we create here is a deploy that will execute our deposit session,
     %% which checks whether the token amount is equal to the amount that was

@@ -8,27 +8,31 @@ erDiagram
         fn withdraw()
         fn transfer()
         fn getBalance()
+        fn getBalances()
         fn getTransactions()
     }
 
     ApiServer ||--|| Database : read-write-to
 
-    ApiServer ||--|| Proover : use
+    ApiServer ||--|| Prover : use
 
-    Proover {
-        fn proove()
-        fn verify()
+    Prover {
+        fn proveDeposit()
+        fn proveWithdrawal()
+        fn proveTransfer()
+        fn proveRollup()
+        fn verifyDeposit()
+        fn verifyWithdrawal()
+        fn verifyTransfer()
+        fn verifyRollup()
     }
-
-    ApiServer ||--|| ValidiumStateContract : use
 
     ValidiumStateContract {
         fn getState()
         fn updateState()
     }
 
-    Proover ||--|| VerifierContract : use
-    VerifierContract {
-    }
+    ApiServer ||--|| CardanoNode : submit-read-and-notify
+    CardanoNode ||--|| ValidiumStateContract : submit-and-read
 
-    VerifierContract ||--|| ValidiumStateContract : notify
+    ValidiumStateContract ||--|| VerifierContract : request-verification
