@@ -11,6 +11,9 @@ Notes:
 First steps:
 - Dig into casper node: What does a Casper transaction look like? Data limits?
 - Casper node environment: How to integrate ZK verifier?
+- Mermaid: Include a devShell with Mermaid, a command to generate SVGs from the
+  .mmd files, and make sure the SVGs are generated before calling typst
+  (Marijan)
 - Dig through the remaining issues
 - Write the rest of the spec, including many diagrams for the responsibilities
   of each component, how they work internally and sequence diagrams

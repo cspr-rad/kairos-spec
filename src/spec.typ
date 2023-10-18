@@ -120,12 +120,6 @@ Based on the criteria defined in the previous section, this section aims to desc
 - [tag:FRA00] The user should be able to see its validium account balance immediately when it's queried (either through the CLI or web-UI)
 - [tag:FRA01] Anyone should be able to see all validium account balances through the CLI, web-UI and API
 
-=== Post-PoC: Query all transfers given filters
-
-- [tag:FRA02] The user should be able to see all the past transactions involving its validium account (TODO discuss whether we actually need this for this MVP)
-
-Filters could be that one party is involved (i.e. "give me all data related to this institution") or time-bounded.
-
 === Verification
 
 - [tag:FRV00] Anyone should be able to query and verify proofs of the validiums state changes caused by deposit/withdraw/transfer interactions at any given time
@@ -138,6 +132,12 @@ Filters could be that one party is involved (i.e. "give me all data related to t
 - [tag:FRD03] Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
 - [tag:FRD04] Transaction data should not be written if the verification of the proof of the interactions fails
 
+=== Post-PoC: Query all transfers given filters
+
+- [tag:FRA02] The user should be able to see all the past transactions involving its validium account
+
+Filters could be that one party is involved (i.e. "give me all data related to this institution") or time-bounded.
+
 == Non-functional requirements
 
 These are qualitative requirements, such as "it should be fast". Can be fulfilled with e.g. benchmarks.
@@ -147,9 +147,36 @@ These are qualitative requirements, such as "it should be fast". Can be fulfille
 
 = UI/UX <uiux>
 
-Mockups written out + diagrams.
+Mockups we want:
+- WebUI: Connect to wallet, see your L1 & Validium account balance(s), deposit/withdrawal, L2 transfer, sign L2 Tx
 
-// TODO: Insert all diagrams here.
+#figure(
+  image("components.svg", width: 50%),
+  caption: [
+    Overview of the components
+  ],
+)
+
+#figure(
+  image("deposit.svg", width: 100%),
+  caption: [
+    Deposit sequence diagram
+  ],
+)
+
+#figure(
+  image("simple_transfer.svg", width: 100%),
+  caption: [
+    Singular transfer sequence diagram
+  ],
+)
+
+#figure(
+  image("transfer_sequence.svg", width: 100%),
+  caption: [
+    Sequence diagram for a set of transfers
+  ],
+)
 
 = High-level design <high-level-design>
 
@@ -258,12 +285,10 @@ The casper-node allows for creating a web hook. Therefore, by running a casper-n
 
 - GET /accounts/:accountID returns a single user's L2 account balance
 - GET /accounts returns the current Validium state, i.e. all L2 account balances
-- POST /transfer takes in an L2 transaction in CBOR format, and returns a TxID
-  // TODO: Determine whether we indeed want to use CBOR here.
+- POST /transfer takes in an L2 transaction in JSON format, and returns a TxID
 - GET /transfer/:TxID shows the status of a given transaction: Cancelled, ZKP in progress, ZKR in progress, or "posted in L1 block with blockhash X"
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
 - GET /withdrawal takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
-// TODO: Should these last two be POST requests? They don't change anything in the server's state, but the request itself also carries data.
 
 Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree.
 
@@ -310,11 +335,10 @@ The smart contract stores the following data:
 
 The smart contract offers the following API and verifications:
 - POST deposit: sender's public key, token ID, token amount, new Merkle root, ZKP verifying the Merkle root, sender's signature
-  // TODO: Do we want the sender's signature to be part of the ZKP, or checked "manually" by the L1?
   - Verify that this amount of tokens can be sent, and take it out of the sender's 1 account
   - Verify the ZKP given public inputs
   - Update the smart contract's state
-- POST withdrawal: Receiver's public key, token ID, token amount, new Merkle root, ZKP verifying the merkle root, receiver's signature
+- POST withdrawal: Receiver's public key, token ID, token amount, new Merkle root, ZKP verifying the merkle root
   - Move the appropriate amount of tokens to the receiver's L1 account
   - Verify the ZKP given public inputs
   - Update the smart contract's state
@@ -345,12 +369,20 @@ Withdrawal transaction:
 - Private inputs: Info on the old Merkle tree in order to verify, signature
 - Verify: Merkle root update & signature
 
-=== How do Merkle tree updates work?
+=== How do Merkle tree updates work? <merkle-tree-update>
 
 Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken over by the ZKR, in order to allow for parallelization at a later stage.
 
 Deposit & withdrawal transaction: Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
+
 // TODO: Draw this into a diagram (Marijan & Nick).
+//
+// #figure(
+//   image("merkle-tree-update.svg", width: 100%),
+//   caption: [
+//     How to update a single leaf of a Merkle tree
+//   ],
+// )
 
 === Where does the ZK verification happen?
 
