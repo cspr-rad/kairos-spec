@@ -155,6 +155,8 @@ These are qualitative requirements, such as "it should be fast". Can be fulfille
 
 Mockups written out + diagrams.
 
+// TODO: Insert all diagrams here.
+
 = High-level design <high-level-design>
 
 Any ZK validium can be described as a combination of 6 components. For this proof of concept, we made the following choices:
@@ -197,7 +199,7 @@ The CLI will be built in Rust and packaged with Nix, supporting all Linux distri
 
 === Validium vs. rollup
 
-We're attempting to create an L2 solution which can scale to 10'000 Tx/s. However, these transactions need to be indpendent, since dependent transactions require the latter transaction to be aware of the state resulting from the first transaction, which you'll not be able to query quickly enough (given restrictions such as the time it takes to sign a transaction and send messages around given the speed of light). Therefore, in order to reach 10k Tx/s you need at least 20k people using the L2. Therefore, 20k people's L2 account balances need to be stored within the validium L1 smart contract. This means the data associated with this contract will supercede Casper L1's data limits, leading to the requirement for our L2 solution to be a Validium.
+We're attempting to create an L2 solution which can scale to 10'000 transaction/s. However, these transactions need to be indpendent, since dependent transactions require the latter transaction to be aware of the state resulting from the first transaction, which you'll not be able to query quickly enough (given restrictions such as the time it takes to sign a transaction and send messages around given the speed of light). Therefore, in order to reach 10k transaction/s you need at least 20k people using the L2. Therefore, 20k people's L2 account balances need to be stored within the validium L1 smart contract. This means the data associated with this contract will supercede Casper L1's data limits, leading to the requirement for our L2 solution to be a Validium.
 
 === Centralized L2
 
@@ -230,7 +232,15 @@ In this section, we will describe in detail how each component works individuall
 
 == L2 server
 
-The L2 server must be able to collect L2 Txs and then get some processing time to create a ZKR and post it to L1. During this second phase, no new L2 Txs can be accepted into the queue, given the L2 Tx posting uniqueness discussion above. Therefore, the L2 server will accept transfer Txs for 10s, then refuse them for 10s so it has time to create a ZKR and post it to L1. Afterward it opens up again for new L2 Txs. If a L2 Tx is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
+=== Ensuring L2 transaction uniqueness
+
+We have to make sure the same L2 transaction cannot be used twice. One option is to add the Merkle root of the Validium's state at the time the L2 transaction is submitted, to the ZKP's public inputs, and have the ZKR code verify this. The problem with this approach is that any deposit or withdrawal on L1 would then require all in-progress L2 transactions to be recreated and resigned. We could have the smart contract store two Merkle roots though, the current one and the last one posted by L2 (i.e. the second one doesn't change based on deposits and withdrawals). That way, no L2 transactions must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
+
+Note that this solution does require that the same L2 transaction cannot be posted twice within the same rollup. However, this is easy to avoid by requiring all L2 transactions rolled up into the same ZKR (for posting to L1) to be independent, i.e. to not clash in senders and receivers with any other L2 transactions. We want to set this requirement anyway in order to stimulate parallelization opportunities within the ZKP/ZKR generation.
+
+=== Two phases of the server <phases>
+
+After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given the L2 transaction posting uniqueness discussion above. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterward new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
 
 === L2 transactions
 
@@ -250,44 +260,53 @@ The casper-node allows for creating a web hook. Therefore, by running a casper-n
 
 - GET /accounts/:accountID returns a single user's L2 account balance
 - GET /accounts returns the current Validium state, i.e. all L2 account balances
-- POST /transfer takes in a L2 Tx in CBOR format, and returns a TxID
+- POST /transfer takes in an L2 transaction in CBOR format, and returns a TxID
   // TODO: Determine whether we indeed want to use CBOR here.
 - GET /transfer/:TxID shows the status of a given transaction: Cancelled, ZKP in progress, ZKR in progress, or "posted in L1 block with blockhash X"
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
 - GET /withdrawal takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
+// TODO: Should these last two be POST requests? They don't change anything in the server's state, but the request itself also carries data.
 
 === Data redundancy
 
 How do we accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state without being able to reconstruct would lead to a loss of all Validium funds?
 
-TODO: Do we want to build in a failsafe, in case the data does get lost? What would this look like, and how do we prevent the failsafe from being more dangerous than the thing it's preventing?
+TODO:
+- How many servers do we need?
+- Some recovery system must be built, such that if the first server goes down, another server can take over
+- How to get the servers synced up again after one comes back from downtime?
+
+// TODO: Do we want to build in a failsafe, in case the data does get lost? What would this look like, and how do we prevent the failsafe from being more dangerous than the thing it's preventing?
 
 === Load balance for ZK proving
 
-Within the PoC, the ZKPs themselves will be sufficiently quick to generate that it makes sense to keep all computation on one performant machine. We predict most of the computation will lie in the ZKR itself (not the individual ZKPs). In addition, we can limit the number of transactions we accept during a single loop of the system, in order to provide a feasible PoC. After going into production, load balancing can be added for the ZKPs and ZKR in order to increase transaction throughput to keep up with demand.
+Within the PoC, the ZKPs themselves will be sufficiently quick to generate that there is litlte opportunity for speedup through parallelization. When exploring the ZKR, we should look into parallelization opportunities.
 
-=== What happens when you post an L2 Tx?
+Note that we can limit the number of transactions we accept during a single loop of the system in order to provide a feasible PoC. After going into production, we can optimize the server(s)' performance to keep up with demand.
 
-- Check if the Tx is posted within the right time window. The L2 server turns on for 10s, then off for 10s to process transactions, create a ZKR and post it to L1, and then opens up again for new L2 Txs. If the time window is not correct, return a clear error to the API caller.
+=== What happens when you post an L2 transaction?
+
+- Check if the transaction is posted within the server's phase 1, see @phases. If not, return a clear error to the API caller.
 - Create a TxID and return this to the API caller
-- Post the Tx and TxID to the dB
-- Verify the Tx. If this fails, put the Tx status to Cancelled.
+- Post the transaction and TxID to the dB
+- Verify the transaction. If this fails, put the transaction status to Cancelled.
   - Signature
-  - Token ID and amount are legitimate, given the current Validium's state
-  - The Tx is independent of the current queue of transactions, i.e. the sender and recipient aren't included yet
+  - TokenID and amount are legitimate, given the current Validium's state
+  - The transaction is independent of the current queue of transactions, i.e. the sender and recipient aren't included yet
 - Generate a ZKP
-- Once the 10s time window has passed, roll up all ZKPs and post the ZKR to the L1 smart contract
-- Put the status of all Txs included in this ZKR to Success
+- Once the server reaches phase 2, generate the ZKR and post it to the L1 smart contract
+- Put the status of all transactions included in this ZKR to Success once the L1 transaction is accepted
 
 Notes:
 - Anytime the L2 server posts something to its database, this information is sent to the backup servers.
-- The web UI can create a web hook to be netified by a casper-node when the smart contract is updated through the Transfer endpoint, i.e. when the L2 Tx it posted might be included. At that point it can contact the L2 to verify the Tx's success.
+- The web UI can create a web hook to be notified by a casper-node when the smart contract is updated through the Transfer endpoint, i.e. when the L2 transaction it posted might be included. At that point it can contact the L2 to verify the transaction's success.
 
 == Smart contract
 
 The smart contract stores the following data:
 - Current Merkle root, representing the Validium's state
 - The last Merkle root posted by the L2 (i.e. deposits). This is needed for the L2 rollup to work.
+- Its own account balance, which amounts to the total sum of all the Validium account balances
 
 The smart contract offers the following API and verifications:
 - POST deposit: sender's public key, token ID, token amount, new Merkle root, ZKP verifying the Merkle root, sender's signature
@@ -305,55 +324,70 @@ The smart contract offers the following API and verifications:
 
 === Smart contract initialization
 
-Q: What is the initial state of the smart contract?
-
-A: Initiating the L1 smart contract requires putting money onto the Validium. The balance of the smart contract will then be equal to the initial deposit, and the Merkle roots (current and "current minus deposits/withdrawals") will be equal to the Merkle root for a Merkle tree with only one leaf, namely the single initial account.
+Initiating the L1 smart contract requires putting money onto the Validium. The balance of the smart contract will then be equal to the initial deposit, and the Merkle roots (current and "current minus deposits/withdrawals") will be equal to the Merkle root for a Merkle tree with only one leaf, namely the single initial account.
 
 == ZKP
 
-=== What exactly is proven by a ZKP?
+=== What exactly do the ZKPs look like?
 
-- The signature of the L2 Tx
+Transfer transaction:
+- Public inputs: Unsigned L2 transaction
+- Private inputs: L2 transaction signature
+- Verify: Signature
 
-Q: What are the public and private inputs of the ZKPs? (Deposit, withdrawal and transfer.)
+Deposit transaction:
+- Public inputs: Old Merkle root, new Merkle root, sender, token ID, token amount
+- Private inputs: Info on the old Merkle tree in order to verify
+- Verify: Merkle root update. Note that the signature must be checked by L1.
+
+Withdrawal transaction:
+- Public inputs: Old Merkle root, new Merkle root, receiver, token ID, token amount
+- Private inputs: Info on the old Merkle tree in order to verify, signature
+- Verify: Merkle root update & signature
+
+=== How do Merkle tree updates work?
+
+Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken over by the ZKR, in order to allow for parallelization at a later stage.
+
+Deposit & withdrawal transaction: Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
+// TODO: Draw this into a diagram (Marijan & Nick).
 
 === Where does the ZK verification happen?
 
 Within the casper-node, if the ZK verification code doesn't fit into a smart contract? If it does, then within the same smart contract, or a dedicated one?
-
-=== Ensuring L2 Tx uniqueness
-
-We have to make sure the same L2 Tx cannot be used twice. One option is to add the Merkle root of the Validium's state at the time the L2 Tx is submitted, to the ZKP's public inputs, and have the ZKR code verify this. The problem with this approach is that any deposit or withdrawal on L1 would then require all in-progress L2 Txs to be recreated and resigned. We could have the smart contract store two Merkle roots though, the current one and the last one posted by L2 (i.e. the second one doesn't change based on deposits and withdrawals). That way, no L2 Txs must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
-
-Note that this solution does require that the same L2 Tx cannot be posted twice within the same rollup. However, this is easy to avoid given that we can require all L2 Txs which are rolled up into the same ZKR (for posting to L1), to be independent, i.e. to not clash in senders and receivers with any other L2 Txs.
+// @Marijan TODO: Figure out which options would be feasible.
 
 === Comparison of ZK provers
 
 We decided to build the PoC using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and the use of STARKs and SNARKs to quickly end up with small proofs.
 
+// TODO: Do we want to write out an argument here?
+
 == ZKR
 
-=== What exactly is proven by the ZKR?
-
+The ZK rollup verifies the following:
 - The ZKPs don't clash, i.e. they all have separate senders and receivers
 - All ZKPs are valid
-- All L2 Txs include as a public input the last Merkle root posted on L1 by L2. This Merkle root itself is taken as a public input to the ZKR.
+- All L2 transactions include as a public input the last Merkle root posted on L1 by L2. This Merkle root itself is taken as a public input to the ZKR.
+- The old Merkle root is correctly transformed into the new Merkle root through applying all the L2 transactions
+
+Its public inputs include the old Merkle root and new Merkle root. The private inputs are the list of L2 transactions and their ZKPs, as well as the full old Merkle tree.
 
 == Web UI: List interactions
 
 - Connect to Casper wallet
 - Query Validium balance
 - Query Casper L1 balance
-- Deposit on and withdraw from Validium: Create, sign & submit L1 Tx, check its status on casper-node
-- Transfer within Validium: Query Validium state, create, sign & submit L2 Tx, check its status on L2 server
+- Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
+- Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
 
 == CLI: List interactions
 
 - Connect to Casper wallet
 - Query Validium balance
 - Query Casper L1 balance
-- Deposit on and withdraw from Validium: Create, sign & submit L1 Tx, check its status on casper-node
-- Transfer within Validium: Query Validium state, create, sign & submit L2 Tx, check its status on L2 server
+- Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
+- Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
 - Query last N ZKPs posted to L1
 - Verify a ZKP
 

@@ -14,7 +14,6 @@ Notes:
 - "Validity proofs" are ZKPs rolled up into one
 
 First steps:
-- Review & edit typst so Mark can use everything
 - Dig into casper node: What does a Casper transaction look like? Data limits?
 - Casper node environment: How to integrate ZK verifier?
 
