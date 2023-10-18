@@ -107,12 +107,6 @@ Based on the criteria defined in the previous section, this section aims to desc
 - [tag:FRW03] Withdrawing a valid amount from the users validium account should only succeed if the user has signed the withdraw transaction
 - [tag:FRW03] Withdrawing a valid amount from another users validium account should not be possible
 
-=== Withdraw money from L2 system without requiring L2 approval
-
-This endpoint is necessary in order to avoid such a stringent trust assumption on the L2. Without it, we require L2's approval in order to withdraw our funds from the system in case we lose trust.
-
-- [tag:FRW04] Any user can withdraw all their money from the Validium without requiring L2's approval
-
 === Transfer money within the L2 system
 
 - [tag:FRT00] Transfering an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
@@ -214,9 +208,10 @@ Unfortunately there is nothing we can do about the L2 denying you service within
 + Withdrawing your current funds from the Validium should always be possible, even without permission from the L2.
 + The centralized L2 will be ran by the Casper Association, which has a significant incentive to aid and stimulate the Casper ecosystem to offer equal access to all.
 
-As mentioned before, we will design the system in such a way that withdrawing all your validium funds is possible without L2 approval. This eliminates the second danger associated with centralized L2s ZKVs.
+As mentioned before, we will design the system in such a way that withdrawing validium funds is possible without L2 approval. This eliminates the second danger associated with centralized L2s ZKVs. This does require you to obtain the current Validium state.
+// TODO: Do we have a good defense for how this will be ensured? Without us posting this information publicly, nobody can deposit money either, and the entire L2 becomes without value.
 
-Finally, what if the L2 loses its data? The Casper Association has a very strong incentive to prevent this, since the entire project would die permanently if this failure shows up even once. Therefore, we will build the L2 service in such a way as to include the necessary redundancy, as mentioned above.
+Finally, what if the L2 loses its data? The Casper Association has a very strong incentive to prevent this, since the entire project would die permanently if this occurs. Therefore, we will build the L2 service in such a way as to include the necessary redundancy, as mentioned above.
 
 === Privacy provided by L2
 
@@ -242,6 +237,9 @@ Note that this solution does require that the same L2 transaction cannot be post
 
 After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given the L2 transaction posting uniqueness discussion above. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterward new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
 
+Note that this second phase requires some amount of computation and therefore some time to get accomplished. Meanwhile, if a deposit or withdraw transaction gets pushed to L1, much of the ZKR computation must start over, since the old Merkle root is different.
+// TODO: Figure out how to make sure as much as possible of the work can be redone, so that nobody can DDoS our L2 (i.e. prevent it from ever pushing to L1) by constantly depositing/withdrawing small amounts on L1.
+
 === L2 transactions
 
 The contents of an L2 transaction are:
@@ -266,6 +264,8 @@ The casper-node allows for creating a web hook. Therefore, by running a casper-n
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
 - GET /withdrawal takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
 // TODO: Should these last two be POST requests? They don't change anything in the server's state, but the request itself also carries data.
+
+Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree.
 
 === Data redundancy
 
@@ -376,6 +376,8 @@ Its public inputs include the old Merkle root and new Merkle root. The private i
 == Web UI: List interactions
 
 - Connect to Casper wallet
+- Sign L2 Tx: This requires an "L2 wallet" of some type
+  // TODO: Design the L2 wallet.
 - Query Validium balance
 - Query Casper L1 balance
 - Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
