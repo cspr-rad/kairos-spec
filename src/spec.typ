@@ -208,9 +208,21 @@ In other words, when an endpoint call comes in, we
 
 The L2 node will be ran on three powerful machines running NixOS, as mentioned before. The server code will be written in Rust, to assure performance and simplify interactions with Casper's L1. The database will be postgres, duplicated over the three machines.
 
+// TODO: Do we want to make the argument to use Haskell here?
+// Pros:
+// - Easier to test
+// - Clients can be generated from the Servant API, ensuring correctness of UI/server interactions
+// - Yesod framework can be used for Web UI
+// 
+// Cons:
+// - Some data types have to be reimplemented from Rust, since Casper's L1 is in Rust
+// - Rust is a bit faster
+
 == Web UI
 
-TODO: determine the tooling.
+// TODO: determine the tooling.
+// Everything depends on what Casper's current wallet looks like. Can we integrate this easily into a simple website, which consists of nothing but HTML and CSS otherwise? Can we extend the Casper wallet to sign random JSON blobs, such that it can also serve our L2 purposes? If so, we could use something very simple for the website, like the Yesod framework.
+// Proposal: Yesod, if the L2 server is Haskell. Otherwise Elm.
 
 == CLI
 
@@ -235,8 +247,7 @@ Unfortunately there is nothing we can do about the L2 denying you service within
 + Withdrawing your current funds from the Validium should always be possible, even without permission from the L2.
 + The centralized L2 will be ran by the Casper Association, which has a significant incentive to aid and stimulate the Casper ecosystem to offer equal access to all.
 
-As mentioned before, we will design the system in such a way that withdrawing validium funds is possible without L2 approval. This eliminates the second danger associated with centralized L2s ZKVs. This does require you to obtain the current Validium state.
-// TODO: Do we have a good defense for how this will be ensured? Without us posting this information publicly, nobody can deposit money either, and the entire L2 becomes without value.
+As mentioned before, we will design the system in such a way that withdrawing validium funds is possible without L2 approval. This eliminates the second danger associated with centralized L2s ZKVs, requiring exclusively that you have access to the current Validium state. Without such access, the L2 would be entirely dead, as no deposits or withdrawals can be made without it.
 
 Finally, what if the L2 loses its data? The Casper Association has a very strong incentive to prevent this, since the entire project would die permanently if this occurs. Therefore, we will build the L2 service in such a way as to include the necessary redundancy, as mentioned above.
 
