@@ -8,19 +8,19 @@ Useful reference links:
 Notes:
 - "Validity proofs" are ZKPs rolled up into one
 
-First steps:
-- Dig into casper node: What does a Casper transaction look like? Data limits?
-- Casper node environment: How to integrate ZK verifier?
-- Mermaid: Include a devShell with Mermaid, a command to generate SVGs from the
-  .mmd files, and make sure the SVGs are generated before calling typst
-  (Marijan)
-- Dig through the remaining issues
-- Write the rest of the spec, including many diagrams for the responsibilities
-  of each component, how they work internally and sequence diagrams
-- Risc0 PoC: Write a simple program to prove 10,000 times the same simple
-  program, each time with different inputs and one output being the input to the
-  next Tx. See how quickly it executes on a good machine. Include GPU
-  acceleration.
+Next actions:
+- Get the spec approved by Mark
+- Casper node deep-dive: What does a Casper transaction look like? Data limits?
+- Casper wallet deep-dive: How can we get L2 Txs (JSON blobs) signed with the
+  user's private key?
+- Risc0 deep-dive
+  * Benchmark running 10,000 small transactions, with GPU acceleration. Do we
+    need parallelization over multiple machines for the PoC?
+  * Benchmark the storage and computational needs of ZKR verification: Can this
+    run within a smart contract?
+- Mermaid & graphviz: Include in devShell, build `app` and include in the spec
+  generating `app` (Nick)
+- Finish the sequence diagrams
 
 
 

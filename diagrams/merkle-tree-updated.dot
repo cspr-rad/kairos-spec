@@ -1,0 +1,28 @@
+digraph { 
+  rankdir="BT";
+
+  // Merkle leaves
+  D1;
+  D2 [ label = "D2'" ];
+  D3;
+  D4;
+
+  // Merkle leaf hashes
+  H2 [ label = "H2'" ];
+  D1 -> H1;
+  D2 -> H2;
+  D3 -> H3;
+  D4 -> H4;
+
+  // Layer 2
+  A1 [ label = "A1'" ];
+  H1 -> A1;
+  H2 -> A1;
+  H3 -> A2;
+  H4 -> A2;
+
+  // Merkle root
+  R [ label = "R'" ];
+  A1 -> R;
+  A2 -> R;
+} 

@@ -184,13 +184,13 @@ Any ZK validium can be described as a combination of 6 components. For this proo
 - Consensus layer = Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
 - Contracts: Simple payments
 - ZK prover: Risc0 generates proofs from the L2 simple payment transactions
-- L2 nodes: A centralized, single L2 node, for simplicity reasons. This will connect all other components.
+- L2 nodes: A centralized, single L2 server, for simplicity reasons. This will connect all other components.
 - Data availability: The L2 server allows an interface to query public inputs and their associated proofs as well as the validium's current state
 - Rollup: Risc0 is used to combine proofs into one, compressed ZKR, posted on L1
 
 From a services perspective, the system consists of four components:
 - L1 smart contract: This allows users to deposit, withdraw and transfer tokens
-- L2 node: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state
+- L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state
 - Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
 - CLI: Do everything the Web UI offers, and query and verify the Validium proofs
 
@@ -204,25 +204,26 @@ In other words, when an endpoint call comes in, we
 - run the ZK circuit to verify the proof, using the endpoint call's parameters as the public inputs, e.g. "user X deposits Y tokens";
 - if the verification succeeds, the L1 transaction is accepted.
 
-== L2 node
+== L2 server
 
-The L2 node will be ran on three powerful machines running NixOS, as mentioned before. The server code will be written in Rust, to assure performance and simplify interactions with Casper's L1. The database will be postgres, duplicated over the three machines.
+The L2 server will be ran on three powerful machines running NixOS, as mentioned before. The server code will be written in Rust, to assure performance and simplify interactions with Casper's L1. The database will be postgres, duplicated over the three machines.
 
-// TODO: Do we want to make the argument to use Haskell here?
+// @Mark: Do we want to build the L2 server in Haskell or in Rust?
 // Pros:
 // - Easier to test
-// - Clients can be generated from the Servant API, ensuring correctness of UI/server interactions
+// - Clients can be generated from APIs such as Servant, ensuring correctness of server/client interactions
 // - Yesod framework can be used for Web UI
 // 
 // Cons:
 // - Some data types have to be reimplemented from Rust, since Casper's L1 is in Rust
 // - Rust is a bit faster
+// - There might be some data type sharing between the Risc0, smart contract and L2 server code
 
 == Web UI
 
-// TODO: determine the tooling.
-// Everything depends on what Casper's current wallet looks like. Can we integrate this easily into a simple website, which consists of nothing but HTML and CSS otherwise? Can we extend the Casper wallet to sign random JSON blobs, such that it can also serve our L2 purposes? If so, we could use something very simple for the website, like the Yesod framework.
-// Proposal: Yesod, if the L2 server is Haskell. Otherwise Elm.
+// @Mark: What tooling do we want to use for the Web UI?
+// Note: The integration with Casper's L1 wallet shouldn't be difficult. There is an SDK in Typescript, which compiles to Javascript, and hence the small number of interactions we require with the L1 wallet will be implementable in anything else that compiles to or uses Javascript, whether that be Elm, Yesod, Typescript, Purescript..
+// Proposal: If the L2 server is implemented in Haskell, we could use Yesod. Otherwise our preferred choice would be Elm.
 
 == CLI
 
@@ -239,9 +240,9 @@ We're attempting to create an L2 solution which can scale to 10'000 transaction/
 Decentralized L2s require many complex problems to be resolved. For example, everyone involved in the L2 must get paid, both the storers, provers etc. In addition, we must avoid any trust assumptions on individual players, making it difficult to provide reasonable storage options, and requires a complex solution, e.g. Starknet's Data Availability Committee. Each of these issues takes time to resolve, and doing all this within the proof of concept would likely lead to an infinite loop of design improvements and realizations of vulnerabilities.
 
 Therefore, a centralized L2 ran by the Casper Association is a very attractive initial solution. This poses the question, what are the dangers of centralized L2s?
-- Denial of service: The L2 node could block any user from using the system
+- Denial of service: The L2 server could block any user from using the system
 - Loss of trust in L2: The L2 server could blacklist someone, thereby locking in their funds. This opens up blackmail attacks and the like.
-- Loss of data: What if the L2 node loses the data? Then we can no longer confirm who owns what, and the L2 system dies a painful death.
+- Loss of data: What if the L2 server loses the data? Then we can no longer confirm who owns what, and the L2 system dies a painful death.
 
 Unfortunately there is nothing we can do about the L2 denying you service within a centralized L2 setting. If the L2 decides to blacklist your public key, you will not have access to its functionality. Of course we should keep in mind two key things here:
 + Withdrawing your current funds from the Validium should always be possible, even without permission from the L2.
@@ -255,7 +256,7 @@ Finally, what if the L2 loses its data? The Casper Association has a very strong
 
 We don't really provide any increased privacy compared to L1 within this proof of concept. The reason for this is that providing any extra privacy would raise AML-related concerns we wish to stay away from.
 
-=== The L2 node should get paid
+=== The L2 server should get paid
 
 Within our proof of concept, this issue is rather simple, given the L2 is centralized. In essence, all we need to do is make sure that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to keep the system appropriately maintained. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
 
@@ -275,8 +276,7 @@ Note that this solution does require that the same L2 transaction cannot be post
 
 After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given the L2 transaction posting uniqueness discussion above. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterward new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
 
-Note that this second phase requires some amount of computation and therefore some time to get accomplished. Meanwhile, if a deposit or withdraw transaction gets pushed to L1, much of the ZKR computation must start over, since the old Merkle root is different.
-// TODO: Figure out how to make sure as much as possible of the work can be redone, so that nobody can DDoS our L2 (i.e. prevent it from ever pushing to L1) by constantly depositing/withdrawing small amounts on L1.
+Note that this second phase requires some amount of computation and therefore some time to get accomplished. Meanwhile, if a deposit or withdraw transaction gets pushed to L1, the ZKR computation must start over, since the old Merkle root is different. The generation of the individual ZKPs, on the other hand, does not depend on the old Merkle root, only on their sender and receiver's Validium balances.
 
 === L2 transactions
 
@@ -305,14 +305,15 @@ Note that through the CLI, any user can decide to compute the ZKP necessary for 
 
 === Data redundancy
 
-How do we accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state without being able to reconstruct would lead to a loss of all Validium funds?
+We must accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state would lead to a loss of al Validium funds. Therefore, we decided to commence the project with three servers, one master and two slaves. The data sharing between the three servers will be handled using Postgres duplication, which is built into Postgres, very mature tooling. The master server will be assigned the master role to Postgres, with the slaves copying all incoming data. Postgres' duplication feature also solves the problem of syncing up servers after one of them went down.
 
-TODO:
-- How many servers do we need?
-- Some recovery system must be built, such that if the first server goes down, another server can take over
-- How to get the servers synced up again after one comes back from downtime?
+Naively, we might want to consider building a failsafe into the Validium smart contract in case the Validium's state gets lost. After all, such a situation would be disasterous. However, any failsafe which could be built, would create more risk and complexity than it would resolve. Therefore, we opt to focus on building data redundancy as mentioned above, including measures such having the three servers spread out geographically.
 
-// TODO: Do we want to build in a failsafe, in case the data does get lost? What would this look like, and how do we prevent the failsafe from being more dangerous than the thing it's preventing?
+// In deploying the storage, we must
+// - Deploy to three servers
+// - Make sure that if one server goes down, another one is picked as master and can take over temporarily
+// - If a server comes back up, it must get synced with the others automatically
+// - Keep the three servers geographically spread out, i.e. located in three different countries.
 
 === Load balance for ZK proving
 
@@ -382,29 +383,40 @@ Withdrawal transaction:
 
 === How do Merkle tree updates work? <merkle-tree-update>
 
-Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken over by the ZKR, in order to allow for parallelization at a later stage.
+Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken over by the ZKR. The main reason for this is that we want to avoid trasnfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
 
-Deposit & withdrawal transaction: Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
+#figure(
+  grid(
+    columns: 2,
+    image("merkle-tree.svg", width: 80%),
+    image("merkle-tree-updated.svg", width: 80%)
+  ),
+  caption: [
+    How to update a single leaf of a Merkle tree
+  ],
+) <merkle-tree-update-figure>
 
-// TODO: Draw this into a diagram (Marijan & Nick).
-//
-// #figure(
-//   image("merkle-tree-update.svg", width: 100%),
-//   caption: [
-//     How to update a single leaf of a Merkle tree
-//   ],
-// )
+Let's look at @merkle-tree-update-figure as an example of a single-leaf Merkle tree update. As we can see, the datum D2 is updated to D2'. As a result, H2, A1 and R each get updated. The deposit transaction itself will include by necessity D2, D2', R and R', in order to provide the smart contract with all the information necessary in order to execute the right processes. In addition, the smart contract must verify that changing D2 to D2' does indeed lead to the update of the Merkle tree from root R to root R'. Note now that in order to verify this claim, we don't require the entire Merkle tree. Rather, all we need are values H1 and A2 and the directionality (i.e. the fact that H1 is to the left of H2, whereas A2 is to the right of A1, in the Merkle tree). Given these parameters, we can now check that indeed for
+
+$ "H2" = "hash"("D2"), "A1" = "hash"("H1", "H2") $
+$ "H2'" = "hash"("D2'"), "A1'" = "hash"("H1", "H2'") $
+
+it is true that
+$ R = "hash"("A1", "A2"), "R'" = "hash"("A1'", "A2"). $
+
+For a general balanced Merkle tree with $N$ leaves, this requires $log^2(N)$ hashes, each with their directionality, to be passed along to the Validium smart contract, to allow the verification.
 
 === Where does the ZK verification happen?
 
 Within the casper-node, if the ZK verification code doesn't fit into a smart contract? If it does, then within the same smart contract, or a dedicated one?
-// @Marijan TODO: Figure out which options would be feasible.
+// TODO: Deep-dive into Risc0: What does verification require? How much data and computation?
+// - Can this be integrated into a smart contract?
+// - If so, should we use a separation ZK verification smart contract, or include it in the Validium start contract?
+// - If not, how can we integrate this with the Casper node?
 
 === Comparison of ZK provers
 
-We decided to build the PoC using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and the use of STARKs and SNARKs to quickly end up with small proofs.
-
-// TODO: Do we want to write out an argument here?
+We decided to build the PoC using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allows for GPU acceleration for the ZKR computation.
 
 == ZKR
 
@@ -418,9 +430,10 @@ Its public inputs include the old Merkle root and new Merkle root. The private i
 
 == Web UI: List interactions
 
+// TODO: Deep-dive into the Casper wallet. Can we sign arbitrary JSON blobs? If not, how could we use the user's private key to sign our L2 Txs?
+
 - Connect to Casper wallet
 - Sign L2 Tx: This requires an "L2 wallet" of some type
-  // TODO: Design the L2 wallet.
 - Query Validium balance
 - Query Casper L1 balance
 - Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
@@ -448,11 +461,14 @@ Its public inputs include the old Merkle root and new Merkle root. The private i
 
 == Property testing
 
+- We don't need Merkle tree rebalancing. If this fails, research and implement Merkle tree rebalancing, generate ZKPs for it and include this as an endpoint to the Validium smart contract.
+
 == Whatever else Syd can come up with
 
 = Notes
 
 - Once we go beyond the PoC, we want to consider allowing users to post ZKPs of L2 transactions as well, rather than only raw L2 transactions.
+- Merkle roots aren't unique. Therefore, we could imagine the Validium state getting back into a state it has been in before, thereby allowing old L2 transactions to be reused. How do we avoid this issue? One solution would be to add an extra leaf to the Merkle tree, and update this leaf with each ZKR, e.g. $"L'" = "hash"(L)$
 
 
 
