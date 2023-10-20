@@ -22,12 +22,21 @@
           kairos-spec = pkgs.stdenv.mkDerivation {
             name = "kairos-spec";
             src = ./src;
-            nativeBuildInputs = [
-              pkgs.typst
+            nativeBuildInputs = with pkgs; [
+              nodePackages.mermaid-cli
+              graphviz
+              typst
             ];
             buildCommand = ''
               mkdir -p $out
-              typst compile $src/spec.typ $out/spec.pdf
+              dot -Tsvg $src/diagrams/merkle-tree.dot > $out/merkle-tree.svg
+              dot -Tsvg $src/diagrams/merkle-tree-updated.dot > $out/merkle-tree-updated.svg
+              mmdc -i $src/diagrams/transfer_sequence_diagram.mmd -o $out/transfer_sequence.svg
+              mmdc -i $src/diagrams/deposit_sequence_diagram.mmd -o $out/deposit.svg
+              mmdc -i $src/diagrams/simple_transfer_diagram.mmd -o $out/simple_transfer.svg
+              mmdc -i $src/diagrams/components_diagram.mmd -o $out/components.svg
+              cp $src/spec.typ $out/spec.typ
+              typst compile $out/spec.typ $out/spec.pdf
             '';
           };
         in
@@ -45,6 +54,8 @@
             nativeBuildInputs = with pkgs; [
               typst
               typst-lsp
+              nodePackages.mermaid-cli
+              graphviz
             ];
           };
         };

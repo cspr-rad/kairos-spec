@@ -2,7 +2,7 @@
 
 A first draft of the spec can be found in [spec](./src/spec.typ).
 
-The sequence diagram that we created at the workshop in Zug can be found in the diagrams subdirectory [here](./diagrams/transfer_sequence_diagram.mmd). Additional sequence diagrams can be found [here](./diagrams).
+The sequence diagram that we created at the workshop in Zug can be found in the diagrams subdirectory [here](./src/diagrams/transfer_sequence_diagram.mmd). Additional sequence diagrams can be found [here](./src/diagrams).
 
 # Typst
 
