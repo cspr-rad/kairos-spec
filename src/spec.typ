@@ -31,11 +31,11 @@
 
 = Introduction
 
-The Casper Asscoiation has adopted the aim to establish ACTUS contracts on top of the Casper blockchain, unlocking the potential to improve transparency and insights into TradFi without giving up scalability and privacy. As an intermediate step towards building a Layer2 for ACTUS contracts, the goal of this project is to explore the L2-space through a smaller scope. The reason for building this proof of concept is to focus the engineering effort and move forward productively, both in learning about Casper's L1 and how to integrate with it, building an L2, and generating and verifying ZK rollups. Furthermore the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge proving into production but also allows the team to collaborate and grow together by developing a production-grade solution.
+The Casper Asscoiation has adopted the aim to establish ACTUS contracts on top of the Casper blockchain, unlocking the potential for transparency and insights into TradFi without giving up scalability and privacy. As an intermediate step towards building a Layer2 for ACTUS contracts, the goal of this project is to explore the L2-space through a smaller scope. The reason for building this proof of concept is to focus the engineering effort and move forward productively, both in learning about Casper's L1 and how to integrate with it, building an L2, and generating and verifying ZK rollups. Furthermore, the size and complexity of this project not only provides an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge into production but also allows the team to collaborate and grow together by developing a production-grade solution.
 
-The goal of the proof of concept is to build a zero knowledge validium which exclusively supports payment transfers on its L2. Here, validium refers to the fact that the L2 account balances are stored off-chain, i.e. on L2 rather than L1, enabling both a higher transaction throughput and reduced gas fees on Casper. This is a great first step in the direction of building an ACTUS ZK-based L2 on Casper. Note that this proof of concept also forms the first step towards very cheap, frictionless systems for NFT minting and transfers, to aid Casper in becoming _the_ blockchain to push the art industry forward.
+The goal of the proof of concept is to build a zero knowledge validium for payment transfers on its L2. Here, validium refers to the fact that the L2 data, such as account balances, are stored on L2 rather than L1, enabling both a higher transaction throughput and reduced gas fees on Casper. This is a great first step in the direction of building an ACTUS ZK-based L2 on Casper. Note that this proof of concept also forms the first step towards very cheap, frictionless systems for NFT minting and transfers, to aid Casper in becoming _the_ blockchain to push the digital art industry forward.
 
-The project itself contains very few basic interactions: Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the remainder of this document, we will detail the requirements on such a system and how we plan to implement and test it.
+The project itself contains very few basic interactions. Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the remainder of this document, we will detail the requirements on such a system and how we plan to implement and test it.
 
 In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we describe some UI/UX concerns in @uiux. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by the Low-Level Design in @low-level-design and testing concerns in @testing.
 
@@ -71,13 +71,13 @@ Each transfer must be verified by L1. In addition, at any given time anyone shou
 
 === Query storage
 
-Anyone can query the transaction history based on certain filters, such as a specific party being involved and time constraints.
+Anyone can query the transaction history based on certain filters, such as a specific party being involved and time constraints. This includes the public information associated with each transaction on both L1 and L2, as well as the associated ZKPs.
 
 == Usage
 
-The proof of concept can be used by any participants of the Casper network. It will allow any of them to transfer tokens and make payments with lower gas fees and significantly higher transaction throughput.
+The proof of concept can be used by any participants of the Casper network. It will allow any of them to transfer tokens with lower gas fees and significantly higher transaction throughput.
 
-There will be two groups of users: tech-savvy and less tech-savvy. In order to accommodate both groups, we will offer three user interfaces: A web interface (website) for the less tech-savvy customer, and a CLI client and L2 API for developers. Thereby, we can serve customers directly while laso allowing new projects to build on top of our platform. Finally, this allows us to ensure that even customers in low-resource environments can participate, by moving the resource-heavy away from the web UI.
+There will be two groups of users: tech-savvy and less tech-savvy. In order to accommodate both groups, we will offer three user interfaces: A web interface (website) for the less tech-savvy customer, and a CLI client and a L2 API for developers. Thereby, we can serve customers directly while also allowing new projects to build on top of our platform. Even customers in low-resource environments can participate, as we will move the resource-heavy away from the web UI, while allowing developers to generate ZKPs on the client-side by using our L2 API.
 
 Our L2 server itself will be a set of dedicated, powerful machines, including a powerful CPU and GPU, in order to provide GPU accelleration for ZK proving (see Risc0). The machines will run NixOS and require a solid internet connection. The CLI client will run on any Linux distribution, whereas the web client will support any modern web-browser with JavaScript enabled.
 
@@ -184,25 +184,15 @@ Any ZK validium can be described as a combination of 6 components. For this proo
 - Consensus layer = Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
 - Contracts: Simple payments
 - ZK prover: Risc0 generates proofs from the L2 simple payment transactions
-- L2 nodes: A centralized, single L2 server, for simplicity reasons. This will connect all other components.
-- Data availability: The L2 server allows an interface to query public inputs and their associated proofs as well as the validium's current state
-- Rollup: Risc0 is used to combine proofs into one, compressed ZKR, posted on L1
+- Rollup: Risc0 also combines proofs into a compressed ZKR, posted on L1
+- L2 nodes: A centralized L2 server connects all other components
+- Data availability: The L2 server offers an interface to query public inputs and their associated proofs as well as the validium's current state
 
 From a services perspective, the system consists of four components:
 - L1 smart contract: This allows users to deposit, withdraw and transfer tokens
-- L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state
+- L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state. This is also where the ZKPs and ZKRs are generated.
 - Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
 - CLI: Do everything the Web UI offers, and query and verify the Validium proofs
-
-== Smart contract
-
-The L1 smart contract will be implemented in WASM. Each update of the contract will be accompanied by a ZKP, in order to keep things uniform. The contract itself then has to verify two things:
-+ That the ZKP is correct, given the contract endpoint called
-+ That the ZKP's public inputs correspond to the inputs of the contract endpoint call
-In other words, when an endpoint call comes in, we
-- derive the ZK circuit to use for verification from which endpoint is called;
-- run the ZK circuit to verify the proof, using the endpoint call's parameters as the public inputs, e.g. "user X deposits Y tokens";
-- if the verification succeeds, the L1 transaction is accepted.
 
 == L2 server
 
@@ -219,6 +209,13 @@ The L2 server will be ran on three powerful machines running NixOS, as mentioned
 // - Rust is a bit faster
 // - There might be some data type sharing between the Risc0, smart contract and L2 server code
 
+== Smart contract
+
+The L1 smart contract will be implemented in WASM. Each update of the contract will be accompanied by metadata to confirm the update was made legitimately, such as a ZKP. When a contract endpoint is called, the contract
++ computes the proof's "public inputs", given the contract endpoint call;
++ verifies the update was done correctly, given the public inputs, contract endpoint and metadata, e.g. by running the ZK verifier;
++ if the verification succeeds, the L1 transaction is accepted.
+
 == Web UI
 
 // @Mark: What tooling do we want to use for the Web UI?
@@ -227,21 +224,19 @@ The L2 server will be ran on three powerful machines running NixOS, as mentioned
 
 == CLI
 
-The CLI will be built in Rust and packaged with Nix, supporting all Linux distributions. This allows us to use the client interface derived from the L2 server's API (written in Rust) in the CLI, simplifying the implementation.
+// The CLI will be built using the same programming language as the L2 server, and packaged with Nix, supporting all Linux distributions. This allows us to use the client interface derived from the L2 server's API in the CLI, simplifying the implementation.
 
 == Design decisions
 
 === Validium vs. rollup
 
-We're attempting to create an L2 solution which can scale to 10'000 transaction/s. However, these transactions need to be indpendent, since dependent transactions require the latter transaction to be aware of the state resulting from the first transaction, which you'll not be able to query quickly enough (given restrictions such as the time it takes to sign a transaction and send messages around given the speed of light). Therefore, in order to reach 10k transaction/s you need at least 20k people using the L2. Therefore, 20k people's L2 account balances need to be stored within the validium L1 smart contract. This means the data associated with this contract will supercede Casper L1's data limits, leading to the requirement for our L2 solution to be a Validium.
+We are attempting to build an L2 solution which can scale to 10'000 transaction per second. However, these transactions need to be indpendent, since dependent transactions require the latter transaction to be aware of the state resulting from the former, which cannot be queried in time to fit both transactions in the same second. This is because it takes time to sign transactions and send messages around given the speed of light. Therefore, in order to reach 10,000 transactions per second, we need at least 20,000 people to have account balances on the L2. All these account balances must be stored, yet this amount of data supercedes what fits into the Casper L1's smart contracts. Therefore, our L2 solution must be a Validium.
 
 === Centralized L2
 
-Decentralized L2s require many complex problems to be resolved. For example, everyone involved in the L2 must get paid, both the storers, provers etc. In addition, we must avoid any trust assumptions on individual players, making it difficult to provide reasonable storage options, and requires a complex solution, e.g. Starknet's Data Availability Committee. Each of these issues takes time to resolve, and doing all this within the proof of concept would likely lead to an infinite loop of design improvements and realizations of vulnerabilities.
-
-Therefore, a centralized L2 ran by the Casper Association is a very attractive initial solution. This poses the question, what are the dangers of centralized L2s?
+Decentralized L2s require many complex problems to be resolved. For example, everyone involved in the L2 must get paid, including the storers and provers. In addition, we must avoid any trust assumptions on individual players, making it difficult to provide reasonable storage options. Instead, this requires a complex solution such as Starknet's Data Availability Committee. Each of these issues takes time to resolve, and doing all this within the proof of concept is likely to prevent the project from ever launching into production. Therefore, a centralized L2 ran by the Casper Association is an attractive initial solution. This poses the question, what are the dangers of centralized L2s?
 - Denial of service: The L2 server could block any user from using the system
-- Loss of trust in L2: The L2 server could blacklist someone, thereby locking in their funds. This opens up blackmail attacks and the like.
+- Loss of trust in L2: The L2 server could blacklist someone, thereby locking in their funds. This opens up attacks based on blackmail.
 - Loss of data: What if the L2 server loses the data? Then we can no longer confirm who owns what, and the L2 system dies a painful death.
 
 Unfortunately there is nothing we can do about the L2 denying you service within a centralized L2 setting. If the L2 decides to blacklist your public key, you will not have access to its functionality. Of course we should keep in mind two key things here:
@@ -254,11 +249,11 @@ Finally, what if the L2 loses its data? The Casper Association has a very strong
 
 === Privacy provided by L2
 
-We don't really provide any increased privacy compared to L1 within this proof of concept. The reason for this is that providing any extra privacy would raise AML-related concerns we wish to stay away from.
+We decided not to provide any increased privacy compared to Casper's L1 within this proof of concept. The reason for this is that providing any extra privacy would raise AML-related concerns we wish to stay away from, as seen in the famous TornadoCash example.
 
 === The L2 server should get paid
 
-Within our proof of concept, this issue is rather simple, given the L2 is centralized. In essence, all we need to do is make sure that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to keep the system appropriately maintained. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
+Within our proof of concept this issue is rather simple, given the L2 is centralized. All we need to ensure is that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to appropriately maintain and extend the L2. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
 
 = Low-level design <low-level-design>
 
@@ -270,17 +265,17 @@ In this section, we will describe in detail how each component works individuall
 
 We have to make sure the same L2 transaction cannot be used twice. One option is to add the Merkle root of the Validium's state at the time the L2 transaction is submitted, to the ZKP's public inputs, and have the ZKR code verify this. The problem with this approach is that any deposit or withdrawal on L1 would then require all in-progress L2 transactions to be recreated and resigned. We could have the smart contract store two Merkle roots though, the current one and the last one posted by L2 (i.e. the second one doesn't change based on deposits and withdrawals). That way, no L2 transactions must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
 
-Note that this solution does require that the same L2 transaction cannot be posted twice within the same rollup. However, this is easy to avoid by requiring all L2 transactions rolled up into the same ZKR (for posting to L1) to be independent, i.e. to not clash in senders and receivers with any other L2 transactions. We want to set this requirement anyway in order to stimulate parallelization opportunities within the ZKP/ZKR generation.
+Note that this solution does require that the same L2 transaction cannot be posted twice within the same rollup. However, this is easy to avoid by requiring all L2 transactions rolled up into the same ZKR (for posting to L1) to be independent, i.e. to not clash in senders and receivers with any other L2 transactions. We want to set this requirement anyway for parallelization purposes, both in constructing L2 transactions and ZKP/ZKR generation.
 
 === Two phases of the server <phases>
 
-After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given the L2 transaction posting uniqueness discussion above. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterward new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
+After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given that L2 transactions depend on the Validium state at the time of posting. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterward new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
 
-Note that this second phase requires some amount of computation and therefore some time to get accomplished. Meanwhile, if a deposit or withdraw transaction gets pushed to L1, the ZKR computation must start over, since the old Merkle root is different. The generation of the individual ZKPs, on the other hand, does not depend on the old Merkle root, only on their sender and receiver's Validium balances.
+Note that this second phase requires some computation and therefore some time. Meanwhile, if a deposit or withdraw transaction is pushed to L1, the ZKR computation must start over, since the old Merkle root is different. The generation of the individual ZKPs, on the other hand, does not depend on the old Merkle root, only on their sender and receiver's Validium balances.
 
 === L2 transactions
 
-The contents of an L2 transaction are:
+The content of an L2 transaction is:
 - Sender's address
 - Receiver's address
 - Token ID, i.e. currency
@@ -305,9 +300,9 @@ Note that through the CLI, any user can decide to compute the ZKP necessary for 
 
 === Data redundancy
 
-We must accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state would lead to a loss of al Validium funds. Therefore, we decided to commence the project with three servers, one master and two slaves. The data sharing between the three servers will be handled using Postgres duplication, which is built into Postgres, very mature tooling. The master server will be assigned the master role to Postgres, with the slaves copying all incoming data. Postgres' duplication feature also solves the problem of syncing up servers after one of them went down.
+We must accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state would lead to a loss of all Validium funds. Therefore, we decided to commence the project with three servers, one master and two slaves. The data sharing between the three servers will be handled using Postgres duplication, which is built into Postgres, very mature tooling. The master server will be assigned the master role to Postgres, with the slaves copying all incoming data. Postgres' duplication feature also solves the problem of syncing up servers after one of them went down.
 
-Naively, we might want to consider building a failsafe into the Validium smart contract in case the Validium's state gets lost. After all, such a situation would be disasterous. However, any failsafe which could be built, would create more risk and complexity than it would resolve. Therefore, we opt to focus on building data redundancy as mentioned above, including measures such having the three servers spread out geographically.
+Naively, we might want to consider building a failsafe into the Validium smart contract in case the Validium's state gets lost. After all, such a situation would be disasterous. However, building a failsafe would itself create risk and complexity. Therefore, we opt to focus on building data redundancy as mentioned above, including measures such having the three servers spread out geographically.
 
 // In deploying the storage, we must
 // - Deploy to three servers
@@ -325,13 +320,13 @@ Note that we can limit the number of transactions we accept during a single loop
 
 - Check if the transaction is posted within the server's phase 1, see @phases. If not, return a clear error to the API caller.
 - Create a TxID and return this to the API caller
-- Post the transaction and TxID to the dB
+- Write the transaction and TxID to the database
 - Verify the transaction. If this fails, put the transaction status to Cancelled.
   - Signature
   - TokenID and amount are legitimate, given the current Validium's state
   - The transaction is independent of the current queue of transactions, i.e. the sender and recipient aren't included yet
-- Generate a ZKP
-- Once the server reaches phase 2, generate the ZKR and post it to the L1 smart contract
+- Generate a ZKP and write it to the database
+- During the server's phase 2, generate the ZKR and post it to the L1 smart contract
 - Put the status of all transactions included in this ZKR to Success once the L1 transaction is accepted
 
 Notes:
@@ -341,18 +336,20 @@ Notes:
 == Smart contract
 
 The smart contract stores the following data:
-- Current Merkle root, representing the Validium's state
-- The last Merkle root posted by the L2 (i.e. deposits). This is needed for the L2 rollup to work.
-- Its own account balance, which amounts to the total sum of all the Validium account balances
+- Current Merkle root, representing the Validium's state;
+- The last Merkle root posted by the L2;
+- Its own account balance, which amounts to the total sum of all the Validium account balances.
 
-The smart contract offers the following API and verifications:
-- POST deposit: sender's public key, token ID, token amount, new Merkle root, ZKP verifying the Merkle root, sender's signature
-  - Verify that this amount of tokens can be sent, and take it out of the sender's 1 account
-  - Verify the ZKP given public inputs
+The smart contract offers the following API, with each endpoint verifying and acting as described:
+- POST deposit: sender's public key, token ID, token amount, new Merkle root, metadata verifying the Merkle root, sender's signature
+  - Verify that this amount of tokens can be sent, and move it from the sender's L1 account to the Validium smart contract
+  - Verify the sender's signature
+  - Verify the new Merkle root given public inputs and metadata
   - Update the smart contract's state
-- POST withdrawal: Receiver's public key, token ID, token amount, new Merkle root, ZKP verifying the merkle root
-  - Move the appropriate amount of tokens to the receiver's L1 account
-  - Verify the ZKP given public inputs
+- POST withdrawal: Receiver's public key, token ID, token amount, new Merkle root, metadata verifying the merkle root, receiver's signature
+  - Move the appropriate amount of tokens from the Validium smart contract to the receiver's L1 account
+  - Verify the receiver's signature
+  - Verify the new Merkle root given public inputs and metadata
   - Update the smart contract's state
 - POST ZKV: ZKV, new Merkle root
   - Verify ZKV
@@ -364,26 +361,14 @@ Initiating the L1 smart contract requires putting money onto the Validium. The b
 
 == ZKP
 
-=== What exactly do the ZKPs look like?
-
-Transfer transaction:
-- Public inputs: Unsigned L2 transaction
-- Private inputs: L2 transaction signature
+The zero knowledge proofs for transfer transaction consist of the following:
+- Public input: Unsigned L2 transaction
+- Private input: L2 transaction signature
 - Verify: Signature
-
-Deposit transaction:
-- Public inputs: Old Merkle root, new Merkle root, sender, token ID, token amount
-- Private inputs: Info on the old Merkle tree in order to verify
-- Verify: Merkle root update. Note that the signature must be checked by L1.
-
-Withdrawal transaction:
-- Public inputs: Old Merkle root, new Merkle root, receiver, token ID, token amount
-- Private inputs: Info on the old Merkle tree in order to verify, signature
-- Verify: Merkle root update & signature
 
 === How do Merkle tree updates work? <merkle-tree-update>
 
-Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken over by the ZKR. The main reason for this is that we want to avoid trasnfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
+Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken on by the ZKR. The main reason for this is that we want to avoid transfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
 
 #figure(
   grid(
@@ -396,7 +381,7 @@ Transfer transactions don't have a Merkle tree update themselves. Rather, this d
   ],
 ) <merkle-tree-update-figure>
 
-Let's look at @merkle-tree-update-figure as an example of a single-leaf Merkle tree update. As we can see, the datum D2 is updated to D2'. As a result, H2, A1 and R each get updated. The deposit transaction itself will include by necessity D2, D2', R and R', in order to provide the smart contract with all the information necessary in order to execute the right processes. In addition, the smart contract must verify that changing D2 to D2' does indeed lead to the update of the Merkle tree from root R to root R'. Note now that in order to verify this claim, we don't require the entire Merkle tree. Rather, all we need are values H1 and A2 and the directionality (i.e. the fact that H1 is to the left of H2, whereas A2 is to the right of A1, in the Merkle tree). Given these parameters, we can now check that indeed for
+Let us look at @merkle-tree-update-figure as an example of a single-leaf Merkle tree update. As we can see, the datum D2 is updated to D2'. As a result, H2, A1 and R each get updated. The deposit transaction itself will include by necessity D2, D2', R and R', in order to provide the smart contract with all the information necessary in order to execute the right processes. In addition, the smart contract must verify that changing D2 to D2' does indeed lead to the update of the Merkle tree from root R to root R'. Note now that in order to verify this claim, we don't require the entire Merkle tree. Rather, all we need are values H1 and A2 and the directionality (i.e. the fact that H1 is to the left of H2, whereas A2 is to the right of A1, in the Merkle tree). Given these parameters, we can now check that indeed for
 
 $ "H2" = "hash"("D2"), "A1" = "hash"("H1", "H2") $
 $ "H2'" = "hash"("D2'"), "A1'" = "hash"("H1", "H2'") $
@@ -405,6 +390,8 @@ it is true that
 $ R = "hash"("A1", "A2"), "R'" = "hash"("A1'", "A2"). $
 
 For a general balanced Merkle tree with $N$ leaves, this requires $log^2(N)$ hashes, each with their directionality, to be passed along to the Validium smart contract, to allow the verification.
+
+Note: This should be implemented and tested as well for cases where a leaf must be added/removed, rather than updated.
 
 === Where does the ZK verification happen?
 
@@ -416,7 +403,7 @@ Within the casper-node, if the ZK verification code doesn't fit into a smart con
 
 === Comparison of ZK provers
 
-We decided to build the PoC using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allows for GPU acceleration for the ZKR computation.
+We decided to build the PoC using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the ZKR computation.
 
 == ZKR
 
@@ -426,7 +413,7 @@ The ZK rollup verifies the following:
 - All L2 transactions include as a public input the last Merkle root posted on L1 by L2. This Merkle root itself is taken as a public input to the ZKR.
 - The old Merkle root is correctly transformed into the new Merkle root through applying all the L2 transactions
 
-Its public inputs include the old Merkle root and new Merkle root. The private inputs are the list of L2 transactions and their ZKPs, as well as the full old Merkle tree.
+Its public inputs are the old and new Merkle root. The private inputs are the list of L2 transactions and their ZKPs, as well as the full old Merkle tree.
 
 == Web UI: List interactions
 
@@ -441,11 +428,7 @@ Its public inputs include the old Merkle root and new Merkle root. The private i
 
 == CLI: List interactions
 
-- Connect to Casper wallet
-- Query Validium balance
-- Query Casper L1 balance
-- Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
-- Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
+- All Web UI interactions
 - Query last N ZKPs posted to L1
 - Verify a ZKP
 
@@ -461,13 +444,13 @@ Its public inputs include the old Merkle root and new Merkle root. The private i
 
 == Property testing
 
-- We don't need Merkle tree rebalancing. If this fails, research and implement Merkle tree rebalancing, generate ZKPs for it and include this as an endpoint to the Validium smart contract.
+- Test our assumption that we don't need Merkle tree rebalancing. If this fails, research and implement Merkle tree rebalancing, generate ZKPs for it and include this as an endpoint to the Validium smart contract.
 
 == Whatever else Syd can come up with
 
 = Notes
 
-- Once we go beyond the PoC, we want to consider allowing users to post ZKPs of L2 transactions as well, rather than only raw L2 transactions.
+- Post-PoC, we want to allow users to post ZKPs of L2 transactions as well, rather than only raw L2 transactions.
 - Merkle roots aren't unique. Therefore, we could imagine the Validium state getting back into a state it has been in before, thereby allowing old L2 transactions to be reused. How do we avoid this issue? One solution would be to add an extra leaf to the Merkle tree, and update this leaf with each ZKR, e.g. $"L'" = "hash"(L)$
 
 
