@@ -37,13 +37,13 @@ The goal of the proof of concept is to build a zero knowledge validium which exc
 
 The project itself contains very few basic interactions: Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the remainder of this document, we will detail the requirements on such a system and how we plan to implement and test it.
 
-In @criteria (Criteria) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we describe some UI/UX concerns in @uiux. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by the Low-Level Design in @low-level-design and testing concerns in @testing.
+In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we describe some UI/UX concerns in @uiux. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by the Low-Level Design in @low-level-design and testing concerns in @testing.
 
-= Criteria <criteria>
+= Product Overview<overview>
 
-To have a common denominator on the scope of the proof of concept, this section describes the high-level mandatory-, optional-, and delimination criteria it has to fulfill.
+To have a common denominator on the scope of the proof of concept, this section describes the high-level mandatory-, optional-, and delimination features it has to fulfill.
 
-== Mandatory Criteria
+== Mandatory Features
 
 === Deposit money into L2 system
 
@@ -67,7 +67,7 @@ Due to the nature of validiums, transaction data will be stored off-chain. To en
 
 Each transfer must be verified by L1. In addition, at any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through a web UI, the CLI, or application programming interface (API), i.e. a machine-readable way.
 
-== Optional Criteria: Post-PoC features
+== Optional Features: Post-PoC features
 
 === Query storage
 
@@ -83,7 +83,7 @@ Our L2 server itself will be a set of dedicated, powerful machines, including a 
 
 = Requirements <requirements>
 
-Based on the criteria defined in the previous section, this section aims to describe testable, functional requirements the validium needs to fulfill.
+Based on the product overview given in the previous section, this section aims to describe testable, functional requirements the validium needs to fulfill.
 
 == Functional requirements
 
