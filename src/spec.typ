@@ -188,7 +188,7 @@ Mockups we want:
 = High-level design <high-level-design>
 
 Any ZK validium can be described as a combination of 6 components. For this proof of concept, we made the following choices:
-- Consensus layer = Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
+- Consensus layer: Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
 - Contracts: Simple payments
 - ZK prover: Risc0 generates proofs from the L2 simple payment transactions
 - Rollup: Risc0 also combines proofs into a compressed ZKR, posted on L1
@@ -203,11 +203,11 @@ From a services perspective, the system consists of four components:
 
 == L2 server
 
-The L2 server will be ran on three powerful machines running NixOS, as mentioned before. The server code will be written in Rust, to assure performance and simplify interactions with Casper's L1. The database will be postgres, duplicated over the three machines.
+The L2 server will be ran on three powerful machines running NixOS, as mentioned before. The server code will be written in Rust, to assure performance and simplify interactions with Casper's L1. The database will be postgres, replicated over the three machines.
 
 // @Mark: Do we want to build the L2 server in Haskell or in Rust?
 // Pros:
-// - Easier to test
+// - Easier to test, and better test tooling
 // - Clients can be generated from APIs such as Servant, ensuring correctness of server/client interactions
 // - Yesod framework can be used for Web UI
 // 
@@ -235,9 +235,9 @@ The L1 smart contract will be implemented in WASM. Each update of the contract w
 
 == Design decisions
 
-=== Validium vs. rollup
+=== Validium vs. Rollup
 
-We are attempting to build an L2 solution which can scale to 10'000 transaction per second. However, these transactions need to be indpendent, since dependent transactions require the latter transaction to be aware of the state resulting from the former, which cannot be queried in time to fit both transactions in the same second. This is because it takes time to sign transactions and send messages around given the speed of light. Therefore, in order to reach 10,000 transactions per second, we need at least 20,000 people to have account balances on the L2. All these account balances must be stored, yet this amount of data supercedes what fits into the Casper L1's smart contracts. Therefore, our L2 solution must be a Validium.
+We're attempting to create an L2 solution which can scale to 10'000 transaction/s. However, these transactions need to be independent, since dependent transactions require the latter transaction to be aware of the state resulting from the first transaction, which you'll not be able to query quickly enough (given restrictions such as the time it takes to sign a transaction and send messages around given the speed of light). Therefore, in order to reach 10k transaction/s you need at least 20k people using the L2. Therefore, 20k people's L2 account balances need to be stored within the validium L1 smart contract. This means the data associated with this contract will supercede Casper L1's data limits, leading to the requirement for our L2 solution to be a Validium.
 
 === Centralized L2
 
@@ -272,11 +272,9 @@ In this section, we will describe in detail how each component works individuall
 
 We have to make sure the same L2 transaction cannot be used twice. One option is to add the Merkle root of the Validium's state at the time the L2 transaction is submitted, to the ZKP's public inputs, and have the ZKR code verify this. The problem with this approach is that any deposit or withdrawal on L1 would then require all in-progress L2 transactions to be recreated and resigned. We could have the smart contract store two Merkle roots though, the current one and the last one posted by L2 (i.e. the second one doesn't change based on deposits and withdrawals). That way, no L2 transactions must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
 
-Note that this solution does require that the same L2 transaction cannot be posted twice within the same rollup. However, this is easy to avoid by requiring all L2 transactions rolled up into the same ZKR (for posting to L1) to be independent, i.e. to not clash in senders and receivers with any other L2 transactions. We want to set this requirement anyway for parallelization purposes, both in constructing L2 transactions and ZKP/ZKR generation.
-
 === Two phases of the server <phases>
 
-After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given that L2 transactions depend on the Validium state at the time of posting. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterward new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
+After collecting L2 transactions, the L2 server must be allowed time to create a ZKR and post it to L1. During this "phase 2", no new L2 transactions can be accepted into the queue, given the L2 transaction posting uniqueness discussion above. Therefore, the L2 server will accept transactions for ten seconds, then refuse them for ten seconds so it has time to create a ZKR and post it to L1. Afterwards new L2 transactions are accepted again. If an L2 transaction is posted during phase 2, a clear error message is returned to the API caller. Our web UI and CLI will be built to appropriately deal with this error, waiting for a few seconds before a retry.
 
 Note that this second phase requires some computation and therefore some time. Meanwhile, if a deposit or withdraw transaction is pushed to L1, the ZKR computation must start over, since the old Merkle root is different. The generation of the individual ZKPs, on the other hand, does not depend on the old Merkle root, only on their sender and receiver's Validium balances.
 
@@ -301,13 +299,13 @@ The casper-node allows for creating a web hook. Therefore, by running a casper-n
 - POST /transfer takes in an L2 transaction in JSON format, and returns a TxID
 - GET /transfer/:TxID shows the status of a given transaction: Cancelled, ZKP in progress, ZKR in progress, or "posted in L1 block with blockhash X"
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
-- GET /withdrawal takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
+- GET /withdraw takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
 
 Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree.
 
 === Data redundancy
 
-We must accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state would lead to a loss of all Validium funds. Therefore, we decided to commence the project with three servers, one master and two slaves. The data sharing between the three servers will be handled using Postgres duplication, which is built into Postgres, very mature tooling. The master server will be assigned the master role to Postgres, with the slaves copying all incoming data. Postgres' duplication feature also solves the problem of syncing up servers after one of them went down.
+We must accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state would lead to a loss of all Validium funds. Therefore, we decided to commence the project with three servers, one master and two slaves. The data sharing between the three servers will be handled using Postgres replication, which is built into Postgres, very mature tooling. The master server will be assigned the master role to Postgres, with the slaves copying all incoming data. Postgres' duplication feature also solves the problem of syncing up servers after one of them went down.
 
 Naively, we might want to consider building a failsafe into the Validium smart contract in case the Validium's state gets lost. After all, such a situation would be disasterous. However, building a failsafe would itself create risk and complexity. Therefore, we opt to focus on building data redundancy as mentioned above, including measures such having the three servers spread out geographically.
 
@@ -319,7 +317,7 @@ Naively, we might want to consider building a failsafe into the Validium smart c
 
 === Load balance for ZK proving
 
-Within the PoC, the ZKPs themselves will be sufficiently quick to generate that there is litlte opportunity for speedup through parallelization. When exploring the ZKR, we should look into parallelization opportunities.
+Within the PoC, the ZKPs themselves will be sufficiently quick to generate that there is little opportunity for speedup through parallelization. When exploring the ZKR, we should look into parallelization opportunities.
 
 Note that we can limit the number of transactions we accept during a single loop of the system in order to provide a feasible PoC. After going into production, we can optimize the server(s)' performance to keep up with demand.
 
