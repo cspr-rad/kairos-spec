@@ -104,8 +104,8 @@ Based on the product overview given in the previous section, this section aims t
 - [tag:FRW01] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
 - [tag:FRW02] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens > users validium account balance` should not be possible
 - [tag:FRW03] Withdrawing a valid amount from the users validium account should be possible without the intermediary operator of the validium
-- [tag:FRW03] Withdrawing a valid amount from the users validium account should only succeed if the user has signed the withdraw transaction
-- [tag:FRW03] Withdrawing a valid amount from another users validium account should not be possible
+- [tag:FRW04] Withdrawing a valid amount from the users validium account should only succeed if the user has signed the withdraw transaction
+- [tag:FRW05] Withdrawing a valid amount from another users validium account should not be possible
 
 === Transfer money within the L2 system
 
@@ -113,7 +113,7 @@ Based on the product overview given in the previous section, this section aims t
 - [tag:FRT01] Transfering an amount of `CSPR tokens`, where `CSPR tokens =< 0` should not be executed at all
 - [tag:FRT02] Transfering an amount of `CSPR tokens`, where `CSPR tokens > users validium account` balance should not be possible
 - [tag:FRT03] Transfering a valid amount to another user that does not have a registered validium account yet should be possible.
-- [tag:FRT03] Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
+- [tag:FRT04] Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
 
 === Query account balances
 
@@ -135,15 +135,22 @@ Based on the product overview given in the previous section, this section aims t
 === Post-PoC: Query all transfers given filters
 
 - [tag:FRA02] The user should be able to see all the past transactions involving its validium account
-
-Filters could be that one party is involved (i.e. "give me all data related to this institution") or time-bounded.
+- [tag:FRA03] Transactions should be filterable by time
+- [tag:FRA04] Transactions should be filterable by sender
+- [tag:FRA05] Transactions should be filterable by recipient
+- [tag:FRA06] Transactions should be filterable by amount
+- [tag:FRA07] Transactions should be filterable by any combination of the previously mentioned criterias
 
 == Non-functional requirements
 
-These are qualitative requirements, such as "it should be fast". Can be fulfilled with e.g. benchmarks.
+These are qualitative requirements, such as "it should be fast" and could e.g. be benchmarked.
 
-- [tag:NRB01] The application should not leak any private or sensitive informations like private keys
+- [tag:NRB00] The application should not leak any private nor sensitive informations like private keys
 - [tag:NRB01] The backend API needs to be designed in a way such that it's easy to swap out a web-UI implementation
+- [tag:NRB02] The web-UI should load fast
+- [tag:NRB03] The web-UI should respond on user interactions fast
+- [tag:NRB04] The web-UI should be designed in a user friendly way
+- [tag:NRB05] The web-UI should achieve a very high score running Google lighthouse against it
 
 = UI/UX <uiux>
 
