@@ -114,6 +114,7 @@ Based on the product overview given in the previous section, this section aims t
 - [tag:FRT02] Transfering an amount of `CSPR tokens`, where `CSPR tokens > users validium account` balance should not be possible
 - [tag:FRT03] Transfering a valid amount to another user that does not have a registered validium account yet should be possible.
 - [tag:FRT04] Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
+- [tag:FRT05] When a transfer request is submitted, this request cannot be used to make the transfer happen twice
 
 === Query account balances
 
@@ -268,9 +269,29 @@ In this section, we will describe in detail how each component works individuall
 
 == L2 server
 
+=== Sequential throughput
+
+In this section, we want to make a quick note about a fundamental restriction of L2 scaling solutions. Imagine you and I both want to submit a swap on a DEX, and you come in first. My transaction thus dependents on the state that results from your swap. There are now two options:
++ I am aware of your output state. In this case, you have created, signed and submitted your transaction to the L2 server. I then pull your output state from the L2 server, construct, sign and submit my transaction. Given limitations such as how long it takes to sign a transaction and to send data back and forth to the server, this setup leads to a maximal sequential throughput #footnote[Sequential throughput is defined by the number of transactions which can be posted to the L2 where each transaction depends on the output of the former.] of around 1 Tx/s.
++ I am not aware of your output state. In this case, I have to construct a L2 transaction and sign it without being fully aware of its effects yet. In the example of the DEX swaps, I will sign a transaction which does not fully determine how many tokens I will receive back from the DEX, thereby allowing for sandwich attacks and the like. Finally, not mentioning the full state a given L2 transaction depends on in this transaction, leads to the problem of L2 transaction uniqueness: How can you assure that the DEX swap you just signed, won't be executed twice by the L2 server?
+
+Our solution is to keep all L2 transactions rolled up into the same L1 transaction independent of one another, to avoid such complications. In making this decision, we restrict the sequential throughput of your system.
+
 === Ensuring L2 transaction uniqueness
 
-We have to make sure the same L2 transaction cannot be used twice. One option is to add the Merkle root of the Validium's state at the time the L2 transaction is submitted, to the ZKP's public inputs, and have the ZKR code verify this. The problem with this approach is that any deposit or withdrawal on L1 would then require all in-progress L2 transactions to be recreated and resigned. We could have the smart contract store two Merkle roots though, the current one and the last one posted by L2 (i.e. the second one doesn't change based on deposits and withdrawals). That way, no L2 transactions must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
+The solution here seems to be two-fold:
++ Accept that even though a L2 can significantly increase parallelized transaction throughput, it cannot do the same for sequential transaction throughput.
++ Make each L2 transaction aware of and dependent on the part of the state its execution depends on.
+
+So what part of the L2 state do we want to add to each L2 transaction in order to avoid things such as sandwich attacks, while also ensuring L2 transaction uniqueness?
+
+One option is to add the Merkle root of the Validium's state at the time the L2 transaction is submitted, to the ZKP's public inputs. The ZKR and Validium smart contract can verify this claim. The problem with this approach is that any deposit or withdrawal on L1 would require all in-progress L2 transactions to be recreated and resigned.
+
+A better solution would be for the smart contract to store two Merkle roots, the current one and the last one posted by L2. In such a scenario, the second Merkle root isn't changed by deposits and withdrawals. That way, no L2 transactions must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
+
+We now have the guarantee that a given L2 transaction, once submitted, can only be used in association with a given Merkle root posted by L2 to L1. There are two more caveats.
+- We must require that the same L2 transaction cannot be posted twice within the same rollup. However, this is easy to avoid since we already require all L2 transactions rolled up into the same ZKR to be independent, i.e. to not clash in senders and receivers with any other L2 transactions.
+- We must require that the L2 will never revert back to the same root it had before. TODO
 
 === Two phases of the server <phases>
 

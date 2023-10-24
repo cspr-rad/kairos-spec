@@ -28,7 +28,6 @@
               typst
             ];
             buildCommand = ''
-              set -x
               mkdir -p $out
               dot -Tsvg $src/diagrams/merkle-tree.dot > $out/merkle-tree.svg
               dot -Tsvg $src/diagrams/merkle-tree-updated.dot > $out/merkle-tree-updated.svg
