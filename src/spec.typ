@@ -61,7 +61,7 @@ A user should be able to transfer CSPR tokens from their validium account to ano
 
 Anyone should be able to query the validium account balances of available CSPR tokens at any given time through a web UI or CLI. In particular, users can also query their personal account balance.
 
-Due to the nature of validiums, transaction data will be stored off-chain. To ensure interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly through an API. To reduce the complexity of the project, the data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/machines. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid loss of data.
+Due to the nature of validiums, transaction data will be stored off-chain. To ensure interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly through an API. To reduce the complexity of the project, the data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/machines. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid data loss.
 
 === Verification
 
@@ -317,7 +317,13 @@ Note that through the CLI, any user can decide to compute the ZKP necessary for 
 
 === Data redundancy
 
-We must accomplish an appropriate amount of redundance in the data storage, given that losing the Validium state would lead to a loss of all Validium funds. Therefore, we decided to commence the project with three servers, one master and two slaves. The data sharing between the three servers will be handled using Postgres replication, which is built into Postgres, very mature tooling. The master server will be assigned the master role to Postgres, with the slaves copying all incoming data. Postgres' duplication feature also solves the problem of syncing up servers after one of them went down.
+Because losing the Validium state would lead to a loss of all the funds held by the Validium, there needs to be an appropriate amount of redundancy of the stored data. To meet this requirement, we decided rely on PostgreSQL's streaming replication feature (physical replication). The streaming replication feature comes with two crucial benefits we can make use of:
+- Fail-over: Meaning that when the primary server fails, one of the replicating standby servers can take over the role of the primary
+- Read-only load balancing: Read-only queries can be distributed among several servers
+
+By configuring the streaming replication to be synchronous, we can additionally achieve reliable freshness of the data across all servers. Moreover, it makes the cluster more resilient if the primary server fails after updating. In an asynchronous setting, data could be written to the primary server, which could afterwards fail before sending the update to the standby server, leading to loss of data. In a synchronous setting, the update to the primary server would fail and require a retry until the update gets replicated across all instances.
+
+The number of standby servers can be arbitrarily increased or decreased. For the PoC we decided to start with one primary server and two replicating standby servers.
 
 Naively, we might want to consider building a failsafe into the Validium smart contract in case the Validium's state gets lost. After all, such a situation would be disasterous. However, building a failsafe would itself create risk and complexity. Therefore, we opt to focus on building data redundancy as mentioned above, including measures such having the three servers spread out geographically.
 
