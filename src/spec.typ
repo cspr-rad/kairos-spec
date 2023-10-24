@@ -173,13 +173,6 @@ Mockups we want:
 )
 
 #figure(
-  image("simple_transfer.svg", width: 100%),
-  caption: [
-    Singular transfer sequence diagram
-  ],
-)
-
-#figure(
   image("transfer_sequence.svg", width: 100%),
   caption: [
     Sequence diagram for a set of transfers
@@ -279,19 +272,17 @@ Our solution is to keep all L2 transactions rolled up into the same L1 transacti
 
 === Ensuring L2 transaction uniqueness
 
-The solution here seems to be two-fold:
-+ Accept that even though a L2 can significantly increase parallelized transaction throughput, it cannot do the same for sequential transaction throughput.
-+ Make each L2 transaction aware of and dependent on the part of the state its execution depends on.
+There are many ways to accomplish this.
 
-So what part of the L2 state do we want to add to each L2 transaction in order to avoid things such as sandwich attacks, while also ensuring L2 transaction uniqueness?
+Option 1. Include a timestamp in the L2 Tx and among the ZKP's inputs, such that only L2 Txs which were created and signed within the last ten seconds can be posted on L1
 
-One option is to add the Merkle root of the Validium's state at the time the L2 transaction is submitted, to the ZKP's public inputs. The ZKR and Validium smart contract can verify this claim. The problem with this approach is that any deposit or withdrawal on L1 would require all in-progress L2 transactions to be recreated and resigned.
+Option 2. Include the state of the system before the L2 transaction is submitted, into the transaction body. Note that, as discussed above, this cannot be done in a way where this state would be updated by each L2 Tx, since that would reduce the transaction throughput to around 1 Tx/s. A good option seems to be to add the Merkle root of the Validium state to each L2 Tx, and check both in the ZKR and Validium smart contract that the state's Merkle root corresponds with the L2 Txs' claim.
 
-A better solution would be for the smart contract to store two Merkle roots, the current one and the last one posted by L2. In such a scenario, the second Merkle root isn't changed by deposits and withdrawals. That way, no L2 transactions must be resigned upon deposit or withdrawal, while we also guarantee uniqueness.
+However, one problem with option 2 shows up whenever an L1 deposit or withdrawal is posted. This would change the Merkle root, thereby requiring all L2 transactions in progress to be recreated and resigned. A better solution would be for the smart contract to store two Merkle roots, the current one as well as the last one posted by L2. In such a scenario, the second Merkle root isn't changed by deposits and withdrawals, and can be used to check whether the L2 transactions are indeed not being reused.
 
-We now have the guarantee that a given L2 transaction, once submitted, can only be used in association with a given Merkle root posted by L2 to L1. There are two more caveats.
-- We must require that the same L2 transaction cannot be posted twice within the same rollup. However, this is easy to avoid since we already require all L2 transactions rolled up into the same ZKR to be independent, i.e. to not clash in senders and receivers with any other L2 transactions.
-- We must require that the L2 will never revert back to the same root it had before. TODO
+In order for this solution to work, we have to guarantee two more things: That the L2 transactions within one ZKR are unique, and that the Merkle root is unique. The former follows from the requirement that all L2 transactions in one ZKR must be independent, i.e. have different senders and receivers. The latter, however, is an impossible requirement to prove, though it does seem unlikely to happen in practice.
+
+// TODO
 
 === Two phases of the server <phases>
 
@@ -322,7 +313,7 @@ The casper-node allows for creating a web hook. Therefore, by running a casper-n
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
 - GET /withdraw takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
 
-Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree.
+Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree. However, this does require the L2 server to accept ZKPs directly, rather than only L2 transactions, which is a post-PoC feature.
 
 === Data redundancy
 
@@ -478,6 +469,7 @@ Its public inputs are the old and new Merkle root. The private inputs are the li
 
 - Post-PoC, we want to allow users to post ZKPs of L2 transactions as well, rather than only raw L2 transactions.
 - Merkle roots aren't unique. Therefore, we could imagine the Validium state getting back into a state it has been in before, thereby allowing old L2 transactions to be reused. How do we avoid this issue? One solution would be to add an extra leaf to the Merkle tree, and update this leaf with each ZKR, e.g. $"L'" = "hash"(L)$
+- Research whether there's a way to get rid of the two phases of L2 server
 
 
 
