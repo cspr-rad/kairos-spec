@@ -19,25 +19,34 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          kairos-spec = pkgs.stdenv.mkDerivation {
-            name = "kairos-spec";
-            src = ./src;
-            nativeBuildInputs = with pkgs; [
-              nodePackages.mermaid-cli
-              graphviz
-              typst
-            ];
-            buildCommand = ''
+          kairos-spec = pkgs.runCommand "kairos-spec"
+            {
+              nativeBuildInputs = with pkgs; [
+                typst
+              ];
+            }
+            ''
               mkdir -p $out
-              dot -Tsvg $src/diagrams/merkle-tree.dot > $out/merkle-tree.svg
-              dot -Tsvg $src/diagrams/merkle-tree-updated.dot > $out/merkle-tree-updated.svg
-              mmdc -i $src/diagrams/transfer_sequence_diagram.mmd -o $out/transfer_sequence.svg
-              mmdc -i $src/diagrams/deposit_sequence_diagram.mmd -o $out/deposit.svg
-              mmdc -i $src/diagrams/components_diagram.mmd -o $out/components.svg
-              cp $src/spec.typ $out/spec.typ
-              typst compile $out/spec.typ $out/spec.pdf
+              cp -r ${self'.packages.diagrams}/* .
+              cp ${./src}/spec.typ .
+              typst compile spec.typ $out/spec.pdf
             '';
-          };
+          diagrams = pkgs.runCommand "diagrams" { nativeBuildInputs = with pkgs; [ plantuml graphviz ]; }
+            ''
+              mkdir -p $out
+              for file in "${./diagrams}"/*; do
+                filename=$(basename "$file")
+                base_filename="''${filename%.*}"
+                if [[ $file == *.puml ]]; then
+                  echo "$file"
+                  plantuml "$file" -tsvg -o $out
+                fi
+                if [[ $file == *.dot ]]; then
+                  plantuml "$file" -tsvg -o "$out"
+                  dot -Tsvg "$file" > "$out/$base_filename.svg"
+                fi
+              done
+            '';
         in
         {
           treefmt = {
@@ -46,14 +55,13 @@
             settings.formatter = { };
           };
           packages = {
-            inherit kairos-spec;
+            inherit kairos-spec diagrams;
             default = self'.packages.kairos-spec;
           };
           devShells.default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
               typst
               typst-lsp
-              nodePackages.mermaid-cli
               graphviz
             ];
           };

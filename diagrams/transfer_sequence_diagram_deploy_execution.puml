@@ -1,0 +1,42 @@
+@startuml
+autoactivate on
+actor "Bob :: User" as Bob
+participant CasperWallet
+box "l2-stack" #LightBlue
+participant WebClient
+participant ApiServer
+participant Database
+participant Prover
+participant CasperNode
+end box
+box "on-chain" #LightGreen
+participant VerifyTransferSession
+participant ValidiumContract
+end box
+
+activate CasperNode
+activate ApiServer
+
+note over ApiServer, Prover
+Once every x seconds or n transfers
+end note
+ApiServer -> Prover: prove(transfer(Vector<{sender, receiver, amount}>))
+Prover --> ApiServer: (new_account_balances, proof)
+
+note over ApiServer
+What we create here is a "deploy" that will execute our transfer session.
+The transfer session verifies that the proof is valid, given the public inputs.
+If validation is successful, we update the state using the proper
+contract entrypoint.
+In the next diagram (Deploy Execution), you will see what happen 
+once the transfer session gets executed on-chain
+end note
+ApiServer -> ApiServer: create_verify_transfer_deploy(new_account_balances_root_hash, proof, Vector<{sender, receiver, amount}>)
+ApiServer --> ApiServer: verify_transfer_deploy :: Deploy
+
+ApiServer -> ApiServer: sign(verify_transfer_deploy)
+ApiServer --> ApiServer: signed_verify_transfer_deploy :: SignedDeploy
+
+ApiServer -> CasperNode: account_put_deploy(signed_verify_transfer_deploy)
+CasperNode --> ApiServer: account_put_deploy_result
+@enduml

@@ -159,23 +159,30 @@ Mockups we want:
 - WebUI: Connect to wallet, see your L1 & Validium account balance(s), deposit/withdrawal, L2 transfer, sign L2 Tx
 
 #figure(
-  image("components.svg", width: 50%),
+  image("transfer_sequence_diagram_client_submit.svg", width: 100%),
   caption: [
-    Overview of the components
+    Transfer: User submits a transaction to L2.
   ],
 )
 
 #figure(
-  image("deposit.svg", width: 100%),
+  image("transfer_sequence_diagram_l2_prove_deploy.svg", width: 100%),
   caption: [
-    Deposit sequence diagram
+    Transfer: Proving and submitting the proof.
   ],
 )
 
 #figure(
-  image("transfer_sequence.svg", width: 100%),
+  image("transfer_sequence_diagram_deploy_execution.svg", width: 100%),
   caption: [
-    Sequence diagram for a set of transfers
+    Transfer: Execution of the Deploy on L1.
+  ],
+)
+
+#figure(
+  image("transfer_sequence_diagram_notify_l2.svg", width: 100%),
+  caption: [
+    Transfer: Notifying the L2 after succcessfull on-chain execution.
   ],
 )
 

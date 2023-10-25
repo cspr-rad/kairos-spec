@@ -9,7 +9,7 @@ sequenceDiagram
     participant CasperNode
     end
     box on-chain
-    participant VerifyDepositSession
+    participant VerifyTransferSession
     participant ValidiumContract
     end
     ApiServer ->>+ CasperNode: subscribe(DeployProcessed)
@@ -21,7 +21,7 @@ sequenceDiagram
     WebClient -->>- Bob: Ok
 
     Note over ApiServer, Prover: Once every x seconds, n transfers
-    ApiServer ->>+ Prover: prove(transfer(Vector of (sender :: User, receiver :: User, amount :: Money)))
+    ApiServer ->>+ Prover: proove(transfer(Vector of (sender :: User, receiver :: User, amount :: Money)))
     Prover -->>- ApiServer: (new_account_balances :: AccountBalances, proof ::  Proof)
     %% what we create here is a deploy that will execute our transfer session,
     %% which verifies given the public inputs that the proof is valid. If validation

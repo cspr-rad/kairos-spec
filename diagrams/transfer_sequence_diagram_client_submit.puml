@@ -1,0 +1,32 @@
+@startuml
+autoactivate on
+actor "Bob :: User" as Bob
+participant CasperWallet
+box "l2-stack" #LightBlue
+participant WebClient
+participant ApiServer
+participant Database
+participant Prover
+participant CasperNode
+end box
+box "on-chain" #LightGreen
+participant VerifyTransferSession
+participant ValidiumContract
+end box
+
+activate CasperNode
+activate ApiServer
+
+ApiServer -> CasperNode: subscribe(DeployProcessed)
+Bob -> WebClient: transfer(from: Bob to: Alice, amount)
+
+note over WebClient, ApiServer
+This happens multiple times
+for different users,
+the ApiServer optimizes transfers
+end note 
+
+WebClient -> ApiServer: POST /transfer/{user: Bob, user: Alice, amount}
+ApiServer --> WebClient: Ok
+WebClient --> Bob: Ok
+@enduml
