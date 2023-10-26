@@ -63,6 +63,7 @@
               typst
               typst-lsp
               graphviz
+              plantuml
             ];
           };
         };
