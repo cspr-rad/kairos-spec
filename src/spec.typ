@@ -367,6 +367,38 @@ We decided to build the PoC using Risc0 as a ZK prover system, both for the indi
 
 == L2 server
 
+=== Deposit Sequence Diagram
+
+Depositing funds to user `Bob`'s account is divided into three phases, which are modelled in the following sequence diagrams.
+
+In the first phase users submit their deposit requests to the L2 server, which updates the Merkle-tree root and creates a _Deploy_ which will execute the validation of this update, do the state transition and transfer the funds. This _Deploy_ also needs to be signed by the user before submitting since we transfer funds from the users purse to the Validiums wallet.
+
+#figure(
+  image("deposit_sequence_diagram_client_submit.svg", width: 100%),
+  caption: [
+    Deposit: User submits a deposit to L2 which gets forwarded to L1.
+  ],
+)
+
+After submitting, the L1 smart-contracts take care of first validating the new Merkle-tree root hash, updating the validiums state, and transferring the funds.
+
+#figure(
+  image("deposit_sequence_diagram_deploy_execution.svg", width: 100%),
+  caption: [
+    Deposit: Execution of the _Deploy_ on L1.
+  ],
+)
+
+Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
+
+#figure(
+  image("deposit_sequence_diagram_notify_l2.svg", width: 100%),
+  caption: [
+    Deposit: Notifying the L2 after succcessfull on-chain execution.
+  ],
+)
+
+
 === L2 transactions
 
 The content of an L2 transaction is:
