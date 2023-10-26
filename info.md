@@ -9,11 +9,11 @@ Notes:
 - "Validity proofs" are ZKPs rolled up into one. In the spec, we call them ZKRs.
 
 Next actions:
-- Finish up the diagrams (Marijan)
-- Finish data redundancy subsubsection (Marijan)
-- Get the spec approved by Mark (Nick & Marijan)
-- Split up the work into separate projects & ask the team to get started (Nick)
-- Set up test plan (Nick)
+- [ ] Finish up the diagrams (Marijan)
+- [x] Finish data redundancy subsubsection (Marijan)
+- [ ] Get the spec approved by Mark (Nick & Marijan)
+- [ ] Split up the work into separate projects & ask the team to get started (Nick)
+- [ ] Set up test plan (Nick)
 
 The projects:
 - Casper node deep-dive: What does a Casper transaction look like? Data limits?
@@ -28,6 +28,4 @@ The projects:
 Remaining decisions, after deep-dives:
 - Split up the smart contract into two, where one stores the state and the other
   verifies the proofs
-
-
 
