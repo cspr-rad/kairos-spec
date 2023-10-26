@@ -10,7 +10,7 @@ participant Prover
 participant CasperNode
 end box
 box "on-chain" #LightGreen
-participant VerifyTransferSession
+participant VerifyDepositSession
 participant ValidiumContract
 end box
 
@@ -22,15 +22,19 @@ After the deploy gets processed we get notified
 end note
 
 CasperNode -> ApiServer: eventHandler(event :: DeployProcessed)
-ApiServer -> Database: insert_transfers(Vector<{sender, receiver, amount}>)
+ApiServer -> CasperNode: query_balance()
+CasperNode --> ApiServer: query_balance_result
+
+ApiServer -> Database: insert_deposit(user: Bob, amount)
 Database --> ApiServer: Ok
+
 ApiServer --> WebClient: trigger_refresh
 ApiServer --> ApiServer: end eventHandler
 
-WebClient -> ApiServer: GET /balance
+WebClient -> ApiServer: GET /balance/{user: Bob}
 ApiServer -> Database: get_balance(user: Bob)
 Database --> ApiServer: balance
 ApiServer --> WebClient: balance
-WebClient -> Bob: notify
+WebClient --> Bob: notify_with_signal
 
 @enduml

@@ -1,0 +1,36 @@
+@startuml
+autoactivate on
+actor "Bob :: User" as Bob
+participant CasperWallet
+box "l2-stack" #LightBlue
+participant WebClient
+participant ApiServer
+participant Database
+participant Prover
+participant CasperNode
+end box
+box "on-chain" #LightGreen
+participant VerifyDepositSession
+participant ValidiumContract
+end box
+
+activate CasperNode
+activate ApiServer
+
+note over CasperNode, VerifyTransferSession
+At some point the deploy gets executed on-chain.
+end note
+
+CasperNode -> VerifyDepositSession: call()
+VerifyDepositSession -> ValidiumContract: verify_deposit_entrypoint(new_account_balance, old_accout_balance, new_account_balances_root_hash, sibling_hashes, user, amount)
+note over ValidiumContract, ValidiumContract
+if ok then
+end note
+ValidiumContract -> ValidiumContract: update_state_entrypoint(new_account_balances_root_hash)
+ValidiumContract --> ValidiumContract: Ok
+ValidiumContract --> VerifyDepositSession: Ok 
+VerifyDepositSession -> VerifyDepositSession: transfer_from_purse_to_purse(user_purse, validium_purse, amount)
+VerifyDepositSession --> VerifyDepositSession: Ok
+VerifyDepositSession --> CasperNode: end call()
+
+@enduml
