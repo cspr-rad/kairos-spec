@@ -1,0 +1,62 @@
+@startuml
+node "WebClient" {
+}
+
+node "CliClient" {
+}
+
+node "ApiServer" {
+  port a443
+  () "deposit"
+  () "withdraw"
+  () "transfer"
+  () "getBalance"
+  () "getTransactions"
+}
+
+node "Prover" {
+  port p443
+  () "prove"
+  () "verify" 
+}
+
+database "Postgres - primary" {
+  folder "Balances" {
+  }
+  folder "Transactions" {
+  }
+}
+database "Postgres - standby 1" {
+}
+database "Postgres - standby 2" {
+}
+cloud "Casper Blockchain" {
+  [VerifierContract]
+  [ValidiumStateContract]
+}
+
+"WebClient" --> "a443"
+
+"CliClient" --> "a443"
+"CliClient" --> "p443"
+"CliClient" --> "Casper Blockchain"
+
+"transfer" --> "p443"
+"transfer"  --> "Postgres - primary"
+"transfer"  --> "ValidiumStateContract"
+
+"deposit"  --> "ValidiumStateContract"
+"deposit"  --> "Postgres - primary"
+
+"withdraw"  --> "ValidiumStateContract"
+"withdraw"  --> "Postgres - primary"
+
+"getBalance"  --> "Postgres - primary"
+
+"getTransactions"  --> "Postgres - primary"
+
+"Postgres - primary" --> "Postgres - standby 1"
+"Postgres - primary" --> "Postgres - standby 2"
+
+"ValidiumStateContract" --> "VerifierContract"
+@enduml

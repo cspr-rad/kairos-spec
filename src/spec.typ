@@ -155,7 +155,12 @@ These are qualitative requirements, such as "it should be fast" and could e.g. b
 
 = High-level design <high-level-design>
 
-TODO: Add components diagram here.
+#figure(
+  image("components_diagram.svg", width: 100%),
+  caption: [
+    Components diagram
+  ],
+) <components-diagram-figure>
 
 Any ZK validium can be described as a combination of 6 components. For this proof of concept, we made the following choices:
 - Consensus layer: Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
