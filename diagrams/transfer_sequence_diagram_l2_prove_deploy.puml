@@ -1,3 +1,4 @@
+
 @startuml
 autoactivate on
 actor "Bob :: User" as Bob
@@ -17,40 +18,26 @@ end box
 activate CasperNode
 activate ApiServer
 
-note over CasperNode, VerifyTransferSession
-At some point the deploy gets executed on-chain.
+note over ApiServer, Prover
+Once every x seconds or n transfers
 end note
+ApiServer -> Prover: prove(transfer(Vector<{sender, receiver, amount}>))
+Prover --> ApiServer: (new_account_balances, proof)
 
-CasperNode -> VerifyTransferSession: call()
-
-note over VerifyTransferSession, ValidiumContract
-This is where we verify the proof,
-we obviously need to provide the public inputs
+note over ApiServer
+What we create here is a "deploy" that will execute our transfer session.
+The transfer session verifies that the proof is valid, given the public inputs.
+If validation is successful, we update the state using the proper
+contract entrypoint.
+In the next diagram (Deploy Execution), you will see what happen 
+once the transfer session gets executed on-chain
 end note
+ApiServer -> ApiServer: create_verify_transfer_deploy(new_account_balances_root_hash, proof, Vector<{sender, receiver, amount}>)
+ApiServer --> ApiServer: verify_transfer_deploy :: Deploy
 
-VerifyTransferSession -> ValidiumContract: verify_entrypoint(new_account_balances_root_hash, proof, Vector<{sender, receiver, amount})
+ApiServer -> ApiServer: sign(verify_transfer_deploy)
+ApiServer --> ApiServer: signed_verify_transfer_deploy :: SignedDeploy
 
-note over ValidiumContract, ValidiumContract
-If proof is Ok then
-end note
-ValidiumContract -> ValidiumContract: update_state_entrypoint(new_account_balances_root_hash)
-ValidiumContract --> ValidiumContract: Ok
-ValidiumContract --> VerifyTransferSession: Ok 
-VerifyTransferSession --> CasperNode: end call()
+ApiServer -> CasperNode: account_put_deploy(signed_verify_transfer_deploy)
+CasperNode --> ApiServer: account_put_deploy_result
 @enduml
-
-Note Over CasperNode, ApiServer: After the deploy gets processed we get notified
-CasperNode ->>+ ApiServer: DeployProcessed
-ApiServer ->>+ ApiServer: eventHandler(event :: DeployProcessed)
-ApiServer ->>+ Database: insert_transfers(Vector of (sender :: User, receiver :: User, amount :: Money))
-Database -->>- ApiServer: Ok
-ApiServer ->> WebClient: trigger_refresh
-ApiServer -->>- ApiServer: end eventHandler
-
-WebClient ->>+ ApiServer: GET /balance
-ApiServer ->>+ Database: get_balance(user: Bob :: User)
-Database -->>- ApiServer: balance :: Balance
-ApiServer -->>- WebClient: balance :: Balance
-WebClient ->> Bob: notify
-
-CasperNode -->>- ApiServer: ...
