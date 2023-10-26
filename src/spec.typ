@@ -384,12 +384,20 @@ The content of an L2 transaction is:
 
 Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree. However, this does require the L2 server to accept ZKPs directly, rather than only L2 transactions, which is a post-PoC feature.
 
+=== L2 Transaction Sequence Diagram
+
+Transfering funds from user `Bob` to a user `Alice` can be divided into four phases, which are modelled in the following sequence diagrams.
+
+In the first phase users submit their transactions to the L2 server, which accumulates them and checks for independence.
+
 #figure(
   image("transfer_sequence_diagram_client_submit.svg", width: 100%),
   caption: [
     Transfer: User submits a transaction to L2.
   ],
 )
+
+After `t` seconds or `n` transactions, the L2 server creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
 
 #figure(
   image("transfer_sequence_diagram_l2_prove_deploy.svg", width: 100%),
@@ -398,12 +406,16 @@ Note that through the CLI, any user can decide to compute the ZKP necessary for 
   ],
 )
 
+After submitting, the L1 smart-contracts take care of first validating the proof and updating the validiums state.
+
 #figure(
   image("transfer_sequence_diagram_deploy_execution.svg", width: 100%),
   caption: [
     Transfer: Execution of the Deploy on L1.
   ],
 )
+
+Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
 
 #figure(
   image("transfer_sequence_diagram_notify_l2.svg", width: 100%),
