@@ -311,6 +311,8 @@ The L2 server accumulates a queue of L2 transactions which can be posted into th
 
 The casper-node allows for creating a web hook. Therefore, by running a casper-node on each L2 server, we can ensure the servers get notified as soon as a deposit or withdrawal is made on the L1 smart contract.
 
+Once the L2 server gets notified about deposits or withdrawals the L2 server will query a Casper node to obtain the respective information to update the Database and provide consistet data availability.
+
 === Data redundancy
 
 Because losing the Validium state would lead to a loss of all the funds held by the Validium, there needs to be an appropriate amount of redundancy of the stored data. To meet this requirement, we decided rely on PostgreSQL's streaming replication feature (physical replication). The streaming replication feature comes with two crucial benefits we can make use of:
