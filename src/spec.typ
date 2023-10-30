@@ -248,6 +248,12 @@ There will be a service, running on the same servers as the L2 server, which com
 
 == Design decisions
 
+=== Operating Modes
+
+The CLI should have two operating modes
++ Trusting: the CLI should behave like the Web-client and use the L2 server's endpoints to perform the interactions with the Validium
++ Trustless: the CLI should perform all computations locally except for querying the data availability layer to obtain the Validium's state.
+
 === Validium vs. Rollup
 
 As mentioned in the introduction, a ZK rollup is an L2 solution where the state is stored on the L1, while state updates are performed by the L2. A ZK proof, proving that such a state update was performed correctly, is then posted along with the new state on L1. A ZK Validium is similar to a ZK rollup except in that the whole state isn't posted to the L1, but rather a hash of the state. This requires significantly less data resources on L1, and therefore allows further scaling.
@@ -407,15 +413,17 @@ We decided to build the PoC using Risc0 as a ZK prover system, both for the indi
 
 Depositing funds to user `Bob`'s account is divided into three phases, which are modelled in the following sequence diagrams.
 
-In the first phase users submit their deposit requests to the L2 server, which updates the Merkle-tree root and creates a _Deploy_ which will execute the validation of this update, do the state transition and transfer the funds. This _Deploy_ also needs to be signed by the user before submitting since we transfer funds from the users purse to the Validiums wallet.
+#page(flipped: true)[
+  In the first phase users submit their deposit requests to the L2 server, which updates the Merkle-tree root and creates a _Deploy_ which will execute the validation of this update, do the state transition and transfer the funds. This _Deploy_ also needs to be signed by the user before submitting since we transfer funds from the users purse to the Validiums wallet.
+  #figure(
+      image("deposit_sequence_diagram_client_submit.svg", width: 100%),
+      caption: [
+        Deposit: User submits a deposit to L2 which gets forwarded to L1.
+      ],
+  )
+]
 
-#figure(
-  image("deposit_sequence_diagram_client_submit.svg", width: 100%),
-  caption: [
-    Deposit: User submits a deposit to L2 which gets forwarded to L1.
-  ],
-)
-
+#page(flipped: true)[
 After submitting, the L1 smart-contracts take care of first validating the new Merkle-tree root hash, updating the validiums state, and transferring the funds.
 
 #figure(
@@ -424,7 +432,9 @@ After submitting, the L1 smart-contracts take care of first validating the new M
     Deposit: Execution of the _Deploy_ on L1.
   ],
 )
+]
 
+#page(flipped: true)[
 Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
 
 #figure(
@@ -433,6 +443,7 @@ Lastly, the L2 server gets notified when the _Deploy_ was processed successfully
     Deposit: Notifying the L2 after succcessfull on-chain execution.
   ],
 )
+]
 
 
 === L2 transactions
@@ -461,6 +472,7 @@ Note that through the CLI, any user can decide to compute the ZKP necessary for 
 
 Transfering funds from user `Bob` to a user `Alice` can be divided into four phases, which are modelled in the following sequence diagrams.
 
+#page(flipped: true)[
 In the first phase users submit their transactions to the L2 server, which accumulates them and checks for independence.
 
 #figure(
@@ -469,7 +481,9 @@ In the first phase users submit their transactions to the L2 server, which accum
     Transfer: User submits a transaction to L2.
   ],
 )
+]
 
+#page(flipped: true)[
 After `t` seconds or `n` transactions, the L2 server creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
 
 #figure(
@@ -478,7 +492,9 @@ After `t` seconds or `n` transactions, the L2 server creates a proof and the acc
     Transfer: Proving and submitting the proof.
   ],
 )
+]
 
+#page(flipped: true)[
 After submitting, the L1 smart-contracts take care of first validating the proof and updating the validiums state.
 
 #figure(
@@ -487,7 +503,9 @@ After submitting, the L1 smart-contracts take care of first validating the proof
     Transfer: Execution of the Deploy on L1.
   ],
 )
+]
 
+#page(flipped: true)[
 Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
 
 #figure(
@@ -496,6 +514,7 @@ Lastly, the L2 server gets notified when the _Deploy_ was processed successfully
     Transfer: Notifying the L2 after succcessfull on-chain execution.
   ],
 )
+]
 
 == Smart contract
 
