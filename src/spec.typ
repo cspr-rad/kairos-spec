@@ -73,6 +73,40 @@ Each transfer must be verified by L1. In addition, at any given time anyone shou
 
 Anyone can query the transaction history based on certain filters, such as a specific party being involved and time constraints. This includes the public information associated with each transaction on both L1 and L2, as well as the associated ZKPs.
 
+=== ACTUS Contract support
+
+Users should be able to log the public information of their financial contracts on-chain, and allow verification of the proper execution of the contracts.
+
+=== Big scale NFT Minting and Transfering
+
+Users should be able to mint and transfer a large number of NFTs in an automated fashion.
+
+=== Support posting ZKP/ ZKRs directly
+
+Users should be able to post ZKPs/ ZKRs directly to allow them to keep their private information private, instead of conveying it to a L2 node.
+
+=== Parallelize ZKP/ZKR computations
+
+In order to speed up the responsiveness of the system, the computation of the ZKPs and ZKRs should be parallelizable over multiple machines.
+
+=== Decentralized Data Availability
+
+In order to build towards a trustless service, the data availability layer should be decentralized.
+
+=== Decentralized L2 Node
+
+In order to build towards a trustless service, the L2 layer should be decentralized.
+
+=== Support multiple and latest zKVM
+
+Users should be able to have a selection between different state-of-the art zKVMs.
+
+=== Risk simulation
+
+Users should be able to use risk simulation services on financial institution's contract data. In practice, this means that anyone can submit a risk simulation algorithm based on ACTUS contracts. The service will run these algorithms on the data associated with a given financial institution and provide the results.
+
+In addition, the system should provide the necessary technology for financial institution customers to run risk simulation algorithms on their private data, and not only compute their risk situation but also provide a proof that this analysis resulted from the given algorithm ran on their private data, corresponding to the ZKV posted on-chain.
+
 == Usage
 
 The proof of concept can be used by any participants of the Casper network. It will allow any of them to transfer tokens with lower gas fees and significantly higher transaction throughput.
