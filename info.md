@@ -9,7 +9,7 @@ Notes:
 - "Validity proofs" are ZKPs rolled up into one. In the spec, we call them ZKRs.
 
 Next actions:
-- [ ] Finish up the diagrams (Marijan)
+- [x] Finish up the diagrams (Marijan)
 - [x] Finish data redundancy subsubsection (Marijan)
 - [ ] Get the spec approved by Mark (Nick & Marijan)
 - [ ] Split up the work into separate projects & ask the team to get started (Nick)
