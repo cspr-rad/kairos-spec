@@ -10,14 +10,15 @@ node "ApiServer" {
   () "deposit"
   () "withdraw"
   () "transfer"
+  () "verify"
   () "getBalance"
   () "getTransactions"
 }
 
 node "Prover" {
   port p443
-  () "prove"
-  () "verify" 
+  [proverlib] -up-> () "prove"
+  [proverlib] -up-> () "pVerify"
 }
 
 database "Postgres - primary" {
@@ -38,7 +39,7 @@ cloud "Casper Blockchain" {
 "WebClient" --> "a443"
 
 "CliClient" --> "a443"
-"CliClient" --> "p443"
+"CliClient" --> "prove"
 "CliClient" --> "Casper Blockchain"
 
 "transfer" --> "p443"
@@ -50,6 +51,8 @@ cloud "Casper Blockchain" {
 
 "withdraw"  --> "ValidiumStateContract"
 "withdraw"  --> "Postgres - primary"
+
+"verify" --> "pVerify"
 
 "getBalance"  --> "Postgres - primary"
 
