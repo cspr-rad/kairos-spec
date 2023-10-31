@@ -43,7 +43,7 @@ In @overview (Product Overview) we specify the high-level interactions that the 
 
 To have a common denominator on the scope of the proof of concept, this section describes the high-level features it has to fulfill.
 
-== Mandatory Features
+== Features
 
 === Deposit money into L2 system
 
@@ -51,27 +51,25 @@ A user should be able to deposit CSPR tokens from the Casper chain to their vali
 
 === Withdraw money from L2 system
 
-A user should be able to withdraw CSPR tokens from their validium account to the Casper chain at any given time through a web UI or CLI. This interaction should be made possible without the approval of the validium operator (#link("https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals")[see Ethereum's validium]).
+A user should be able to withdraw CSPR tokens from their validium account to the Casper chain at any given time through a CLI. This interaction should be made possible without the approval of the validium operator (#link("https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals")[see Ethereum's validium]).
 
 === Transfer money within the L2 system
 
-A user should be able to transfer CSPR tokens from their validium account to another user's validium account at any given time through a web UI or CLI.
+A user should be able to transfer CSPR tokens from their validium account to another user's validium account at any given time through a CLI.
 
 === Query account balances
 
-Anyone should be able to query the validium account balances of available CSPR tokens at any given time through a web UI or CLI. In particular, users can also query their personal account balance.
-
-Due to the nature of validiums, transaction data will be stored off-chain. To ensure interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly through an API. To reduce the complexity of the project, the data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/machines. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid data loss.
+Anyone should be able to query the validium account balances of available CSPR tokens at any given time through a CLI. In particular, users can also query their personal account balance.
 
 === Verification
 
-Each transfer must be verified by L1. In addition, at any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through a web UI, the CLI, or application programming interface (API), i.e. a machine-readable way.
+Each transfer must be verified by L1. In addition, at any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through the CLI or application programming interface (API), i.e. a machine-readable way.
 
 == Usage
 
 Version 0.1 can be used by any participants of the Casper network. It will allow any of them to transfer tokens with lower gas fees and significantly higher transaction throughput.
 
-There will be two groups of users: tech-savvy and less tech-savvy. In order to accommodate both groups, we will offer three user interfaces: A web interface (website) for the less tech-savvy customer, and a CLI client and a L2 API for developers. Thereby, we can serve customers directly while also allowing new projects to build on top of our platform. Even customers in low-resource environments can participate, as we will move the resource-heavy away from the web UI, while allowing developers to generate ZKPs on the client-side by using our L2 API.
+We will offer two user interfaces: A CLI client for users and a L2 API for developers. Thereby, we can serve customers directly while also allowing new projects to build on top of our platform. In addition, this allows customers to generate ZKPs on the client-side by using our L2 API.
 
 Our L2 server itself will be a set of dedicated, powerful machines, including a powerful CPU and GPU, in order to provide GPU accelleration for ZK proving (see Risc0). The machines will run NixOS and require a solid internet connection. The CLI client will run on any Linux distribution, whereas the web client will support any modern web-browser with JavaScript enabled.
 
@@ -272,6 +270,8 @@ Once the L2 server gets notified about deposits or withdrawals the L2 server wil
 
 === Data redundancy
 
+Due to the nature of validiums, transaction data will be stored off-chain. To ensure interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly through an API. To reduce the complexity of the project, the data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/machines. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid data loss.
+
 Because losing the Validium state would lead to a loss of all the funds held by the Validium, there needs to be an appropriate amount of redundancy of the stored data. To meet this requirement, we decided rely on PostgreSQL's streaming replication feature (physical replication). The streaming replication feature comes with two crucial benefits we can make use of:
 - Fail-over: Meaning that when the primary server fails, one of the replicating standby servers can take over the role of the primary
 - Read-only load balancing: Read-only queries can be distributed among several servers
@@ -309,7 +309,6 @@ Note that we can limit the number of transactions we accept during a single loop
 
 Notes:
 - Anytime the L2 server posts something to its database, this information is sent to the backup servers.
-- The web UI can create a web hook to be notified by a casper-node when the smart contract is updated through the Transfer endpoint, i.e. when the L2 transaction it posted might be included. At that point it can contact the L2 to verify the transaction's success.
 
 == Smart contract
 
