@@ -197,21 +197,13 @@ There will be a service, running on the same servers as the L2 server, which com
 
 = Design considerations <considerations>
 
-== Design decisions
-
-=== Operating Modes
-
-The CLI should have two operating modes.
-+ Trusting: the CLI should use the L2 server's endpoints to perform the interactions with the Validium.
-+ Trustless: the CLI should perform all computations locally except for querying the data availability layer to obtain the Validium's state and submitting L2 transactions to the L2 server.
-
-=== Validium vs. Rollup
+== Validium vs. Rollup
 
 As mentioned in the introduction, a ZK rollup is an L2 solution where the state is stored on the L1, while state updates are performed by the L2. A ZK proof, proving that such a state update was performed correctly, is then posted along with the new state on L1. A ZK Validium is similar to a ZK rollup except in that the whole state isn't posted to the L1, but rather a hash of the state. This requires significantly less data resources on L1, and therefore allows further scaling.
 
 We are attempting to create an L2 solution which can scale up to 10,000 transactions per second. However, these transactions need to be independent. The reason for that is that dependent transactions require latter transaction to be aware of the state resulting from the prior transaction. Note: the state is a Merkle-tree root hash of the account balances. Given restrictions such as the time it takes to sign a transaction and send messages around constrained by the speed of light, one is not quick enough to query the prior state. Therefore, in order to reach 10,000 transactions per second you need at least 20,000 people using the L2. This requires 20,000 people's L2 account balances to be stored within the L1 smart contract. However, this amount of data supercedes Casper L1's data limits. In conclusion, any L2 ZK solution on top of Casper must be a Validium.
 
-=== Centralized L2
+== Centralized L2
 
 Decentralized L2s require many complex problems to be resolved. For example, everyone involved in the L2 must get paid, including the storers and provers. In addition, we must avoid any trust assumptions on individual players, making it difficult to provide reasonable storage options. Instead, this requires a complex solution such as Starknet's Data Availability Committee. Each of these issues takes time to resolve, and doing all this within the project's version 0.1 is likely to prevent the project from ever launching into production. Therefore, a centralized L2 ran by the Casper Association is an attractive initial solution. This poses the question, what are the dangers of centralized L2s?
 - Denial of service: The L2 server could block any user from using the system
@@ -226,17 +218,15 @@ As mentioned before, we will design the system in such a way that withdrawing va
 
 Finally, what if the L2 loses its data? The Casper Association has a very strong incentive to prevent this, since the entire project would die permanently if this occurs. Therefore, we will build the L2 service in such a way as to include the necessary redundancy, as mentioned above.
 
-=== Privacy provided by L2
+== Privacy provided by L2
 
 We decided not to provide any increased privacy compared to Casper's L1 within version 0.1, since providing any extra privacy would raise AML-related concerns we wish to stay away from, as seen in the famous TornadoCash example.
 
-=== The L2 server should get paid
+== The L2 server should get paid
 
 Within version 0.1 this issue is rather simple, given the L2 is centralized. All we need to ensure is that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to appropriately maintain and extend the L2. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
 
-== L2 server
-
-=== Sequential throughput
+== Sequential throughput
 
 In this section, we want to make a quick note about a fundamental restriction of L2 scaling solutions. Imagine you and I both want to submit a swap on a DEX, and you come in first. My transaction thus dependents on the state that results from your swap. There are now two options:
 + I am aware of your output state. In this case, you have created, signed and submitted your transaction to the L2 server. I then pull your output state from the L2 server, construct, sign and submit my transaction. Given limitations such as how long it takes to sign a transaction and to send data back and forth to the server, this setup leads to a maximal sequential throughput #footnote[Sequential throughput is defined by the number of transactions which can be posted to the L2 where each transaction depends on the output of the former.] of around 1 Tx/s.
@@ -244,7 +234,7 @@ In this section, we want to make a quick note about a fundamental restriction of
 
 Our solution is to keep all L2 transactions rolled up into the same L1 transaction independent of one another, to avoid such complications. In making this decision, we restrict the sequential throughput of your system.
 
-=== Ensuring L2 transaction uniqueness <uniqueness>
+== Ensuring L2 transaction uniqueness <uniqueness>
 
 We must ensure that each L2 transaction which is posted to the L2 server, can only be used on the L1 once. This can be accomplished in many ways, which generally fall into two categories:
 + Add something to the L2 transaction about the state of the world.
@@ -256,17 +246,17 @@ The former option is difficut to accomplish, as there are few real-world concept
 
 The alternative is to add a piece of information X about the Validium's state to each L2 transaction. The batch proof can then include that piece of information as a public input, and check that all L2 transactions have that same public input. However, we must make sure that X is unique, meaning that even if the Validium reverts back to an old state, no old L2 transactions can be reused against the will of the person who signed them. Therefore, we decided to make use of [logical time](https://en.wikipedia.org/wiki/Logical_clock) analogous to [lamport timestamps](https://en.wikipedia.org/wiki/Lamport_timestamp). Meaning that X will be a counter, initialized at 0 and increasing by 1 every time a batch proof is posted to the L1. As such, the batch proof and Validium smart contract can verify perfectly whether a given L2 transaction fits into its rollup, while also providing a simple and clear user interface.
 
-=== Two phases of the server <phases>
+== Two phases of the server <phases>
 
 The L2 server accumulates a queue of L2 transactions which can be posted into the same batch proof. Based upon a number of limits #footnote[Two examples of such limits would be the number of transactions posted into one batch proof, and the time window which is compiled into one batch prof. The latter limit is necessary in order to allow a sensible sequential throughput as well.] the server will start computing a batch proof based on its current queue. Any new transactions must now set their Validium counter to one higher than before, in order to fit into the next batch proof rather than the current one. This will be communicated by the L2 server through a clear error.
 
-=== How will L2 become aware of deposits and withdrawals?
+== How will L2 become aware of deposits and withdrawals?
 
 The casper-node allows for creating a web hook. Therefore, by running a casper-node on each L2 server, we can ensure the servers get notified as soon as a deposit or withdrawal is made on the L1 smart contract.
 
 Once the L2 server gets notified about deposits or withdrawals the L2 server will query a Casper node to obtain the respective information to update the Database and provide consistet data availability.
 
-=== Data redundancy
+== Data redundancy
 
 Due to the nature of validiums, transaction data will be stored off-chain. To ensure interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly through an API. To reduce the complexity of the project, the data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/machines. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid data loss.
 
@@ -286,13 +276,13 @@ Naively, we might want to consider building a failsafe into the Validium smart c
 // - If a server comes back up, it must get synced with the others automatically
 // - Keep the three servers geographically spread out, i.e. located in three different countries.
 
-=== Load balance for ZK proving
+== Load balance for ZK proving
 
 Within version 0.1, the ZKPs themselves will be sufficiently quick to generate that there is little opportunity for speedup through parallelization. When exploring the batch proof, we should look into parallelization opportunities.
 
 Note that we can limit the number of transactions we accept during a single loop of the system in order to provide a feasible version 0.1. After going into production, we can optimize the server(s)' performance to keep up with demand.
 
-=== What happens when you post an L2 transaction?
+== What happens when you post an L2 transaction?
 
 - Check if the transaction is posted with the correct Validium counter, see @phases. If not, return a clear error to the API caller.
 - Create a TxID and return this to the API caller
@@ -308,13 +298,7 @@ Note that we can limit the number of transactions we accept during a single loop
 Notes:
 - Anytime the L2 server posts something to its database, this information is sent to the backup servers.
 
-== Smart contract
-
-Each smart contract endpoint will require the new Merkle root and some form of proof that this Merkle root was correctly computed. After verifying this proof, the smart contract's state will be updated and the necessary actions executed on L1. For more details on the smart contract's state and endpoints, see @low-level-design.
-
-== ZKP
-
-=== How do Merkle tree updates work? <merkle-tree-update>
+== How do Merkle tree updates work? <merkle-tree-update>
 
 Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken on by the batch proof. The main reason for this is that we want to avoid transfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
 
@@ -340,18 +324,6 @@ $ R = "hash"("A1", "A2"), "R'" = "hash"("A1'", "A2"). $
 For a general balanced Merkle tree with $N$ leaves, this requires $log^2(N)$ hashes, each with their directionality, to be passed along to the Validium smart contract, to allow the verification.
 
 Note: This should be implemented and tested as well for cases where a leaf must be added/removed, rather than updated.
-
-=== Where does the ZK verification happen?
-
-Within the casper-node, if the ZK verification code doesn't fit into a smart contract? If it does, then within the same smart contract, or a dedicated one?
-// TODO: Deep-dive into Risc0: What does verification require? How much data and computation?
-// - Can this be integrated into a smart contract?
-// - If so, should we use a separation ZK verification smart contract, or include it in the Validium start contract?
-// - If not, how can we integrate this with the Casper node?
-
-=== Comparison of ZK provers
-
-Version 0.1 will be built using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the batch proof computation.
 
 = Low-level design <low-level-design>
 
@@ -468,6 +440,8 @@ Lastly, the L2 server gets notified when the _Deploy_ was processed successfully
 
 == Smart contract
 
+Each smart contract endpoint will require the new Merkle root and some form of proof that this Merkle root was correctly computed. After verifying this proof, the smart contract's state will be updated and the necessary actions executed on L1. For more details on the smart contract's state and endpoints, see @low-level-design.
+
 === Smart contract data
 
 The smart contract stores the following data:
@@ -497,6 +471,20 @@ The smart contract offers the following API, with each endpoint verifying and ac
 Initiating the L1 smart contract requires putting money onto the Validium. The balance of the smart contract will then be equal to the initial deposit, and the Merkle roots (current and "current minus deposits/withdrawals") will be equal to the Merkle root for a Merkle tree with only one leaf, namely the single initial account.
 
 == Prover
+
+=== Where does the ZK verification happen?
+
+Within the casper-node, if the ZK verification code doesn't fit into a smart contract? If it does, then within the same smart contract, or a dedicated one?
+// TODO: Deep-dive into Risc0: What does verification require? How much data and computation?
+// - Can this be integrated into a smart contract?
+// - If so, should we use a separation ZK verification smart contract, or include it in the Validium start contract?
+// - If not, how can we integrate this with the Casper node?
+
+=== Comparison of ZK provers
+
+Version 0.1 will be built using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the batch proof computation.
+
+=== What do the ZKPs look like?
 
 The zero knowledge proofs for transfer transaction consist of the following:
 - Public input: Unsigned L2 transaction
@@ -534,6 +522,10 @@ The CLI offers the following interactions:
 - Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
 - Query last N ZKP/batch proofs posted to L1
 - Verify ZKPs and batch proofs
+
+The CLI should have two operating modes.
++ Trusting: the CLI should use the L2 server's endpoints to perform the interactions with the Validium.
++ Trustless: the CLI should perform all computations locally except for querying the data availability layer to obtain the Validium's state and submitting L2 transactions to the L2 server.
 
 = Testing <testing>
 
