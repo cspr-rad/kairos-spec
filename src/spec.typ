@@ -37,7 +37,7 @@ The goal of the proof of concept is to build a zero knowledge validium for payme
 
 The project itself contains very few basic interactions. Any user will be able to deposit to and withdraw from an L1 contract controlled by the ZK validium, and use the L2 to transfer tokens to others who have done the same. In the remainder of this document, we will detail the requirements on such a system and how we plan to implement and test it.
 
-In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by low-level design considerations in @considerations and their conclusions in @low-level-design. We conclude with testing concerns in @testing.
+In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by low-level design considerations in @considerations and their conclusions in @low-level-design. After discussing testing concerns in @testing, we conclude with thread models and a glossary, which clarifies the terminology used throughout this document.
 
 = Product Overview<overview>
 
@@ -551,6 +551,18 @@ The CLI offers the following interactions:
 - Test our assumption that we don't need Merkle tree rebalancing. If this fails, research and implement Merkle tree rebalancing, generate ZKPs for it and include this as an endpoint to the Validium smart contract.
 
 == Whatever else Syd can come up with
+
+== Thread model
+
+== Glossary
+
+- L1
+- L2
+- ZKP
+- Merkle tree
+- Validium
+- ZK rollup
+- Batch proof
 
 
 
