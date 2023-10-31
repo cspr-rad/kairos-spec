@@ -52,7 +52,7 @@ To have a common denominator on the scope of the proof of concept, this section 
 
 === Deposit money into L2 system
 
-A user should be able to deposit CSPR tokens from the Casper chain to their validium account at any given time through a web user interface (UI) or command line interface (CLI).
+A user should be able to deposit CSPR tokens from the Casper chain to their validium account at any given time through a command line interface (CLI).
 
 === Withdraw money from L2 system
 
@@ -84,30 +84,26 @@ Based on the product overview given in the previous section, this section aims t
 
 == Functional requirements
 
-=== Start up web client
-
-- [tag:FRB00] Automatically connects to the users CSPR wallet when they access the web interface
-
 === Deposit money into L2 system
 
-- [tag:FRD00] Depositing an amount of `CSPR tokens`, where `CSPR tokens > 0` should be accounted correctly
-- [tag:FRD01] Depositing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
-- [tag:FRD02] A user depositing any valid amount to on its `validium account` should only succeed if the user has signed the deposit transaction
-- [tag:FRD03] A user depositing any valid amount with a proper signature to another users `validium account` should fail
+- [tag:FRD00] Depositing an amount of `CSPR tokens`, where `CSPR tokens >= min. amount` should be accounted correctly
+- [tag:FRD01] Depositing an amount of `CSPR tokens`, where `CSPR tokens < min. amount` should not be executed at all
+- [tag:FRD02] A user depositing any valid amount to on its `account` should only succeed if the user has signed the deposit transaction
+- [tag:FRD03] A user depositing any valid amount with a proper signature to another users account should fail
 
 === Withdraw money from L2 system
 
-- [tag:FRW00] Withdrawing an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
-- [tag:FRW01] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens <= 0` should not be executed at all
-- [tag:FRW02] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens > users validium account balance` should not be possible
-- [tag:FRW03] Withdrawing a valid amount from the users validium account should be possible without the intermediary operator of the validium
-- [tag:FRW04] Withdrawing a valid amount from the users validium account should only succeed if the user has signed the withdraw transaction
-- [tag:FRW05] Withdrawing a valid amount from another users validium account should not be possible
+- [tag:FRW00] Withdrawing an amount of `CSPR tokens`, where `users account balance >= CSPR tokens > min. amount` should be accounted correctly
+- [tag:FRW01] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens < min. amount` should not be executed at all
+- [tag:FRW02] Withdrawing an amount of `CSPR tokens`, where `CSPR tokens > users account balance` should not be possible
+- [tag:FRW03] Withdrawing a valid amount from the users account should be possible without the intermediary operator of the validium
+- [tag:FRW04] Withdrawing a valid amount from the users account should only succeed if the user has signed the withdraw transaction
+- [tag:FRW05] Withdrawing a valid amount from another users account should not be possible
 
 === Transfer money within the L2 system
 
-- [tag:FRT00] Transfering an amount of `CSPR tokens`, where `users validium account balance >= CSPR tokens > 0` should be accounted correctly
-- [tag:FRT01] Transfering an amount of `CSPR tokens`, where `CSPR tokens =< 0` should not be executed at all
+- [tag:FRT00] Transfering an amount of `CSPR tokens`, where `users account balance >= CSPR tokens > min. amount` should be accounted correctly
+- [tag:FRT01] Transfering an amount of `CSPR tokens`, where `CSPR tokens < min. amount` should not be executed at all
 - [tag:FRT02] Transfering an amount of `CSPR tokens`, where `CSPR tokens > users validium account` balance should not be possible
 - [tag:FRT03] Transfering a valid amount to another user that does not have a registered validium account yet should be possible.
 - [tag:FRT04] Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
@@ -115,8 +111,8 @@ Based on the product overview given in the previous section, this section aims t
 
 === Query account balances
 
-- [tag:FRA00] The user should be able to see its validium account balance immediately when it's queried (either through the CLI or web-UI)
-- [tag:FRA01] Anyone should be able to see all validium account balances through the CLI, web-UI and API
+- [tag:FRA00] A user should be able to see its validium account balance immediately when it's queried through the CLI
+- [tag:FRA01] Anyone should be able to see all validium account balances when querying the CLI and API
 
 === Verification
 
@@ -129,17 +125,17 @@ Based on the product overview given in the previous section, this section aims t
 - [tag:FRD02] Transaction data should be written by known, verified entities only
 - [tag:FRD03] Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
 - [tag:FRD04] Transaction data should not be written if the verification of the proof of the interactions fails
+- [tag:FRD04] Transaction data should be stored redundantly
 
 == Non-functional requirements
 
 These are qualitative requirements, such as "it should be fast" and could e.g. be benchmarked.
 
 - [tag:NRB00] The application should not leak any private nor sensitive informations like private keys
-- [tag:NRB01] The backend API needs to be designed in a way such that it's easy to swap out a web-UI implementation
-- [tag:NRB02] The web-UI should load fast
-- [tag:NRB03] The web-UI should respond on user interactions fast
-- [tag:NRB04] The web-UI should be designed in a user friendly way
-- [tag:NRB05] The web-UI should achieve a very high score running Google lighthouse against it
+- [tag:NRB01] The backend API needs to be designed in a way such that it's easy to swap out a client implementation
+- [tag:NRB02] The CLI should load fast
+- [tag:NRB03] The CLI should respond on user interactions fast
+- [tag:NRB04] The CLI should be designed in a user friendly way
 
 = High-level design <high-level-design>
 
@@ -162,7 +158,7 @@ From a services perspective, the system consists of four components:
 - L1 smart contract: This allows users to deposit, withdraw and transfer tokens
 - L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state. This is also where the ZKPs and ZKRs are generated.
 // - Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
-- CLI: Do everything the Web UI offers, and query and verify the Validium proofs
+// - CLI: Do everything the Web UI offers, and query and verify the Validium proofs
 
 == L2 server
 
