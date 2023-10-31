@@ -31,55 +31,59 @@
 
 = Introduction
 
-The Casper blockchain's ecosystem yearns for a scaling solution to achieve a higher transaction throughput and continue to stay competitive. As a first step towards providing a trustless scaling solution, the goal of the initial version 0.1 of this project, called Kairos, is to build a zero-knowledge (ZK) _validium_ for payment transactions in a second layer (L2). This system will both enable a higher transaction throughput and lower gas fees. Here, _validium_ refers to the fact that the data, such as account balances, are stored on L2 rather than on L1.
+The Casper blockchain's ecosystem yearns for a scaling solution to achieve a higher transaction throughput and continue to stay competitive. As a first step towards providing a trustless scaling solution, the goal of the initial version 0.1 of this project, called Kairos, is to build a zero-knowledge (ZK) _validium_ for payment transactions in a second layer (L2). This system will both enable a higher transaction throughput and lower gas fees. Here, _validium_ refers to a rollup where the data, such as account balances, are stored on L2 rather than on layer 1 (L1).
 
-Kairos V0.1 serves two major purposes:
+Additionally, Kairos V0.1 serves two other major purposes:
 
 - It is a first step towards a cheap and frictionless NFT minting and transfer system aiding Casper to become _the_ blockchain to push the digital art industry forward.
 
-- Its scope allows us to focus the engineering effort and move forward productively. More specifically, it allows exploring the problem space of building an L2 solution that leverages zero-knowledge technology and integrates with Casper's L1. Furthermore, the size and complexity of this project provide an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge into production, as well as allowing the team to collaborate and grow together.
+- The concise size and complexity of its scope, allows one to explore challenges and the problem space of building an L2 solution that leverages zero-knowledge technology and integrates with Casper's L1. Furthermore, it allows the team to collaborate and grow together by building a production-grade system.
 
-The initial version 0.1 of Kairos will support very few simple interactions and features. Users will be able to deposit and withdraw funds to an L1 contract controlled by Kairos. The L2 is then used to transfer tokens to others. In the remainder of this document, we will detail the requirements of such a system and how we plan to implement and test it.
+The initial version 0.1 of Kairos will support very few simple interactions and features. Users will be able to deposit and withdraw funds by interacting with an L1 contract controlled by Kairos. Transfers of funds to other participants will be serviced by the L2 and verified and stored by the L1. In the remainder of this document, we will detail the requirements of such a system.
 
-In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by low-level design considerations in @considerations and their conclusions in @low-level-design. After discussing testing concerns in @testing, we conclude with thread models and a glossary, which clarifies the terminology used throughout this document.
+In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we provide an abstract architecture in @architecture (Architecture), followed by low-level design considerations in @considerations and their conclusions in @low-level-design. After discussing testing concerns in @testing, we conclude with thread models and a glossary, which clarifies the terminology used throughout this document.
 
 = Product Overview<overview>
 
-To have a common denominator on the scope of the proof of concept, this section describes the high-level features it has to fulfill.
+To have a common denominator on the scope of Kairos V0.1, this section describes the high-level features it has to fulfill.
 
 == Features
 
 === Deposit money into L2 system
 
-A user should be able to deposit CSPR tokens from the Casper chain to their validium account at any given time through a command line interface (CLI).
+A user should be able to deposit CSPR tokens from the Casper chain to their Kairos account at any given time through a command line interface (CLI).
 
 === Withdraw money from L2 system
 
-A user should be able to withdraw CSPR tokens from their validium account to the Casper chain at any given time through a CLI. This interaction should be made possible without the approval of the validium operator (#link("https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals")[see Ethereum's validium]).
+A user should be able to withdraw CSPR tokens from their Kairos account to the Casper chain at any given time through a CLI. This interaction should not require the approval of the operator (#link("https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals")[see Ethereum's validium]).
 
 === Transfer money within the L2 system
 
-A user should be able to transfer CSPR tokens from their validium account to another user's validium account at any given time through a CLI.
+A user should be able to transfer CSPR tokens from their Kairos account to another user's Kairos account at any given time through a CLI.
 
 === Query account balances
 
-Anyone should be able to query the validium account balances of available CSPR tokens at any given time through a CLI. In particular, users can also query their personal account balance.
+Anyone should be able to query the Kairos account balances of available CSPR tokens at any given time through a CLI. In particular, users can also query their personal account balance.
 
 === Verification
 
-Each transfer must be verified by L1. In addition, at any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through the CLI or application programming interface (API), i.e. a machine-readable way.
+Anyone should be able to verify deposits, withdrawals, or transactions either through a CLI or application programming interface (API), i.e. a machine-readable way.
 
-== Usage
+== Product Application
 
-Version 0.1 can be used by any participants of the Casper network. It will allow any of them to transfer tokens with lower gas fees and significantly higher transaction throughput.
+=== Target Audience
 
-We will offer two user interfaces: A CLI client for users and a L2 API for developers. Thereby, we can serve customers directly while also allowing new projects to build on top of our platform. In addition, this allows customers to generate ZKPs on the client-side by using our L2 API.
+The target audience comprises users familiar with blockchain technology, and applications built on top of the Casper blockchain.
 
-Our L2 server itself will be a set of dedicated, powerful machines, including a powerful CPU and GPU, in order to provide GPU accelleration for ZK proving (see Risc0). The machines will run NixOS and require a solid internet connection. The CLI client will run on any Linux distribution.
+=== Operating Environment
+
+The product's backend will be deployed on modern powerful machines, equipped with a powerful GPU and a large amount of working memory as well as persistent disk space. The machines will have continuous acces to the internet.
+
+The CLI will be deployed on modern, potentially less powerfull hardware.
 
 = Requirements <requirements>
 
-Based on the product overview given in the previous section, this section aims to describe testable, functional requirements the validium needs to fulfill.
+Based on the product overview given in the previous section, this section aims to describe testable, functional requirements the system needs to fulfill.
 
 == Functional requirements
 
@@ -136,7 +140,9 @@ These are qualitative requirements, such as "it should be fast" and could e.g. b
 - [tag:NRB03] The CLI should respond on user interactions fast
 - [tag:NRB04] The CLI should be designed in a user friendly way
 
-= High-level design <high-level-design>
+= Architecture <architecture>
+
+Kairos's architecture is a typical client-server architecture, where the server (the backend) has access to a blockchain network. The client is a typical CLI application. And the server/backend consists of 6 components, whose roles will be described in the following @architecture-components. @components-diagram-figure displays the interfaces and interactions between the components of the system.
 
 #figure(
   image("components_diagram.svg", width: 100%),
@@ -144,6 +150,201 @@ These are qualitative requirements, such as "it should be fast" and could e.g. b
     Components diagram
   ],
 ) <components-diagram-figure>
+
+== Architecture Components <architecture-components>
+=== CLI client
+
+The CLI client's offers a simple user interface (UI) which provides commands to allow a user to deposit, transfer and withdraw funds allocated in their Kairos account. Once a user submits either of the transactions the client delegates the bulk of the work to the backend.
+
+=== Backend
+
+==== L2 Server <l2-server>
+
+The L2 server is the backends interface, through which external clients can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) in order to be able to persist the account balances, whose state representation is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, therefore the L2 server's task is also to create according transactions on the L1, which call respective smart contracts (@contracts) to do so. For performing and batching transfers the L2 utilizes a prooving system provided by the Prover service (@prover). For deposits and withdrawals the L2 server creates according Merkle-tree updates of the account balances.
+
+==== Prover <prover>
+
+The Prover is a separate service that exposes a _prove_ and a _verify_ endpoint, which will mainly be used by the L2 in order to prove batches of transactions. Under the hood the Prover utilizes a zero-knowledge proving system that computes the account balance resulting from the transactions within a batch and a prove of correct computation.
+
+==== Database <database>
+
+The Database is a persistent storage that stores the performed transactions and the account balances whose state is stored on the blockchain. In order to achieve more failsafe and reliable availability of the data it replicated sufficiently often. In the case of failure, standby's (replicas) can be used as new primary stores.
+
+==== Kairos State/ Verifier Contract <contracts>
+
+The Kairos State and Verifier Contract are responsible for verifying and performing state updates of the account balances on-chain. They can be two separate contracts or a single contract with two endpoints. The important thing is that the state update only happens if the updated state was verified beforehand. The contracts are already called by the L2 by creating according transactions and submitting them to a blockchain node.
+
+== APIs
+
+=== L2 Server <l2-server-api>
+- GET /counter returns the Validium counter which new L2 transactions should use in order to be accepted by the server
+- GET /accounts/:accountID returns a single user's L2 account balance
+- GET /accounts returns the current Validium state, i.e. all L2 account balances
+- POST /transfer takes in an L2 transaction in JSON format, and returns a TxID
+- GET /transfer/:TxID shows the status of a given transaction: Cancelled, ZKP in progress, batch proof in progress, or "posted in L1 block with blockhash X"
+- GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
+- GET /withdraw takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
+
+=== Kairos State/ Verifier Contract <contracts-api>
+
+- POST deposit: sender's public key, token ID, token amount, new Merkle root, metadata verifying the Merkle root, sender's signature
+  - Verify that this amount of tokens can be sent, and move it from the sender's L1 account to the Validium smart contract
+  - Verify the sender's signature
+  - Verify the new Merkle root given public inputs and metadata
+  - Update the smart contract's state
+- POST withdrawal: Receiver's public key, token ID, token amount, new Merkle root, metadata verifying the merkle root, receiver's signature
+  - Move the appropriate amount of tokens from the Validium smart contract to the receiver's L1 account
+  - Verify the receiver's signature
+  - Verify the new Merkle root given public inputs and metadata
+  - Update the smart contract's state
+- POST ZKV: ZKV, new Merkle root
+  - Verify ZKV
+  - Update the smart contract's state
+
+== Data
+
+=== CLI client/ L2 Server <l2-server-data>
+==== Deposit 
+- Depositor's address
+- Depositor's signature
+- Token amount
+- Token ID, i.e. currency
+
+==== Transfer
+- Sender's address
+- Receiver's address
+- Token amount
+- Token ID, i.e. currency
+- Sender's signature
+- Validium's counter, as discussed in @uniqueness
+
+==== Withdraw
+- Withdrawer's address
+- Withdrawer's signature
+- Token amount
+- Token ID, i.e. currency
+
+=== Kairos State/ Verifier Contract <contracts-data>
+- Current Merkle root, representing the Validium's state;
+- The Validium counter, see @uniqueness
+- Its own account balance, which amounts to the total sum of all the Validium account balances.
+
+== Component Interaction
+
+=== Deposit Sequence Diagram
+
+Depositing funds to user `Bob`'s account is divided into three phases, which are modelled in the following sequence diagrams.
+
+#page(flipped: true)[
+  In the first phase users submit their deposit requests to the L2 server, which updates the Merkle-tree root and creates a _Deploy_ which will execute the validation of this update, do the state transition and transfer the funds. This _Deploy_ also needs to be signed by the user before submitting since we transfer funds from the users purse to the Validiums wallet.
+  #figure(
+      image("deposit_sequence_diagram_client_submit.svg", width: 100%),
+      caption: [
+        Deposit: User submits a deposit to L2 which gets forwarded to L1.
+      ],
+  )
+]
+
+#page(flipped: true)[
+After submitting, the L1 smart-contracts take care of first validating the new Merkle-tree root hash, updating the validiums state, and transferring the funds.
+
+#figure(
+  image("deposit_sequence_diagram_deploy_execution.svg", width: 100%),
+  caption: [
+    Deposit: Execution of the _Deploy_ on L1.
+  ],
+)
+]
+
+#page(flipped: true)[
+Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
+
+#figure(
+  image("deposit_sequence_diagram_notify_l2.svg", width: 100%),
+  caption: [
+    Deposit: Notifying the L2 after succcessfull on-chain execution.
+  ],
+)
+]
+
+=== Transaction Sequence Diagram
+
+Transfering funds from user `Bob` to a user `Alice` can be divided into four phases, which are modelled in the following sequence diagrams.
+
+#page(flipped: true)[
+In the first phase users submit their transactions to the L2 server, which accumulates them and checks for independence.
+
+#figure(
+  image("transfer_sequence_diagram_client_submit.svg", width: 100%),
+  caption: [
+    Transfer: User submits a transaction to L2.
+  ],
+)
+]
+
+#page(flipped: true)[
+After `t` seconds or `n` transactions, the L2 server creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
+
+#figure(
+  image("transfer_sequence_diagram_l2_prove_deploy.svg", width: 100%),
+  caption: [
+    Transfer: Proving and submitting the proof.
+  ],
+)
+]
+
+#page(flipped: true)[
+After submitting, the L1 smart-contracts take care of first validating the proof and updating the validiums state.
+
+#figure(
+  image("transfer_sequence_diagram_deploy_execution.svg", width: 100%),
+  caption: [
+    Transfer: Execution of the Deploy on L1.
+  ],
+)
+]
+
+#page(flipped: true)[
+Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
+
+#figure(
+  image("transfer_sequence_diagram_notify_l2.svg", width: 100%),
+  caption: [
+    Transfer: Notifying the L2 after succcessfull on-chain execution.
+  ],
+)
+]
+
+== Algorithms <algorithms>
+
+=== Deposit/ Withdraw: Merkle tree updates <merkle-tree-update-algorithm>
+
+Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken on by the batch proof. The main reason for this is that we want to avoid transfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
+
+#figure(
+  grid(
+    columns: 2,
+    image("merkle-tree.svg", width: 80%),
+    image("merkle-tree-updated.svg", width: 80%)
+  ),
+  caption: [
+    How to update a single leaf of a Merkle tree
+  ],
+) <merkle-tree-update-figure-algorithm>
+
+Let us look at @merkle-tree-update-figure-algorithm as an example of a single-leaf Merkle tree update. As we can see, the datum D2 is updated to D2'. As a result, H2, A1 and R each get updated. The deposit transaction itself will include by necessity D2, D2', R and R', in order to provide the smart contract with all the information necessary in order to execute the right processes. In addition, the smart contract must verify that changing D2 to D2' does indeed lead to the update of the Merkle tree from root R to root R'. Note now that in order to verify this claim, we don't require the entire Merkle tree. Rather, all we need are values H1 and A2 and the directionality (i.e. the fact that H1 is to the left of H2, whereas A2 is to the right of A1, in the Merkle tree). Given these parameters, we can now check that indeed for
+
+$ "H2" = "hash"("D2"), "A1" = "hash"("H1", "H2") $
+$ "H2'" = "hash"("D2'"), "A1'" = "hash"("H1", "H2'") $
+
+it is true that
+$ R = "hash"("A1", "A2"), "R'" = "hash"("A1'", "A2"). $
+
+For a general balanced Merkle tree with $N$ leaves, this requires $log^2(N)$ hashes, each with their directionality, to be passed along to the Validium smart contract, to allow the verification.
+
+Note: This should be implemented and tested as well for cases where a leaf must be added/removed, rather than updated.
+
+= High-level design <high-level-design>
 
 Any ZK validium can be described as a combination of 6 components. For this project's version 0.1, we made the following choices:
 - Consensus layer: Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
@@ -161,9 +362,7 @@ From a services perspective, the system consists of three components:
 
 == L2 server
 
-The L2 server will be ran on three powerful machines running NixOS, as mentioned before. The server code will be written in Rust, to assure performance and simplify interactions with Casper's L1. The database will be postgres, replicated over the three machines.
-
-// @Mark: Do we want to build the L2 server in Haskell or in Rust?
+// @Mark: Do we want to build the L2 server in Haskell or in Rust? 
 // Pros:
 // - Easier to test, and better test tooling
 // - Clients can be generated from APIs such as Servant, ensuring correctness of server/client interactions
@@ -191,9 +390,6 @@ There will be a service, running on the same servers as the L2 server, which com
 // Note: The integration with Casper's L1 wallet shouldn't be difficult. There is an SDK in Typescript, which compiles to Javascript, and hence the small number of interactions we require with the L1 wallet will be implementable in anything else that compiles to or uses Javascript, whether that be Elm, Yesod, Typescript, Purescript..
 // Proposal: If the L2 server is implemented in Haskell, we could use Yesod. Otherwise our preferred choice would be Elm.
 
-== CLI
-
-// The CLI will be built using the same programming language as the L2 server, and packaged with Nix, supporting all Linux distributions. This allows us to use the client interface derived from the L2 server's API in the CLI, simplifying the implementation.
 
 = Design considerations <considerations>
 
@@ -327,46 +523,9 @@ Note: This should be implemented and tested as well for cases where a leaf must 
 
 = Low-level design <low-level-design>
 
-In this section, we will describe in detail how each component works individually. Note that these components are strung together into the bigger project according to the diagram shown in @high-level-design.
+In this section, we will describe in detail how each component works individually. Note that these components are strung together into the bigger project according to the diagram shown in @architecture.
 
 == L2 server
-
-=== Deposit Sequence Diagram
-
-Depositing funds to user `Bob`'s account is divided into three phases, which are modelled in the following sequence diagrams.
-
-#page(flipped: true)[
-  In the first phase users submit their deposit requests to the L2 server, which updates the Merkle-tree root and creates a _Deploy_ which will execute the validation of this update, do the state transition and transfer the funds. This _Deploy_ also needs to be signed by the user before submitting since we transfer funds from the users purse to the Validiums wallet.
-  #figure(
-      image("deposit_sequence_diagram_client_submit.svg", width: 100%),
-      caption: [
-        Deposit: User submits a deposit to L2 which gets forwarded to L1.
-      ],
-  )
-]
-
-#page(flipped: true)[
-After submitting, the L1 smart-contracts take care of first validating the new Merkle-tree root hash, updating the validiums state, and transferring the funds.
-
-#figure(
-  image("deposit_sequence_diagram_deploy_execution.svg", width: 100%),
-  caption: [
-    Deposit: Execution of the _Deploy_ on L1.
-  ],
-)
-]
-
-#page(flipped: true)[
-Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
-
-#figure(
-  image("deposit_sequence_diagram_notify_l2.svg", width: 100%),
-  caption: [
-    Deposit: Notifying the L2 after succcessfull on-chain execution.
-  ],
-)
-]
-
 
 === L2 transactions
 
@@ -390,53 +549,6 @@ The content of an L2 transaction is:
 
 Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree. However, this does require the L2 server to accept ZKPs directly, rather than only L2 transactions, which is a feature for a later version of the project.
 
-=== L2 Transaction Sequence Diagram
-
-Transfering funds from user `Bob` to a user `Alice` can be divided into four phases, which are modelled in the following sequence diagrams.
-
-#page(flipped: true)[
-In the first phase users submit their transactions to the L2 server, which accumulates them and checks for independence.
-
-#figure(
-  image("transfer_sequence_diagram_client_submit.svg", width: 100%),
-  caption: [
-    Transfer: User submits a transaction to L2.
-  ],
-)
-]
-
-#page(flipped: true)[
-After `t` seconds or `n` transactions, the L2 server creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
-
-#figure(
-  image("transfer_sequence_diagram_l2_prove_deploy.svg", width: 100%),
-  caption: [
-    Transfer: Proving and submitting the proof.
-  ],
-)
-]
-
-#page(flipped: true)[
-After submitting, the L1 smart-contracts take care of first validating the proof and updating the validiums state.
-
-#figure(
-  image("transfer_sequence_diagram_deploy_execution.svg", width: 100%),
-  caption: [
-    Transfer: Execution of the Deploy on L1.
-  ],
-)
-]
-
-#page(flipped: true)[
-Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
-
-#figure(
-  image("transfer_sequence_diagram_notify_l2.svg", width: 100%),
-  caption: [
-    Transfer: Notifying the L2 after succcessfull on-chain execution.
-  ],
-)
-]
 
 == Smart contract
 
@@ -543,7 +655,7 @@ The CLI should have two operating modes.
 
 == Whatever else Syd can come up with
 
-= Thread model
+= Threat model
 
 = Glossary
 
