@@ -31,16 +31,15 @@
 
 = Introduction
 
-// - Casper wants to scale, because this is a must for modern blockchains
-// - As a first step, we will build Kairos version 0.1, as set out in this document
-// - Kairos V0.1 is a zero-knowledge validium for Casper transfers, making Casper transactions have extremely low gas fees
-// - Kairos V0.1 has two purposes: Be a production-grade solution to focus the engineering efforts of the Casper Association, and form the first step towards Casper-based scaling solutions. In particular, this forms the first step towards a cheap, frictionless NFT minting and transfer systems, to aid Casper in pushing the digital art industry forward.
+The Casper blockchain's ecosystem yearns for a scaling solution to achieve a higher transaction throughput and continue to stay competitive. As a first step towards providing a trustless scaling solution, the goal of the initial version 0.1 of this project, called Kairos, is to build a zero-knowledge (ZK) _validium_ for payment transactions in a second layer (L2). This system will both enable a higher transaction throughput and lower gas fees. Here, _validium_ refers to the fact that the data, such as account balances, are stored on L2 rather than on L1.
 
-As a first step towards building a trustless scaling solution for the Casper blockchain, the goal of this initial version 0.1 of Kairos is to build a zero-knowledge _validium_ for payment transfers as a second layer (L2). Here, _validium_ refers to the fact that the data, such as account balances, are stored on L2 rather than on L1, which enables both a higher transaction throughput and reduced gas fees on Casper. Moreover, this initial version 0.1 forms the first step towards cheap, frictionless systems for NFT minting and transfers to aid Casper in becoming _the_ blockchain to push the digital art industry forward.
+Kairos V0.1 serves two major purposes:
 
-Another reason for building this initial version 0.1 is to focus the engineering effort and move forward productively, to explore the problem space of integrating with Casper's L1, building an L2, and generating and verifying ZK rollups. Furthermore, the size and complexity of this project provide an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge into production as well as allowing the team to collaborate and grow together by developing a production-grade solution.
+- It is a first step towards a cheap and frictionless NFT minting and transfer system aiding Casper to become _the_ blockchain to push the digital art industry forward.
 
-The initial version 0.1 of Kairos will support very few basic interactions and features. Any user will be able to deposit and withdraw funds to an L1 contract controlled by Kairos. The L2 is then used to transfer tokens to others. In the remainder of this document, we will detail the requirements of such a system and how we plan to implement and test it.
+- Its scope allows us to focus the engineering effort and move forward productively. More specifically, it allows exploring the problem space of building an L2 solution that leverages zero-knowledge technology and integrates with Casper's L1. Furthermore, the size and complexity of this project provide an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge into production, as well as allowing the team to collaborate and grow together.
+
+The initial version 0.1 of Kairos will support very few simple interactions and features. Users will be able to deposit and withdraw funds to an L1 contract controlled by Kairos. The L2 is then used to transfer tokens to others. In the remainder of this document, we will detail the requirements of such a system and how we plan to implement and test it.
 
 In @overview (Product Overview) we specify the high-level interactions that the proof of concept will implement. @requirements determines requirements based on the specified interactions to end-to-end test. Next, we provide an abstract architecture in @high-level-design (High-Level Design), followed by low-level design considerations in @considerations and their conclusions in @low-level-design. After discussing testing concerns in @testing, we conclude with thread models and a glossary, which clarifies the terminology used throughout this document.
 
