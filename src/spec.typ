@@ -31,7 +31,12 @@
 
 = Introduction
 
-As a first step towards building a trustless scaling solution for the Casper blockchain, the goal of this initial version 0.1 of Kairos is to build a zero-knowledge _validium_ for payment transfers in a second layer (L2). Here, _validium_ refers to the fact that the data, such as account balances, are stored on L2 rather than on L1, which enables both a higher transaction throughput and reduced gas fees on Casper. Moreover, this initial version 0.1 also forms the first step towards cheap, frictionless systems for NFT minting and transfers to aid Casper in becoming _the_ blockchain to push the digital art industry forward.
+// - Casper wants to scale, because this is a must for modern blockchains
+// - As a first step, we will build Kairos version 0.1, as set out in this document
+// - Kairos V0.1 is a zero-knowledge validium for Casper transfers, making Casper transactions have extremely low gas fees
+// - Kairos V0.1 has two purposes: Be a production-grade solution to focus the engineering efforts of the Casper Association, and form the first step towards Casper-based scaling solutions. In particular, this forms the first step towards a cheap, frictionless NFT minting and transfer systems, to aid Casper in pushing the digital art industry forward.
+
+As a first step towards building a trustless scaling solution for the Casper blockchain, the goal of this initial version 0.1 of Kairos is to build a zero-knowledge _validium_ for payment transfers as a second layer (L2). Here, _validium_ refers to the fact that the data, such as account balances, are stored on L2 rather than on L1, which enables both a higher transaction throughput and reduced gas fees on Casper. Moreover, this initial version 0.1 also forms the first step towards cheap, frictionless systems for NFT minting and transfers to aid Casper in becoming _the_ blockchain to push the digital art industry forward.
 
 Another reason for building this initial version 0.1 is to focus the engineering effort and move forward productively, to explore the problem space of integrating with Casper's L1, building an L2, and generating and verifying ZK rollups. Furthermore, the size and complexity of this project not only provide an opportunity to get a better understanding of the challenges associated with bringing zero-knowledge into production but also allow the team to collaborate and grow together by developing a production-grade solution.
 
