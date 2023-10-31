@@ -1,12 +1,9 @@
 @startuml
-node "WebClient" {
-}
-
 node "CliClient" {
 }
 
-node "ApiServer" {
-  port a443
+node "L2Server" {
+  port 443
   () "deposit"
   () "withdraw"
   () "transfer"
@@ -17,49 +14,47 @@ node "ApiServer" {
 
 node "Prover" {
   port p443
-  [proverlib] -up-> () "prove"
-  [proverlib] -up-> () "pVerify"
+  () "prove"
+  () "pVerify"
 }
 
-database "Postgres - primary" {
+database "Database - primary" {
   folder "Balances" {
   }
   folder "Transactions" {
   }
 }
-database "Postgres - standby 1" {
+database "Database - standby 1" {
 }
-database "Postgres - standby 2" {
+database "Database - standby 2" {
 }
 cloud "Casper Blockchain" {
   [VerifierContract]
-  [ValidiumStateContract]
+  [KairosStateContract]
 }
 
-"WebClient" --> "a443"
-
-"CliClient" --> "a443"
-"CliClient" --> "prove"
-"CliClient" --> "Casper Blockchain"
+"CliClient" --> "443"
 
 "transfer" --> "p443"
-"transfer"  --> "Postgres - primary"
-"transfer"  --> "ValidiumStateContract"
+"transfer"  --> "prove"
+"transfer"  --> "Database - primary"
+"transfer"  --> "KairosStateContract"
 
-"deposit"  --> "ValidiumStateContract"
-"deposit"  --> "Postgres - primary"
 
-"withdraw"  --> "ValidiumStateContract"
-"withdraw"  --> "Postgres - primary"
+"deposit"  --> "KairosStateContract"
+"deposit"  --> "Database - primary"
+
+"withdraw"  --> "KairosStateContract"
+"withdraw"  --> "Database - primary"
 
 "verify" --> "pVerify"
 
-"getBalance"  --> "Postgres - primary"
+"getBalance"  --> "Database - primary"
 
-"getTransactions"  --> "Postgres - primary"
+"getTransactions"  --> "Database - primary"
 
-"Postgres - primary" --> "Postgres - standby 1"
-"Postgres - primary" --> "Postgres - standby 2"
+"Database - primary" --> "Database - standby 1"
+"Database - primary" --> "Database - standby 2"
 
-"ValidiumStateContract" --> "VerifierContract"
+"KairosStateContract" --> "VerifierContract"
 @enduml
