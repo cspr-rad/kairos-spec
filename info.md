@@ -17,8 +17,6 @@ Next actions:
 
 The projects:
 - Casper node deep-dive: What does a Casper transaction look like? Data limits?
-- Casper wallet deep-dive: How can we get L2 Txs (JSON blobs) signed with the
-  user's private key?
 - Risc0 deep-dive
   * Benchmark running 10,000 small transactions, with GPU acceleration. Do we
     need parallelization over multiple machines for the PoC?
@@ -28,4 +26,6 @@ The projects:
 Remaining decisions, after deep-dives:
 - Split up the smart contract into two, where one stores the state and the other
   verifies the proofs
+
+
 

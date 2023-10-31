@@ -1,5 +1,5 @@
 #let title = [
-  Kairos: Zero-knowledge Validium Proof of Concept
+  Kairos: Zero-knowledge Casper Transaction scaling
 ]
 #let time_format = "[weekday] [month repr:long] [day padding:none], [year]"
 #set page(
@@ -41,7 +41,7 @@ In @overview (Product Overview) we specify the high-level interactions that the 
 
 = Product Overview<overview>
 
-To have a common denominator on the scope of the proof of concept, this section describes the high-level mandatory-, optional-, and delimination features it has to fulfill.
+To have a common denominator on the scope of the proof of concept, this section describes the high-level features it has to fulfill.
 
 == Mandatory Features
 
@@ -67,49 +67,9 @@ Due to the nature of validiums, transaction data will be stored off-chain. To en
 
 Each transfer must be verified by L1. In addition, at any given time anyone should be able to verify deposits, withdrawals, or transactions. This should be possible through a web UI, the CLI, or application programming interface (API), i.e. a machine-readable way.
 
-== Optional Features: Post-PoC features
-
-=== Query storage
-
-Anyone can query the transaction history based on certain filters, such as a specific party being involved and time constraints. This includes the public information associated with each transaction on both L1 and L2, as well as the associated ZKPs.
-
-=== ACTUS Contract support
-
-Users should be able to log the public information of their financial contracts on-chain, and allow verification of the proper execution of the contracts.
-
-=== Big scale NFT Minting and Transfering
-
-Users should be able to mint and transfer a large number of NFTs in an automated fashion.
-
-=== Support posting ZKP/ ZKRs directly
-
-Users should be able to post ZKPs/ ZKRs directly to allow them to keep their private information private, instead of conveying it to a L2 node.
-
-=== Parallelize ZKP/ZKR computations
-
-In order to speed up the responsiveness of the system, the computation of the ZKPs and ZKRs should be parallelizable over multiple machines.
-
-=== Decentralized Data Availability
-
-In order to build towards a trustless service, the data availability layer should be decentralized.
-
-=== Decentralized L2 Node
-
-In order to build towards a trustless service, the L2 layer should be decentralized.
-
-=== Support multiple and latest zKVM
-
-Users should be able to have a selection between different state-of-the art zKVMs.
-
-=== Risk simulation
-
-Users should be able to use risk simulation services on financial institution's contract data. In practice, this means that anyone can submit a risk simulation algorithm based on ACTUS contracts. The service will run these algorithms on the data associated with a given financial institution and provide the results.
-
-In addition, the system should provide the necessary technology for financial institution customers to run risk simulation algorithms on their private data, and not only compute their risk situation but also provide a proof that this analysis resulted from the given algorithm ran on their private data, corresponding to the ZKV posted on-chain.
-
 == Usage
 
-The proof of concept can be used by any participants of the Casper network. It will allow any of them to transfer tokens with lower gas fees and significantly higher transaction throughput.
+Version 0.1 can be used by any participants of the Casper network. It will allow any of them to transfer tokens with lower gas fees and significantly higher transaction throughput.
 
 There will be two groups of users: tech-savvy and less tech-savvy. In order to accommodate both groups, we will offer three user interfaces: A web interface (website) for the less tech-savvy customer, and a CLI client and a L2 API for developers. Thereby, we can serve customers directly while also allowing new projects to build on top of our platform. Even customers in low-resource environments can participate, as we will move the resource-heavy away from the web UI, while allowing developers to generate ZKPs on the client-side by using our L2 API.
 
@@ -167,15 +127,6 @@ Based on the product overview given in the previous section, this section aims t
 - [tag:FRD03] Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
 - [tag:FRD04] Transaction data should not be written if the verification of the proof of the interactions fails
 
-=== Post-PoC: Query all transfers given filters
-
-- [tag:FRA02] The user should be able to see all the past transactions involving its validium account
-- [tag:FRA03] Transactions should be filterable by time
-- [tag:FRA04] Transactions should be filterable by sender
-- [tag:FRA05] Transactions should be filterable by recipient
-- [tag:FRA06] Transactions should be filterable by amount
-- [tag:FRA07] Transactions should be filterable by any combination of the previously mentioned criterias
-
 == Non-functional requirements
 
 These are qualitative requirements, such as "it should be fast" and could e.g. be benchmarked.
@@ -196,7 +147,7 @@ These are qualitative requirements, such as "it should be fast" and could e.g. b
   ],
 ) <components-diagram-figure>
 
-Any ZK validium can be described as a combination of 6 components. For this proof of concept, we made the following choices:
+Any ZK validium can be described as a combination of 6 components. For this project's version 0.1, we made the following choices:
 - Consensus layer: Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
 - Contracts: Simple payments
 - ZK prover: Risc0 generates proofs from the L2 simple payment transactions
@@ -207,7 +158,7 @@ Any ZK validium can be described as a combination of 6 components. For this proo
 From a services perspective, the system consists of four components:
 - L1 smart contract: This allows users to deposit, withdraw and transfer tokens
 - L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state. This is also where the ZKPs and ZKRs are generated.
-- Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
+// - Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
 - CLI: Do everything the Web UI offers, and query and verify the Validium proofs
 
 == L2 server
@@ -236,9 +187,9 @@ The L1 smart contract will be implemented in WASM. Each update of the contract w
 
 There will be a service, running on the same servers as the L2 server, which computes ZK proofs and ZK rollups. This service will be implemented in Rust, using Risc0 to generate ZKPs.
 
-== Web UI
-
-// @Mark: What tooling do we want to use for the Web UI?
+// Web UI is now post-version 0.1
+// == Web UI
+// 
 // Note: The integration with Casper's L1 wallet shouldn't be difficult. There is an SDK in Typescript, which compiles to Javascript, and hence the small number of interactions we require with the L1 wallet will be implementable in anything else that compiles to or uses Javascript, whether that be Elm, Yesod, Typescript, Purescript..
 // Proposal: If the L2 server is implemented in Haskell, we could use Yesod. Otherwise our preferred choice would be Elm.
 
@@ -262,7 +213,7 @@ We are attempting to create an L2 solution which can scale up to 10,000 transact
 
 === Centralized L2
 
-Decentralized L2s require many complex problems to be resolved. For example, everyone involved in the L2 must get paid, including the storers and provers. In addition, we must avoid any trust assumptions on individual players, making it difficult to provide reasonable storage options. Instead, this requires a complex solution such as Starknet's Data Availability Committee. Each of these issues takes time to resolve, and doing all this within the proof of concept is likely to prevent the project from ever launching into production. Therefore, a centralized L2 ran by the Casper Association is an attractive initial solution. This poses the question, what are the dangers of centralized L2s?
+Decentralized L2s require many complex problems to be resolved. For example, everyone involved in the L2 must get paid, including the storers and provers. In addition, we must avoid any trust assumptions on individual players, making it difficult to provide reasonable storage options. Instead, this requires a complex solution such as Starknet's Data Availability Committee. Each of these issues takes time to resolve, and doing all this within the project's version 0.1 is likely to prevent the project from ever launching into production. Therefore, a centralized L2 ran by the Casper Association is an attractive initial solution. This poses the question, what are the dangers of centralized L2s?
 - Denial of service: The L2 server could block any user from using the system
 - Loss of trust in L2: The L2 server could blacklist someone, thereby locking in their funds. This opens up attacks based on blackmail.
 - Loss of data: What if the L2 server loses the data? Then we can no longer confirm who owns what, and the L2 system dies a painful death.
@@ -277,11 +228,11 @@ Finally, what if the L2 loses its data? The Casper Association has a very strong
 
 === Privacy provided by L2
 
-We decided not to provide any increased privacy compared to Casper's L1 within this proof of concept. The reason for this is that providing any extra privacy would raise AML-related concerns we wish to stay away from, as seen in the famous TornadoCash example.
+We decided not to provide any increased privacy compared to Casper's L1 within version 0.1, since providing any extra privacy would raise AML-related concerns we wish to stay away from, as seen in the famous TornadoCash example.
 
 === The L2 server should get paid
 
-Within our proof of concept this issue is rather simple, given the L2 is centralized. All we need to ensure is that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to appropriately maintain and extend the L2. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
+Within version 0.1 this issue is rather simple, given the L2 is centralized. All we need to ensure is that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to appropriately maintain and extend the L2. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
 
 = Design considerations <considerations>
 
@@ -327,7 +278,7 @@ Because losing the Validium state would lead to a loss of all the funds held by 
 
 By configuring the streaming replication to be synchronous, we can additionally achieve reliable freshness of the data across all servers. Moreover, it makes the cluster more resilient if the primary server fails after updating. In an asynchronous setting, data could be written to the primary server, which could afterwards fail before sending the update to the standby server, leading to loss of data. In a synchronous setting, the update to the primary server would fail and require a retry until the update gets replicated across all instances.
 
-The number of standby servers can be arbitrarily increased or decreased. For the PoC we decided to start with one primary server and two replicating standby servers.
+The number of standby servers can be arbitrarily increased or decreased. For version 0.1 we decided to use one primary server and two replicating standby servers.
 
 Naively, we might want to consider building a failsafe into the Validium smart contract in case the Validium's state gets lost. After all, such a situation would be disasterous. However, building a failsafe would itself create risk and complexity. Therefore, we opt to focus on building data redundancy as mentioned above, including measures such having the three servers spread out geographically.
 
@@ -339,9 +290,9 @@ Naively, we might want to consider building a failsafe into the Validium smart c
 
 === Load balance for ZK proving
 
-Within the PoC, the ZKPs themselves will be sufficiently quick to generate that there is little opportunity for speedup through parallelization. When exploring the ZKR, we should look into parallelization opportunities.
+Within version 0.1, the ZKPs themselves will be sufficiently quick to generate that there is little opportunity for speedup through parallelization. When exploring the ZKR, we should look into parallelization opportunities.
 
-Note that we can limit the number of transactions we accept during a single loop of the system in order to provide a feasible PoC. After going into production, we can optimize the server(s)' performance to keep up with demand.
+Note that we can limit the number of transactions we accept during a single loop of the system in order to provide a feasible version 0.1. After going into production, we can optimize the server(s)' performance to keep up with demand.
 
 === What happens when you post an L2 transaction?
 
@@ -403,7 +354,7 @@ Within the casper-node, if the ZK verification code doesn't fit into a smart con
 
 === Comparison of ZK provers
 
-We decided to build the PoC using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the ZKR computation.
+Version 0.1 will be built using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the ZKR computation.
 
 = Low-level design <low-level-design>
 
@@ -466,7 +417,7 @@ The content of an L2 transaction is:
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
 - GET /withdraw takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
 
-Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree. However, this does require the L2 server to accept ZKPs directly, rather than only L2 transactions, which is a post-PoC feature.
+Note that through the CLI, any user can decide to compute the ZKP necessary for depositing/withdrawing money locally, thereby relying less on the L2 server. This cuts down the dependency on the L2 server to nothing but requesting the current Merkle tree. However, this does require the L2 server to accept ZKPs directly, rather than only L2 transactions, which is a feature for a later version of the project.
 
 === L2 Transaction Sequence Diagram
 
@@ -561,24 +512,29 @@ The ZK rollup verifies the following:
 
 Its public inputs are the old and new Merkle root. The private inputs are the list of L2 transactions and their ZKPs, as well as the full old Merkle tree.
 
-== Web UI
-
-// TODO: Deep-dive into the Casper wallet. Can we sign arbitrary JSON blobs? If not, how could we use the user's private key to sign our L2 Txs?
-
-The Web UI offers the following interactions:
-- Connect to Casper wallet
-- Sign L2 Tx: This requires an "L2 wallet" of some type
-- Query Validium balance
-- Query Casper L1 balance
-- Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
-- Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
+// == Web UI
+// 
+// Post version 0.1 todo: Deep-dive into the Casper wallet. Can we sign arbitrary JSON blobs? If not, how could we use the user's private key to sign our L2 Txs?
+// 
+// The Web UI offers the following interactions:
+// - Connect to Casper wallet
+// - Sign L2 Tx: This requires an "L2 wallet" of some type
+// - Query Validium balance
+// - Query Casper L1 balance
+// - Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node
+// - Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
 
 == CLI
 
 The CLI offers the following interactions:
-- All Web UI interactions
-- Query last N ZKPs posted to L1
-- Verify a ZKP
+- Connect to Casper wallet
+- Sign L2 Tx
+- Query Validium balance
+- Query Casper L1 balance
+- Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node. This will be possible in two modes: Trusted, where the L2 server does the necessary computations, and trustless, where the L2 is only needed in order to read the Validium state, and the computations are performed locally.
+- Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
+- Query last N ZKP/ZKRs posted to L1
+- Verify ZKP/ZKRs
 
 = Testing <testing>
 
@@ -595,10 +551,6 @@ The CLI offers the following interactions:
 - Test our assumption that we don't need Merkle tree rebalancing. If this fails, research and implement Merkle tree rebalancing, generate ZKPs for it and include this as an endpoint to the Validium smart contract.
 
 == Whatever else Syd can come up with
-
-= Notes
-
-- Post-PoC, we want to allow users to post ZKPs of L2 transactions as well, rather than only raw L2 transactions.
 
 
 
