@@ -76,7 +76,7 @@ Version 0.1 can be used by any participants of the Casper network. It will allow
 
 We will offer two user interfaces: A CLI client for users and a L2 API for developers. Thereby, we can serve customers directly while also allowing new projects to build on top of our platform. In addition, this allows customers to generate ZKPs on the client-side by using our L2 API.
 
-Our L2 server itself will be a set of dedicated, powerful machines, including a powerful CPU and GPU, in order to provide GPU accelleration for ZK proving (see Risc0). The machines will run NixOS and require a solid internet connection. The CLI client will run on any Linux distribution, whereas the web client will support any modern web-browser with JavaScript enabled.
+Our L2 server itself will be a set of dedicated, powerful machines, including a powerful CPU and GPU, in order to provide GPU accelleration for ZK proving (see Risc0). The machines will run NixOS and require a solid internet connection. The CLI client will run on any Linux distribution.
 
 = Requirements <requirements>
 
@@ -201,7 +201,7 @@ There will be a service, running on the same servers as the L2 server, which com
 === Operating Modes
 
 The CLI should have two operating modes
-+ Trusting: the CLI should behave like the Web-client and use the L2 server's endpoints to perform the interactions with the Validium
++ Trusting: the CLI should use the L2 server's endpoints to perform the interactions with the Validium
 + Trustless: the CLI should perform all computations locally except for querying the data availability layer to obtain the Validium's state.
 
 === Validium vs. Rollup
