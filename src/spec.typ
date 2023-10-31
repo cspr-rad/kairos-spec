@@ -147,17 +147,17 @@ These are qualitative requirements, such as "it should be fast" and could e.g. b
 
 Any ZK validium can be described as a combination of 6 components. For this project's version 0.1, we made the following choices:
 - Consensus layer: Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
-- Contracts: Simple payments
+- L2 transactions supported: Simple payments
 - ZK prover: Risc0 generates proofs from the L2 simple payment transactions
 - Rollup: Risc0 also combines proofs into a batch proof, posted on L1
 - L2 nodes: A centralized L2 server connects all other components
 - Data availability: The L2 server offers an interface to query public inputs and their associated proofs as well as the validium's current state
 
-From a services perspective, the system consists of four components:
+From a services perspective, the system consists of three components:
 - L1 smart contract: This allows users to deposit, withdraw and transfer tokens
 - L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state. This is also where the ZKPs and batch proofs are generated.
 // - Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
-// - CLI: Do everything the Web UI offers, and query and verify the Validium proofs
+- CLI: Connect to your wallet, deposit, withdraw and transfer tokens, query the Validium's state and your own balance, and query and verify the Validium proofs
 
 == L2 server
 
@@ -176,7 +176,7 @@ The L2 server will be ran on three powerful machines running NixOS, as mentioned
 
 == Smart contract
 
-The L1 smart contract will be implemented in WASM. Each update of the contract will be accompanied by metadata to confirm the update was made legitimately, such as a ZKP. When a contract endpoint is called, the contract
+The L1 smart contract will be implemented in Rust, compiled to WASM and deployed to the Casper blockchain. Each update of the contract will be accompanied by metadata to confirm the update was made legitimately, such as a ZKP. When a contract endpoint is called, the contract
 + computes the proof's "public inputs", given the contract endpoint call;
 + verifies the update was done correctly, given the public inputs, contract endpoint and metadata, e.g. by running the ZK verifier;
 + if the verification succeeds, the L1 transaction is accepted.
@@ -195,13 +195,15 @@ There will be a service, running on the same servers as the L2 server, which com
 
 // The CLI will be built using the same programming language as the L2 server, and packaged with Nix, supporting all Linux distributions. This allows us to use the client interface derived from the L2 server's API in the CLI, simplifying the implementation.
 
+= Design considerations <considerations>
+
 == Design decisions
 
 === Operating Modes
 
-The CLI should have two operating modes
-+ Trusting: the CLI should use the L2 server's endpoints to perform the interactions with the Validium
-+ Trustless: the CLI should perform all computations locally except for querying the data availability layer to obtain the Validium's state.
+The CLI should have two operating modes.
++ Trusting: the CLI should use the L2 server's endpoints to perform the interactions with the Validium.
++ Trustless: the CLI should perform all computations locally except for querying the data availability layer to obtain the Validium's state and submitting L2 transactions to the L2 server.
 
 === Validium vs. Rollup
 
@@ -231,10 +233,6 @@ We decided not to provide any increased privacy compared to Casper's L1 within v
 === The L2 server should get paid
 
 Within version 0.1 this issue is rather simple, given the L2 is centralized. All we need to ensure is that the Casper ecosystem grows and benefits from the existence of the L2, and the Casper Association will receive funds to appropriately maintain and extend the L2. Also note that worst-case scenario, as long as the current Valadium state is known, any user can still withdraw their funds from the Validium.
-
-= Design considerations <considerations>
-
-In this section, we will describe in detail how each component works individually. Note that these components are strung together into the bigger project according to the diagrams shown in @high-level-design.
 
 == L2 server
 
@@ -356,6 +354,8 @@ Within the casper-node, if the ZK verification code doesn't fit into a smart con
 Version 0.1 will be built using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the batch proof computation.
 
 = Low-level design <low-level-design>
+
+In this section, we will describe in detail how each component works individually. Note that these components are strung together into the bigger project according to the diagram shown in @high-level-design.
 
 == L2 server
 
@@ -551,15 +551,15 @@ The CLI offers the following interactions:
 
 == Whatever else Syd can come up with
 
-== Thread model
+= Thread model
 
-== Glossary
+= Glossary
 
 Brief descriptions:
 - L1: The Casper blockchain as it currently runs.
 - L2: A layer built on top of the Casper blockchain, which leverages Casper's consensus algorithm and existing infrastructure for security purposes while adding scaling and/or privacy benefits
 
-=== ZKP
+== ZKP
 
 In recent decades, a new industry has evolved around the concept of zero knowledge proofs (ZKPs). In essence, the goal of this industry is to allow party A to prove to party B that they are in possession of information X without revealing this information to party B. In practice, this is accomplished by party A generating some proof, called a zero knowledge proof, based on information X, in such a way as to allow party B to verify that the proof (that party A possesses information X). In addition, this zero knowledge proof cannot be used in order to gain any information about X other than party A's possession of the information, hence the term "zero knowledge".
 
@@ -567,7 +567,7 @@ This general concept has many applications for two specific reasons: Privacy and
 
 The second feature of zero knowledge proofs is scalability. Imagine information X is a large amount of data, then it is possible to generate a ZKP proving party A possesses data X, such that the ZKP itself is much smaller than the data X. This feature of ZKPs is particularly interesting to blockchains, as they experience an accute problem: Each transaction posted to a blockchain must, for most blockchains, be verified by each node. This provides a lot of duplicate work and thereby prevents most blockchains from scaling. One solution to this problem is to leverage ZKPs, where one server collects a set of transactions, generates proofs for them and then batches these proofs into one so-called batch proof. This batch proof can then be posted on the blockchain itself ("L1"), together with the related blockchain's state change. This concept constitutes an L2 scaling solution blockchains.
 
-=== Merkle tree
+== Merkle tree
 
 A Merkle tree is a cryptographic concept to generate a hash for a set of data. It allows for efficient and secure verification of the contents of large data structures. In addition, Merkle trees allow to quickly recompute the hash (called a "Merkle root") when the data changes locally, e.g. if only one element of a list of data points changes.
 
@@ -580,11 +580,11 @@ We will now briefly explain how to construct a Merkle tree and compute the Merkl
   ],
 ) <merkle-tree-figure>
 
-=== ZK Rollup
+== ZK Rollup
 
 A ZK Rollup is the simplest way to create a zero knowledge-based L2 scaling solution on top of a blockchain.
 
-=== ZK Validium
+== ZK Validium
 
 
 
