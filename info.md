@@ -6,7 +6,8 @@ Useful reference links:
 - https://docs.starkware.co/starkex/architecture/solution-architecture.html
 
 Notes:
-- "Validity proofs" are ZKPs rolled up into one. In the spec, we call them ZKRs.
+- "Validity proofs" are ZKPs rolled up into one. In the spec, we call them batch
+  proofs.
 
 Next actions:
 - [x] Finish up the diagrams (Marijan)
@@ -20,8 +21,8 @@ The projects:
 - Risc0 deep-dive
   * Benchmark running 10,000 small transactions, with GPU acceleration. Do we
     need parallelization over multiple machines for the PoC?
-  * Benchmark the storage and computational needs of ZKR verification: Can this
-    run within a smart contract?
+  * Benchmark the storage and computational needs of batch proof verification:
+    Can this run within a smart contract?
 
 Remaining decisions, after deep-dives:
 - Split up the smart contract into two, where one stores the state and the other

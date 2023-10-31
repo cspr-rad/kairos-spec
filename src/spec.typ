@@ -149,13 +149,13 @@ Any ZK validium can be described as a combination of 6 components. For this proj
 - Consensus layer: Casper's L1, which must be able to accept deposits and withdrawals and accept L2 state updates
 - Contracts: Simple payments
 - ZK prover: Risc0 generates proofs from the L2 simple payment transactions
-- Rollup: Risc0 also combines proofs into a compressed ZKR, posted on L1
+- Rollup: Risc0 also combines proofs into a batch proof, posted on L1
 - L2 nodes: A centralized L2 server connects all other components
 - Data availability: The L2 server offers an interface to query public inputs and their associated proofs as well as the validium's current state
 
 From a services perspective, the system consists of four components:
 - L1 smart contract: This allows users to deposit, withdraw and transfer tokens
-- L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state. This is also where the ZKPs and ZKRs are generated.
+- L2 server: This allows users to post L2 transactions, generates ZKPs and posts the results on Casper's L1, and allows for querying the validium's current state. This is also where the ZKPs and batch proofs are generated.
 // - Web UI: Connect to your wallet, deposit, withdraw and transfer tokens, and query the validium's state and your own balance
 // - CLI: Do everything the Web UI offers, and query and verify the Validium proofs
 
@@ -254,13 +254,13 @@ We must ensure that each L2 transaction which is posted to the L2 server, can on
 
 The former option is difficut to accomplish, as there are few real-world concepts which translate into the blockchain world easily. For example, naively speaking, time would be a great option: What if we add a timestamp to each L2 transaction? There are two problems with a suggestion like this:
 - Time is a very complex concept in the blockchain world. Which `currentTime` should the timestamp be compared to by a casper-node? There is no well-defined time at which a block is added to the blockchain, as each node does so at a different time.
-- We must ensure that the bounds on the timestamp are loose enough such that no transactions meant to go into a given ZKR are refused, while never allowing a transaction which was added to the last ZKR to be added to a new one. This requirement of having no mistakes on either end, is so stringent that timestamps don't offer enough information.
+- We must ensure that the bounds on the timestamp are loose enough such that no transactions meant to go into a given batch proof are refused, while never allowing a transaction which was added to the last batch proof to be added to a new one. This requirement of having no mistakes on either end, is so stringent that timestamps don't offer enough information.
 
-The alternative is to add a piece of information X about the Validium's state to each L2 transaction. The ZKR can then include that piece of information as a public input, and check that all L2 transactions have that same public input. However, we must make sure that X is unique, meaning that even if the Validium reverts back to an old state, no old L2 transactions can be reused against the will of the person who signed them. Therefore, we decided to make use of [logical time](https://en.wikipedia.org/wiki/Logical_clock) analogous to [lamport timestamps](https://en.wikipedia.org/wiki/Lamport_timestamp). Meaning that X will be a counter, initialized at 0 and increasing by 1 every time a ZKR is posted to the L1. As such, the ZKR and Validium smart contract can verify perfectly whether a given L2 transaction fits into its rollup, while also providing a simple and clear user interface.
+The alternative is to add a piece of information X about the Validium's state to each L2 transaction. The batch proof can then include that piece of information as a public input, and check that all L2 transactions have that same public input. However, we must make sure that X is unique, meaning that even if the Validium reverts back to an old state, no old L2 transactions can be reused against the will of the person who signed them. Therefore, we decided to make use of [logical time](https://en.wikipedia.org/wiki/Logical_clock) analogous to [lamport timestamps](https://en.wikipedia.org/wiki/Lamport_timestamp). Meaning that X will be a counter, initialized at 0 and increasing by 1 every time a batch proof is posted to the L1. As such, the batch proof and Validium smart contract can verify perfectly whether a given L2 transaction fits into its rollup, while also providing a simple and clear user interface.
 
 === Two phases of the server <phases>
 
-The L2 server accumulates a queue of L2 transactions which can be posted into the same ZKR. Based upon a number of limits #footnote[Two examples of such limits would be the number of transactions posted into one ZKR, and the time window which is compiled into one ZKR. The latter limit is necessary in order to allow a sensible sequential throughput as well.] the server will start computing a ZKR based on its current queue. Any new transactions must now set their Validium counter to one higher than before, in order to fit into the next ZKR rather than the current one. This will be communicated by the L2 server through a clear error.
+The L2 server accumulates a queue of L2 transactions which can be posted into the same batch proof. Based upon a number of limits #footnote[Two examples of such limits would be the number of transactions posted into one batch proof, and the time window which is compiled into one batch prof. The latter limit is necessary in order to allow a sensible sequential throughput as well.] the server will start computing a batch proof based on its current queue. Any new transactions must now set their Validium counter to one higher than before, in order to fit into the next batch proof rather than the current one. This will be communicated by the L2 server through a clear error.
 
 === How will L2 become aware of deposits and withdrawals?
 
@@ -290,7 +290,7 @@ Naively, we might want to consider building a failsafe into the Validium smart c
 
 === Load balance for ZK proving
 
-Within version 0.1, the ZKPs themselves will be sufficiently quick to generate that there is little opportunity for speedup through parallelization. When exploring the ZKR, we should look into parallelization opportunities.
+Within version 0.1, the ZKPs themselves will be sufficiently quick to generate that there is little opportunity for speedup through parallelization. When exploring the batch proof, we should look into parallelization opportunities.
 
 Note that we can limit the number of transactions we accept during a single loop of the system in order to provide a feasible version 0.1. After going into production, we can optimize the server(s)' performance to keep up with demand.
 
@@ -304,8 +304,8 @@ Note that we can limit the number of transactions we accept during a single loop
   - TokenID and amount are legitimate, given the current Validium's state
   - The transaction is independent of the current queue of transactions, i.e. the sender and recipient aren't included yet
 - Generate a ZKP and write it to the database
-- During the server's phase 2, generate the ZKR and post it to the L1 smart contract
-- Put the status of all transactions included in this ZKR to Success once the L1 transaction is accepted
+- During the server's phase 2, generate the batch proof and post it to the L1 smart contract
+- Put the status of all transactions included in this batch proof to Success once the L1 transaction is accepted
 
 Notes:
 - Anytime the L2 server posts something to its database, this information is sent to the backup servers.
@@ -318,7 +318,7 @@ Each smart contract endpoint will require the new Merkle root and some form of p
 
 === How do Merkle tree updates work? <merkle-tree-update>
 
-Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken on by the ZKR. The main reason for this is that we want to avoid transfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
+Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken on by the batch proof. The main reason for this is that we want to avoid transfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.
 
 #figure(
   grid(
@@ -353,7 +353,7 @@ Within the casper-node, if the ZK verification code doesn't fit into a smart con
 
 === Comparison of ZK provers
 
-Version 0.1 will be built using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the ZKR computation.
+Version 0.1 will be built using Risc0 as a ZK prover system, both for the individual ZKPs and for the rollup. The reason for this is a combination of Risc0's maturity in comparison to its competitors, and Risc0's clever combination of STARKs and SNARKs to quickly produce small proofs and verify them. In addition, Risc0 is one of few options which allow for GPU acceleration for the batch proof computation.
 
 = Low-level design <low-level-design>
 
@@ -412,7 +412,7 @@ The content of an L2 transaction is:
 - GET /accounts/:accountID returns a single user's L2 account balance
 - GET /accounts returns the current Validium state, i.e. all L2 account balances
 - POST /transfer takes in an L2 transaction in JSON format, and returns a TxID
-- GET /transfer/:TxID shows the status of a given transaction: Cancelled, ZKP in progress, ZKR in progress, or "posted in L1 block with blockhash X"
+- GET /transfer/:TxID shows the status of a given transaction: Cancelled, ZKP in progress, batch proof in progress, or "posted in L1 block with blockhash X"
 - GET /deposit takes in a JSON request for an L1 deposit and calculates the new Merkle root as well as generating a ZKP for it
 - GET /withdraw takes in a JSON request for an L1 withdrawal and calculates the new Merkle root as well as generating a ZKP for it
 
@@ -506,7 +506,7 @@ The zero knowledge proofs for transfer transaction consist of the following:
 The ZK rollup verifies the following:
 - The ZKPs don't clash, i.e. they all have separate senders and receivers
 - All ZKPs are valid
-- All L2 transactions include as a public input the last Merkle root posted on L1 by L2. This Merkle root itself is taken as a public input to the ZKR.
+- All L2 transactions include as a public input the last Merkle root posted on L1 by L2. This Merkle root itself is taken as a public input to the batch proof.
 - The old Merkle root is correctly transformed into the new Merkle root through applying all the L2 transactions
 
 Its public inputs are the old and new Merkle root. The private inputs are the list of L2 transactions and their ZKPs, as well as the full old Merkle tree.
@@ -532,8 +532,8 @@ The CLI offers the following interactions:
 - Query Casper L1 balance
 - Deposit on and withdraw from Validium: Create, sign & submit L1 transaction, check its status on casper-node. This will be possible in two modes: Trusted, where the L2 server does the necessary computations, and trustless, where the L2 is only needed in order to read the Validium state, and the computations are performed locally.
 - Transfer within Validium: Query Validium state, create, sign & submit L2 transaction, check its status on L2 server
-- Query last N ZKP/ZKRs posted to L1
-- Verify ZKP/ZKRs
+- Query last N ZKP/batch proofs posted to L1
+- Verify ZKPs and batch proofs
 
 = Testing <testing>
 
@@ -555,13 +555,36 @@ The CLI offers the following interactions:
 
 == Glossary
 
-- L1
-- L2
-- ZKP
-- Merkle tree
-- Validium
-- ZK rollup
-- Batch proof
+Brief descriptions:
+- L1: The Casper blockchain as it currently runs.
+- L2: A layer built on top of the Casper blockchain, which leverages Casper's consensus algorithm and existing infrastructure for security purposes while adding scaling and/or privacy benefits
+
+=== ZKP
+
+In recent decades, a new industry has evolved around the concept of zero knowledge proofs (ZKPs). In essence, the goal of this industry is to allow party A to prove to party B that they are in possession of information X without revealing this information to party B. In practice, this is accomplished by party A generating some proof, called a zero knowledge proof, based on information X, in such a way as to allow party B to verify that the proof (that party A possesses information X). In addition, this zero knowledge proof cannot be used in order to gain any information about X other than party A's possession of the information, hence the term "zero knowledge".
+
+This general concept has many applications for two specific reasons: Privacy and scaling. Firstly, zero knowledge proofs allow you to share partial information, retaining your privacy. For example, I could share my birthday in an encoded way (e.g. hashed) and generate a zero knowledge proof that my age is higher than 21, thereby only revealing to you the fact that I am older than 21, and not what my actual age is. Similarly, I could prove to you that I have the password associated to a given Facebook account without actually having to reveal my password.
+
+The second feature of zero knowledge proofs is scalability. Imagine information X is a large amount of data, then it is possible to generate a ZKP proving party A possesses data X, such that the ZKP itself is much smaller than the data X. This feature of ZKPs is particularly interesting to blockchains, as they experience an accute problem: Each transaction posted to a blockchain must, for most blockchains, be verified by each node. This provides a lot of duplicate work and thereby prevents most blockchains from scaling. One solution to this problem is to leverage ZKPs, where one server collects a set of transactions, generates proofs for them and then batches these proofs into one so-called batch proof. This batch proof can then be posted on the blockchain itself ("L1"), together with the related blockchain's state change. This concept constitutes an L2 scaling solution blockchains.
+
+=== Merkle tree
+
+A Merkle tree is a cryptographic concept to generate a hash for a set of data. It allows for efficient and secure verification of the contents of large data structures. In addition, Merkle trees allow to quickly recompute the hash (called a "Merkle root") when the data changes locally, e.g. if only one element of a list of data points changes.
+
+We will now briefly explain how to construct a Merkle tree and compute the Merkle root (the "hash" of the data) given a list of data points, as shown in figure @merkle-tree-figure. First, for each data point, we compute the hash and note that down. These hashes form the leafs of the Merkle tree. Then, in each layer of the tree, two neighboring hashes are combined and hashed again, assigning the resulting value to this node. Eventually the tree ends in one node, the value of which is named the Merkle root.
+
+#figure(
+  image("merkle-tree.svg", width: 80%),
+  caption: [
+    Merkle tree
+  ],
+) <merkle-tree-figure>
+
+=== ZK Rollup
+
+A ZK Rollup is the simplest way to create a zero knowledge-based L2 scaling solution on top of a blockchain.
+
+=== ZK Validium
 
 
 
