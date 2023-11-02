@@ -1,5 +1,5 @@
 @startuml
-node "CliClient" {
+node "KairosCli" {
 }
 
 node "KairosNode" {
@@ -33,7 +33,7 @@ cloud "Casper Blockchain" {
   [KairosStateContract]
 }
 
-"CliClient" --> "443"
+"KairosCli" --> "443"
 
 "transfer" --> "p443"
 "transfer"  --> "prove"
