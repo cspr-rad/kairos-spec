@@ -7,7 +7,6 @@ Useful reference links:
 
 Next actions:
 - Rewrite diagrams (Marijan)
-- Add a bibliography
 - Finish the glossary
 - Turn the `blogposts/` folder into blogposts
 

@@ -1,3 +1,5 @@
+# Merkle trees: How to update without a zero-knowledge proof?
+
 === Deposit/ Withdraw: Merkle tree updates <merkle-tree-update-algorithm>
 
 Transfer transactions don't have a Merkle tree update themselves. Rather, this duty is taken on by the batch proof. The main reason for this is that we want to avoid transfers from depending on the Merkle root, requiring each transfer in progress to be recreated and resigned anytime a deposit or withdrawal is posted on L1. On the other hand, deposit and withdrawal transaction do require the Merkle tree to be updated. Note that these transactions only change one of the leafs. Therefore, in order to verify whether the old Merkle root has been appropriately transformed into the new Merkle root, all we need is the leaves which the updated leaf interacts with.

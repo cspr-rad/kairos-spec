@@ -31,6 +31,8 @@
 
 = Introduction
 
+@harry
+
 The Casper blockchain's ecosystem yearns for a scaling solution to achieve a higher transaction throughput and continue to stay competitive. As a first step towards providing a trustless scaling solution, the goal of the initial version 0.1 of the Kairos project is to build a zero-knowledge (ZK) _validium_ for payment transactions in a second layer (L2). This system will both enable a higher transaction throughput and lower gas fees. Here, _validium_ refers to a rollup where the data, such as account balances, are stored on L2 rather than on the Casper blockchain directly (L1).
 
 Additionally, Kairos V0.1 serves two other major purposes:
@@ -377,13 +379,7 @@ Lastly, the L2 server gets notified when the _Deploy_ was processed successfully
 
 = Threat model
 
-<uniqueness>
-// The L2 Tx uniqueness subsection is moved to a blogpost. Add a bibliography.
-
 = Glossary
-
-<centralized-L2>
-// The "Centralized L2" subsection is moved to a blogpost. Add a bibliography.
 
 Brief descriptions:
 - L1: The Casper blockchain as it currently runs.
@@ -415,6 +411,8 @@ We will now briefly explain how to construct a Merkle tree and compute the Merkl
 A ZK Rollup is the simplest way to create a zero knowledge-based L2 scaling solution on top of a blockchain.
 
 == ZK Validium
+
+#bibliography("bibliography.yml")
 
 
 
