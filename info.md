@@ -7,9 +7,7 @@ Useful reference links:
 
 Next actions:
 - Rewrite diagrams (Marijan)
-- Add a bibliography for "L2 Tx uniqueness"
-- Rewrite centralized L2 summary (4.1.2.1)
-- Remove Risc0, NixOS and Rust mentions in sections 5-6
+- Add a bibliography
 - Finish the glossary
 - Turn the `blogposts/` folder into blogposts
 

@@ -166,7 +166,7 @@ The CLI client's offers a simple user interface (UI) which provides commands to 
 
 ==== L2 Server <l2-server>
 
-We decided to build a centralized L2 in Kairos V0.1. An explanation as to why can be found in @centralized-L2.
+Kairos V0.1 implements a centralized L2. The reasoning behind this decisions, potential dangers around it and our methods for dealing with these dangers, are explained in @centralized-L2.
 
 The L2 server is the backends interface, through which external clients can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) in order to persist the account balances, whose state representation is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the L2 server to also create the relevant transactions on the L1, which call smart contracts (@contracts) to do so. For performing and batching transfers the L2 utilizes a prooving system provided by the Prover service (@prover). For deposits and withdrawals the L2 server creates according Merkle tree updates of the account balances.
 
