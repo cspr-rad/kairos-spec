@@ -334,7 +334,7 @@ Lastly, the Kairos node gets notified after the _Deploy_ was processed successfu
 Transfering funds from user `Bob` to a user `Alice` can be divided into four phases, which are modelled in the following sequence diagrams.
 
 #page(flipped: true)[
-In the first phase users submit their transactions to the L2 server, which accumulates them and checks for independence. In addition, the L2 server will check that the batch proof which is currently being computed, has the same value for the `Validium counter` as the submitted L2 transaction.
+In the first phase users submit their transactions through the Kairos CLI to the Kairos Node (L2 server), which accumulates them and checks for independence. In addition, the Kairos node will check that the batch proof which is going to be computed next, has the same value for the `Kairos counter` as the submitted transaction.
 
 #figure(
   image("transfer_sequence_diagram_client_submit.svg", width: 100%),
@@ -345,7 +345,7 @@ In the first phase users submit their transactions to the L2 server, which accum
 ]
 
 #page(flipped: true)[
-After `t` seconds or `n` transactions, the L2 server creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
+After `t` seconds or `n` transactions, the Kairos node creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
 
 #figure(
   image("transfer_sequence_diagram_l2_prove_deploy.svg", width: 100%),
@@ -356,18 +356,18 @@ After `t` seconds or `n` transactions, the L2 server creates a proof and the acc
 ]
 
 #page(flipped: true)[
-After submitting, the L1 smart-contracts take care of first validating the proof and updating the validium's state.
+After submitting, the L1 smart-contracts take care of first validating the proof and updating the state.
 
 #figure(
   image("transfer_sequence_diagram_deploy_execution.svg", width: 100%),
   caption: [
-    Transfer: Execution of the Deploy on L1.
+    Transfer: Execution of the _Deploy_ on L1.
   ],
 )
 ]
 
 #page(flipped: true)[
-Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
+Lastly, the Kairos node gets notified when the _Deploy_ was processed successfully. The node then commits the updated state to the database. After sufficient time has passed, the users can query their account balances using the Kairos CLI
 
 #figure(
   image("transfer_sequence_diagram_notify_l2.svg", width: 100%),

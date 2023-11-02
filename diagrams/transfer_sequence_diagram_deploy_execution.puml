@@ -1,40 +1,41 @@
 @startuml
 autoactivate on
 actor "Bob :: User" as Bob
-participant CasperWallet
-box "l2-stack" #LightBlue
-participant WebClient
-participant ApiServer
+box "L2-stack" #LightBlue
+participant KairosCli
+participant CasperCli
+participant KairosNode
+participant CasperCliBackend
 participant Database
 participant Prover
 participant CasperNode
 end box
 box "on-chain" #LightGreen
-participant VerifyTransferSession
-participant ValidiumContract
+participant TransferSession
+participant KairosStateContract
 end box
 
 activate CasperNode
-activate ApiServer
+activate KairosNode
 
-note over CasperNode, VerifyTransferSession
+note over CasperNode, TransferSession
 At some point the deploy gets executed on-chain.
 end note
 
-CasperNode -> VerifyTransferSession: call()
+CasperNode -> TransferSession: call()
 
-note over VerifyTransferSession, ValidiumContract
+note over TransferSession, KairosStateContract
 This is where we verify the proof,
 we obviously need to provide the public inputs
 end note
 
-VerifyTransferSession -> ValidiumContract: verify_entrypoint(new_account_balances_root_hash, proof, Vector<{sender, receiver, amount})
+TransferSession -> KairosStateContract: verify_transfer_entrypoint(\n\tnew_account_balances_root_hash,\n\tproof,\n\tVector<{sender, receiver, amount}\n)
 
-note over ValidiumContract, ValidiumContract
+note over KairosStateContract, KairosStateContract
 If proof is Ok then
 end note
-ValidiumContract -> ValidiumContract: update_state_entrypoint(new_account_balances_root_hash)
-ValidiumContract --> ValidiumContract: Ok
-ValidiumContract --> VerifyTransferSession: Ok 
-VerifyTransferSession --> CasperNode: end call()
+KairosStateContract -> KairosStateContract: update_state_entrypoint(new_account_balances_root_hash)
+KairosStateContract --> KairosStateContract: Ok
+KairosStateContract --> TransferSession: Ok 
+TransferSession --> CasperNode: end call()
 @enduml
