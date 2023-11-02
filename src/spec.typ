@@ -298,7 +298,7 @@ For the ZK rollup:
 Depositing funds to user `Bob`'s account is divided into three phases, which are modelled in the following sequence diagrams.
 
 #page(flipped: true)[
-  In the first phase users submit their deposit requests to the L2 server, which updates the Merkle root and creates a _Deploy_ to execute the validation of this update, perform the state transition and transfer the funds. This _Deploy_ also needs to be signed by the user before submitting since we transfer funds from the user's purse to the Validium's wallet.
+  In the first phase users submit their deposit requests through the Kairos CLI to the Kairos node (L2 server), which updates the Merkle root and creates a _Deploy_. This _Deploy_ contains a _Session_ to execute the validation of this Merkle tree update, perform the state transition and transfer the funds from the users purse to the Kairos purse. This _Deploy_ also needs to be signed by the user before submitting, which can be accomplished by calling the Casper CLI.
   #figure(
       image("deposit_sequence_diagram_client_submit.svg", width: 100%),
       caption: [
@@ -308,7 +308,7 @@ Depositing funds to user `Bob`'s account is divided into three phases, which are
 ]
 
 #page(flipped: true)[
-After submitting, the L1 smart-contracts take care of validating the new Merkle root, updating the validium's state, and transferring the funds.
+After submitting, the L1 smart-contracts take care of validating the new Merkle root, updating the Kairos state, and transferring the funds.
 
 #figure(
   image("deposit_sequence_diagram_deploy_execution.svg", width: 100%),
@@ -319,7 +319,7 @@ After submitting, the L1 smart-contracts take care of validating the new Merkle 
 ]
 
 #page(flipped: true)[
-Lastly, the L2 server gets notified when the _Deploy_ was processed successfully. The server then commits the updated state to the database and notifies the clients.
+Lastly, the Kairos node gets notified after the _Deploy_ was processed successfully. The node then commits the updated state to the database. After sufficient time has passed, the user can query its account balance using the Kairos CLI
 
 #figure(
   image("deposit_sequence_diagram_notify_l2.svg", width: 100%),

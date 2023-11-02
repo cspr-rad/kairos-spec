@@ -1,40 +1,41 @@
 @startuml
 autoactivate on
 actor "Bob :: User" as Bob
-participant CasperWallet
-box "l2-stack" #LightBlue
-participant WebClient
-participant ApiServer
+box "L2-stack" #LightBlue
+participant KairosCli
+participant CasperCli
+participant KairosNode
 participant Database
 participant Prover
 participant CasperNode
 end box
 box "on-chain" #LightGreen
-participant VerifyDepositSession
-participant ValidiumContract
+participant DepositSession
+participant KairosStateContract
 end box
 
 activate CasperNode
-activate ApiServer
+activate KairosNode
 
-note over CasperNode, ApiServer
+note over CasperNode, KairosNode
 After the deploy gets processed we get notified
 end note
 
-CasperNode -> ApiServer: eventHandler(event :: DeployProcessed)
-ApiServer -> CasperNode: query_balance()
-CasperNode --> ApiServer: query_balance_result
+CasperNode -> KairosNode: eventHandler(event :: DeployProcessed)
+KairosNode -> CasperNode: query_balance()
+CasperNode --> KairosNode: query_balance_result
 
-ApiServer -> Database: insert_deposit(user: Bob, amount)
-Database --> ApiServer: Ok
+KairosNode -> Database: insert_deposit(user: Bob, amount)
+Database --> KairosNode: Ok
 
-ApiServer --> WebClient: trigger_refresh
-ApiServer --> ApiServer: end eventHandler
-
-WebClient -> ApiServer: GET /balance/{user: Bob}
-ApiServer -> Database: get_balance(user: Bob)
-Database --> ApiServer: balance
-ApiServer --> WebClient: balance
-WebClient --> Bob: notify_with_signal
+note over KairosCli, KairosNode
+After sufficient time the user can query the balance
+end note
+Bob -> KairosCli: get_balance
+KairosCli -> KairosNode: GET /balance/{user: Bob}
+KairosNode -> Database: get_balance(user: Bob)
+Database --> KairosNode: balance
+KairosNode --> KairosCli: balance
+KairosCli --> Bob: balance
 
 @enduml

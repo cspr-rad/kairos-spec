@@ -1,49 +1,45 @@
 @startuml
 autoactivate on
 actor "Bob :: User" as Bob
-participant CasperWallet
-box "l2-stack" #LightBlue
-participant WebClient
-participant ApiServer
+box "L2-stack" #LightBlue
+participant KairosCli
+participant CasperCli
+participant KairosNode
 participant Database
 participant Prover
 participant CasperNode
 end box
 box "on-chain" #LightGreen
-participant VerifyDepositSession
-participant ValidiumContract
+participant DepositSession
+participant KairosStateContract
 end box
 
 activate CasperNode
-activate ApiServer
+activate KairosNode
 
-ApiServer -> CasperNode: subscribe(DeployProcessed)
-Bob -> WebClient: deposit(user: Bob, amount)
-WebClient -> ApiServer: POST /deposit/{user, amount}
+KairosNode -> CasperNode: subscribe(DeployProcessed)
+Bob -> KairosCli: deposit(user: Bob, amount, key_pair)
+KairosCli -> KairosNode: POST /deposit/{user, amount}
 
-note over ApiServer, ApiServer
-see 5.3.1: How do Merkle tree updates work
-end note
-ApiServer -> ApiServer: update_merkle_tree(user, amount)
-ApiServer --> ApiServer: (new_account_balance, old_account_balance, new_account_balances_root_hash, sibling_hashes)
-note over ApiServer, ApiServer
+KairosNode -> KairosNode: update_merkle_tree(user, amount)
+KairosNode --> KairosNode: (new_account_balance,\n old_account_balance,\n new_account_balances_root_hash,\n sibling_hashes\n)
+note over KairosNode, KairosNode
 What we create here is a deploy that will execute our deposit session.
 In the session we check whether the token amount in the transaction
 is equal to the amount that was used to create the new_account_balance.
 Moreover, we make use VerifyContract to check whether the Merkle-tree update
 was done correctly. See deposit sequence diagram - deploy execution
 end note
-ApiServer -> ApiServer: create_deposit_deploy(new_account_balance, old_accout_balance, new_account_balances_root_hash, sibling_hashes, user, amount)
-ApiServer --> ApiServer: verify_deposit_deploy :: Deploy
-ApiServer --> WebClient: verify_deposit_deploy :: Deploy
-WebClient -> CasperWallet: sign(verify_deposit_deploy: Deploy)
-CasperWallet -> Bob: approve?
-Bob --> CasperWallet: approve!
-CasperWallet --> WebClient: signed_verify_deposit_deploy :: SignedDeploy
-WebClient -> ApiServer: POST /deploy/forward/(signed_verify_deposit_deploy :: SignedDeploy)
-ApiServer -> CasperNode: account_put_deploy(signed_verify_deposit_deploy :: SignedDeploy)
-CasperNode --> ApiServer: account_put_deploy_result
-ApiServer --> WebClient: account_put_deploy_result
-WebClient --> Bob: account_put_deploy_result
+KairosNode -> KairosNode: create_deposit_deploy(\n\tnew_account_balance,\n\told_accout_balance,\n\tnew_account_balances_root_hash,\n\tsibling_hashes,\n\tuser,\n\tamount\n)
+KairosNode --> KairosNode: deposit_deploy :: Deploy
+KairosNode --> KairosCli: deposit_deploy :: Deploy
 
+KairosCli -> CasperCli: sign_deploy(deposit_deploy, secret_key)
+CasperCli --> KairosCli: signed_deposit_deploy :: SignedDeploy
+
+KairosCli -> KairosNode: POST /deploy/forward/(signed_deposit_deploy :: SignedDeploy)
+KairosNode -> CasperNode: account_put_deploy(signed_verify_deposit_deploy :: SignedDeploy)
+CasperNode --> KairosNode: account_put_deploy_result
+KairosNode --> KairosCli: account_put_deploy_result
+KairosCli --> Bob: account_put_deploy_result
 @enduml
