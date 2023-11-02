@@ -45,18 +45,3 @@ validium-vs-rollup:
   title: "ZK Validium vs. Rollup"
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/validium-vs-rollup.md
-
-harry:
-    type: Book
-    title: Harry Potter and the Order of the Phoenix
-    author: Rowling, J. K.
-    volume: 5
-    page-total: 768
-    date: 2003-06-21
-
-electronic:
-    type: Web
-    title: Ishkur's Guide to Electronic Music
-    serial-number: v2.5
-    author: Ishkur
-    url: http://www.techno.org/electronic-music-guide/

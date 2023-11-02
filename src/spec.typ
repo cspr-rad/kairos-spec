@@ -433,7 +433,3 @@ A ZK Rollup is the simplest way to create a zero knowledge-based L2 scaling solu
 == ZK Validium
 
 #bibliography("bibliography.yml")
-
-
-== test <centralized-L2>
-== test2<uniqueness>
