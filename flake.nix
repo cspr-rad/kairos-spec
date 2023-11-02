@@ -28,8 +28,7 @@
             ''
               mkdir -p $out
               cp -r ${self'.packages.diagrams}/* .
-              cp ${./src}/spec.typ .
-              cp ${./src}/bibliography.yml .
+              cp ${./src}/* .
               typst compile spec.typ $out/spec.pdf
             '';
           diagrams = pkgs.runCommand "diagrams" { nativeBuildInputs = with pkgs; [ plantuml graphviz ]; }
