@@ -6,9 +6,11 @@ Useful reference links:
 - https://docs.starkware.co/starkex/architecture/solution-architecture.html
 
 Next actions:
+- Add a bibliography for "L2 Tx uniqueness"
 - Add a summary of "Why centralized L2?" somewhere, and move to a blogpost
 - Don't mention the Casper Association running anything
 - Remove Risc0, NixOS and Rust mentions in sections 5-6
+- Finish the glossary
 - Turn the `blogposts/` folder into blogposts
 
 The projects:
