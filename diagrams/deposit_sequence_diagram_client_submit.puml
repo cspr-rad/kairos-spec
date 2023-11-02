@@ -5,6 +5,7 @@ box "L2-stack" #LightBlue
 participant KairosCli
 participant CasperCli
 participant KairosNode
+participant CasperCliBackend
 participant Database
 participant Prover
 participant CasperNode

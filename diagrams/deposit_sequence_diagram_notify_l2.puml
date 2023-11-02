@@ -5,6 +5,7 @@ box "L2-stack" #LightBlue
 participant KairosCli
 participant CasperCli
 participant KairosNode
+participant CasperCliBackend
 participant Database
 participant Prover
 participant CasperNode
@@ -27,6 +28,7 @@ CasperNode --> KairosNode: query_balance_result
 
 KairosNode -> Database: insert_deposit(user: Bob, amount)
 Database --> KairosNode: Ok
+KairosNode --> KairosNode: end eventHandler
 
 note over KairosCli, KairosNode
 After sufficient time the user can query the balance
