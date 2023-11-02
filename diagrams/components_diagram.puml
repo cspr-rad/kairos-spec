@@ -2,7 +2,7 @@
 node "CliClient" {
 }
 
-node "L2Server" {
+node "KairosNode" {
   port 443
   () "deposit"
   () "withdraw"
