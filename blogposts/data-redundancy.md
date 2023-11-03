@@ -1,4 +1,4 @@
-== Data redundancy
+# Data redundancy
 
 Due to the nature of validiums, transaction data will be stored off-chain. To ensure interactions can be proven and verified at any given time by anyone, data needs to be available read-only publicly through an API. To reduce the complexity of the project, the data will be stored by a centralized server that can be trusted. Writing and mutating data should only be possible by selected trusted instances/machines. The storage must be persistent and reliable, i.e. there must be redundancies built-in to avoid data loss.
 
@@ -17,6 +17,13 @@ Naively, we might want to consider building a failsafe into the Validium smart c
 // - Make sure that if one server goes down, another one is picked as master and can take over temporarily
 // - If a server comes back up, it must get synced with the others automatically
 // - Keep the three servers geographically spread out, i.e. located in three different countries.
+
+We should be clear about when to write the Validium state to the dB: Each L2 Tx
+should be written to an "in progress" table as it comes in. Once the batch proof
+is confirmed, the associated "in progress" L2 Txs are written to an "archive" L2
+Txs table, and the batch proof to an "archive" batch proof table. This way, all
+data can be backed up appropriately (data redundancy) and nothing is too
+memory-dependent.
 
 
 

@@ -171,7 +171,7 @@ The Kairos CLI offers a simple user interface (UI) which provides commands to al
 
 As stated in the introduction of this section, Kairos V0.1 has a client-server architecture. Therefore the Kairos node acts as a centralized L2. The reasoning behind this decision, potential dangers, and our methods for dealing with these dangers are explained in @centralized-L2.
 
-The Kairos node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) to persist the account balances, whose state representation is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
+The Kairos node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) to persist the account balances, whose state representation #footnote[The state representation is the Merkle root, see @glossary.] is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
 
 // @Mark: Do we want to build the L2 server in Haskell or in Rust? 
 // Pros:
@@ -194,9 +194,9 @@ The database is a persistent storage that stores the performed transfers and the
 
 ==== Kairos State/ Verifier Contract <contracts>
 
-The Kairos State and Verifier Contract are responsible for verifying and performing state updates of the account balances representation on-chain. They can be two separate contracts or a single contract with several endpoints. The important thing is that the state update only happens if the updated state was verified successfully beforehand. The contracts are called by the Kairos node by creating according transactions and submitting them to a Casper node.
+The Kairos State and Verifier Contract are responsible for verifying and performing updates of the Merkle root of account balances. They can be two separate contracts or a single contract with several endpoints. The important thing is that the state update only happens if the updated state was verified successfully beforehand. The contracts are called by the Kairos node by creating according transactions and submitting them to a Casper node.
 
-In order for the account balances representation (a Merkle tree root) to have an initial state, the Kairos State Contract will be initialized with an initial deposit. This initial deposit will be the balance of the system.
+In order for the Merkle tree root to have an initial value, the Kairos State Contract will be initialized with an deposit. This initial deposit then becomes the balance of the system.
 
 // TODO: Where does the ZK verification happen?
 // This document currently silently assumes verification _can_ happen within the verifying smart contract. Is this the case? Answering that question will require a deep-dive into Risc0 or whicheven ZK prover we end up picking.
@@ -216,12 +216,12 @@ The following sections describe the APIs of the previously described components.
 #table(
   columns: (auto, auto),
   [Endpoint],[Description],
-  [`GET /counter`], [Returns the Kairos counter, a mechanism that prevents the usage of transfers more than one time without the users permission. It has to be added to each new L2 transaction in order to be accepted by the Kairos node. @uniqueness],
+  [`GET /counter`], [Kairos counter, see @glossary],
   [`GET /accounts/:accountID`], [Returns a single user's L2 account balance],
   [`GET /accounts`], [Returns the current Kairos state, i.e. all L2 account balances],
   [`POST /transfer`], [Takes an L2 transfer in JSON format, and returns a TxID],
   [`GET /transfer/:TxID`], [Returns the status of a given transfer: Cancelled, ZKP in progress, batch proof in progress, or "posted on L1 with blockhash X"],
-  [`GET /deposit`], [Takes a JSON request for an L1 deposit and calculates the new Merkle root and accompanying data needed to verify the new Merkle root],
+  [`GET /deposit`], [Takes a JSON request for an L1 deposit and calculates the new Merkle root and accompanying data needed to verify the new Merkle root, see @glossary],
   [`GET /withdraw`], [Takes a JSON request for an L1 withdrawal and calculates the new Merkle root and accompanying data needed to verify the new Merkle root]
 )
 
@@ -242,8 +242,8 @@ The following sections describe the APIs of the previously described components.
   - Verify the new Merkle root given public inputs and metadata \
   - Update the system's on-chain state \
   ],
-  [`POST ZKV:(ZKV, new Merkle root)`],
-  [- Verify ZKV \
+  [`POST batch_proof:(batch proof, new Merkle root)`],
+  [- Verify batch proof \
   - Update the system's on-chain state
   ]
 )
@@ -266,19 +266,19 @@ The CLI offers the following commands:
 == Data
 
 === Kairos CLI/ Kairos Node <kairos-node-data>
-==== Deposit 
+==== Deposit (L1)
 - Depositor's address
 - Depositor's signature
 - Token amount
 - Token ID, i.e. currency
 
-==== Withdraw
+==== Withdraw (L1)
 - Withdrawer's address
 - Withdrawer's signature
 - Token amount
 - Token ID, i.e. currency
 
-==== Transfer
+==== Transfer (L2)
 - Sender's address
 - Receiver's address
 - Token amount
@@ -399,11 +399,12 @@ Lastly (@transfer-notify), the Kairos node gets notified when the _Deploy_ was p
 
 = Threat model
 
-= Glossary
+= Glossary <glossary>
 
 Brief descriptions:
 - L1: The Casper blockchain as it currently runs.
 - L2: A layer built on top of the Casper blockchain, which leverages Casper's consensus algorithm and existing infrastructure for security purposes while adding scaling and/or privacy benefits
+- Kairos counter: A mechanism that prevents the usage of L2 transactions more than once without the user's permission. It is added to each L2 transaction, which is verified by the batch proof and L1 smart contract. For an in-depth explanation, see @uniqueness.
 
 == Zero Knowledge Proof
 
