@@ -1,21 +1,19 @@
 @startuml
-node "KairosCli" {
-}
-
 node "KairosNode" {
   port 443
-  () "deposit"
-  () "withdraw"
   () "transfer"
   () "verify"
+  () "deposit"
+  () "withdraw"
   () "getBalance"
   () "getTransactions"
 }
 
 node "Prover" {
-  port p443
   () "prove"
-  () "pVerify"
+  () "verify" as pVerify
+  () "batchProve"
+  () "batchVerify"
 }
 
 database "Database - primary" {
@@ -35,8 +33,7 @@ cloud "Casper Blockchain" {
 
 "KairosCli" --> "443"
 
-"transfer" --> "p443"
-"transfer"  --> "prove"
+"transfer"  --> "Prover"
 "transfer"  --> "Database - primary"
 "transfer"  --> "KairosStateContract"
 
@@ -47,7 +44,7 @@ cloud "Casper Blockchain" {
 "withdraw"  --> "KairosStateContract"
 "withdraw"  --> "Database - primary"
 
-"verify" --> "pVerify"
+"verify" --> "Prover"
 
 "getBalance"  --> "Database - primary"
 
