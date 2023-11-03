@@ -45,29 +45,7 @@ In @overview (Product Overview) we describe the high-level features that Kairos 
 
 = Product Overview<overview>
 
-To have a common denominator on the scope of Kairos V0.1, this section describes the high-level features it has to provide.
-
-== Features
-
-=== Deposit money into L2 system
-
-Users should be able to deposit CSPR tokens from the Casper chain to their Kairos account at any given time through a command line interface (CLI).
-
-=== Withdraw money from L2 system
-
-Users should be able to withdraw CSPR tokens from their Kairos account to the Casper chain at any given time through a CLI. This interaction should not require the approval of the operator (#link("https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals")[see Ethereum's validium]).
-
-=== Transfer money within the L2 system
-
-Users should be able to transfer CSPR tokens from their Kairos account to another user's Kairos account at any given time through a CLI.
-
-=== Query account balances
-
-Anyone should be able to query their Kairos account balances through a CLI.
-
-=== Verification
-
-Anyone should be able to verify deposits, withdrawals, or transactions either through a CLI or application programming interface (API), i.e. a machine-readable way.
+To have a common denominator on the scope of Kairos V0.1, this section describes the product application and high-level features it has to provide.
 
 == Product Application
 
@@ -81,6 +59,32 @@ The product's backend will be deployed on modern powerfull machines equipped wit
 
 The CLI will be deployed on modern, potentially less powerfull hardware.
 
+== Features
+
+=== Deposit money into L2 system
+
+*[tag:F00]*: Users should be able to deposit tokens from their L1 account to their L2 account at any given time through a command line interface (CLI).
+
+=== Withdraw money from L2 system
+
+*[tag:F01]*: Users should be able to withdraw tokens from their L2 account to their L1 account any given time through a CLI. This interaction should not require the approval of the operator (#link("https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals")[see Ethereum's validium]).
+
+=== Transfer money within the L2 system
+
+*[tag:F02]*: Users should be able to transfer tokens from their L2 account to another user's L2 account at any given time through a CLI.
+
+=== Query account balances
+
+*[tag:F03]*: Anyone should be able to query any L2 account balances at any given time through a CLI. In particular, users can also query their personal L2 account balance.
+
+=== Query transaction data
+
+*[tag:F04]*: Anyone should be able to query any L2 transactions at any given time through a CLI.
+
+=== Verification
+
+*[tag:F05]*: Anyone should be able to verify deposits, withdrawals, or transactions either through a CLI or application programming interface (API), i.e. a machine-readable way.
+
 = Requirements <requirements>
 
 Based on the product overview given in the previous section, this section aims to describe testable, functional requirements the system needs to meet.
@@ -89,58 +93,62 @@ Based on the product overview given in the previous section, this section aims t
 
 === Deposit money into L2 system
 
-- *[tag:FRD00]* Depositing an amount of `CSPR tokens`, where `CSPR tokens >= min. amount` should be accounted correctly
-- *[tag:FRD01]* Depositing an amount of `CSPR tokens`, where `CSPR tokens < min. amount` should not be executed at all
-- *[tag:FRD02]* A user depositing any valid amount to its `account` should only succeed if the user has signed the deposit transaction
-- *[tag:FRD03]* A user depositing any valid amount with a proper signature to another users account should fail
-- *[tag:FRD04]* When a user submits a deposit request, the request cannot be used more than one time without the users approval
+- *[tag:F00-00]* Depositing an amount of `tokens`, where `tokens >= MIN_AMOUNT` should be accounted correctly
+- *[tag:F00-01]* Depositing an amount of `tokens`, where `tokens < MIN_AMOUNT` should not be executed at all
+- *[tag:F00-02]* A user depositing any valid amount to its `L2 account` should only succeed if the user has signed the deposit transaction
+- *[tag:F00-03]* A user depositing any valid amount with a proper signature to another users account should fail
+- *[tag:F00-04]* When a user submits a deposit request, the request cannot be used more than one time without the users approval
 
 === Withdraw money from L2 system
 
-- *[tag:FRW00]* Withdrawing an amount of `CSPR tokens`, where `users account balance >= CSPR tokens > min. amount` should be accounted correctly
-- *[tag:FRW01]* Withdrawing an amount of `CSPR tokens`, where `CSPR tokens < min. amount` should not be executed at all
-- *[tag:FRW02]* Withdrawing an amount of `CSPR tokens`, where `CSPR tokens > users account balance` should not be possible
-- *[tag:FRW03]* Withdrawing a valid amount from the users account should be possible without the intermediary operator of the system
-- *[tag:FRW04]* Withdrawing a valid amount from the users account should only succeed if the user has signed the withdraw transaction
-- *[tag:FRW05]* Withdrawing a valid amount from another users account should not be possible
-- *[tag:FRW06]* When a user submits a withdraw request, the request cannot be used more than one time without the users approval
+- *[tag:F01-00]* Withdrawing an amount of `tokens`, where `users L2 account balance >= tokens > MIN_AMOUNT` should be accounted correctly
+- *[tag:F01-01]* Withdrawing an amount of `tokens`, where `tokens < MIN_AMOUNT` should not be executed at all
+- *[tag:F01-02]* Withdrawing an amount of `tokens`, where `tokens > users L2 account balance` should not be possible
+- *[tag:F01-03]* Withdrawing a valid amount from the users L2 account should be possible without the intermediary operator of the system
+- *[tag:F01-04]* Withdrawing a valid amount from the users L2 account should only succeed if the user has signed the withdraw transaction
+- *[tag:F01-05]* Withdrawing a valid amount from another users L2 account should not be possible
+- *[tag:F01-06]* When a user submits a withdraw request, the request cannot be used more than one time without the users approval
 
 === Transfer money within the L2 system
 
-- *[tag:FRT00]* Transfering an amount of `CSPR tokens`, where `users account balance >= CSPR tokens > min. amount` should be accounted correctly
-- *[tag:FRT01]* Transfering an amount of `CSPR tokens`, where `CSPR tokens < min. amount` should not be executed at all
-- *[tag:FRT02]* Transfering an amount of `CSPR tokens`, where `CSPR tokens > users account` balance should not be possible
-- *[tag:FRT03]* Transfering a valid amount to another user that does not have a registered account yet should be possible.
-- *[tag:FRT04]* Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
-- *[tag:FRT05]* When a user submits a transfer request, the request cannot be used more than one time without the users approval
+- *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `users L2 account balance >= tokens > MIN_AMOUNT` should be accounted correctly
+- *[tag:F02-01]* Transfering an amount of `CSPR tokens`, where `tokens < MIN_AMOUNT` should not be executed at all
+- *[tag:F02-02]* Transfering an amount of `CSPR tokens`, where `tokens > users L2 account balance` should not be possible
+- *[tag:F02-03]* Transfering a valid amount to another user that does not have a registered L2 account yet should be possible.
+- *[tag:F02-04]* Transfering a valid amount to another user sbould only succeed if the user owning the funds has signed the transfer transaction
+- *[tag:F02-05]* When a user submits a transfer request, the request cannot be used more than one time without the users approval
 
 === Query account balances
 
-- *[tag:FRA00]* A user should be able to see its account balance immediately when it's queried through the CLI
+- *[tag:F03-00]* A user should be able to see its L2 account balance immediately when it's queried through the CLI
+- *[tag:F03-01]* Anyone should be able to see any L2 account balances when querying the CLI or API
+- *[tag:F03-02]* Account balances should be written by known, verified entities only
+- *[tag:F03-03]* Account balances should be updated immediately after the successful verification of correct deposit/withdraw/transfer interactions
+- *[tag:F03-04]* Account balances should not be updated if the verification of the proof of the interactions fails
+- *[tag:F03-05]* Account balances should should be stored redundantly @data-redundancy
+
+=== Query transaction data
+- *[tag:F04-00]* A user should be able to see its L2 transactions immediately when it's queried through the CLI
+- *[tag:F04-01]* Anyone should be able to see any L2 transactions when querying the CLI or API
+- *[tag:F04-02]* Transaction data should be written by known, verified entities only
+- *[tag:F04-03]* Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
+- *[tag:F04-04]* Transaction data should not be written if the verification of the proof of the interactions fails
+- *[tag:F04-05]* Transaction data should be stored redundantly @data-redundancy
 
 === Verification
 
-- *[tag:FRV00]* Anyone should be able to query and verify proofs of the system's state changes caused by deposit/withdraw/transfer interactions at any given time
-
-=== Storage
-
-- *[tag:FRD00]* Transaction data should be served read-only to anyone
-- *[tag:FRD01]* Transaction data should be available at any given time
-- *[tag:FRD02]* Transaction data should be written by known, verified entities only
-- *[tag:FRD03]* Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
-- *[tag:FRD04]* Transaction data should not be written if the verification of the proof of the interactions fails
-- *[tag:FRD05]* Transaction data should be stored redundantly @data-redundancy
+- *[tag:F05-00]* Anyone should be able to query and verify proofs of the system's state changes caused by deposit/withdraw/transfer interactions at any given time
 
 == Non-functional requirements
 
 These are qualitative requirements, such as "it should be fast" and could be benchmarked.
 
-- *[tag:NRB00]* The application should not leak any private nor sensitive informations like private keys
-- *[tag:NRB01]* The backend API needs to be designed in a way such that it's easy to swap out a client implementation
-- *[tag:NRB02]* The CLI should load fast
-- *[tag:NRB03]* The CLI should respond on user interactions fast
-- *[tag:NRB04]* The CLI should be designed in a user friendly way
-- *[tag:NRB05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential transaction throughput.]
+- *[tag:00]* The application should not leak any private nor sensitive informations like private keys
+- *[tag:01]* The backend API needs to be designed in a way such that it's easy to swap out a client implementation
+- *[tag:02]* The CLI should start fast
+- *[tag:03]* The CLI should respond on user interactions fast
+- *[tag:04]* The CLI should be designed in a user friendly way
+- *[tag:05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential transaction throughput.]
 
 = A suggested architecture <architecture>
 
@@ -156,7 +164,7 @@ Kairos's architecture is a typical client-server architecture, where the server 
 == Architecture Components <architecture-components>
 === Kairos CLI (CLI client) <kairos-cli>
 
-The Kairos CLI offers a simple user interface (UI) which provides commands to allow a user to deposit, transfer and withdraw funds allocated in their Kairos account. Once a user submits either of the transactions, the client delegates the bulk of the work to the Kairos node (@kairos-node). It can also be used to verify past state changes and to query account balances.
+The Kairos CLI offers a simple user interface (UI) which provides commands to allow a user to deposit, transfer and withdraw funds allocated in their Kairos account. Once a user submits either of the transactions, the client delegates the bulk of the work to the L2 node (@l2-node). It can also be used to verify past state changes and to query account balances.
 
 // Web UI is now post-version 0.1
 // == Web UI
@@ -166,11 +174,11 @@ The Kairos CLI offers a simple user interface (UI) which provides commands to al
 
 === Backend
 
-==== Kairos Node (L2 Server) <kairos-node>
+==== L2 Node <l2-node>
 
-As stated in the introduction of this section, Kairos V0.1 has a client-server architecture. Therefore the Kairos node acts as a centralized L2. The reasoning behind this decision, potential dangers, and our methods for dealing with these dangers are explained in @centralized-L2.
+As stated in the introduction of this section, Kairos V0.1 has a client-server architecture. Therefore the L2 node is centralized. The reasoning behind this decision, potential dangers, and our methods for dealing with these dangers are explained in @centralized-L2.
 
-The Kairos node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) to persist the account balances, whose state representation #footnote[The state representation is the Merkle root, see @glossary.] is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
+The L2 node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a data store(@data-store) to persist the account balances, whose state representation #footnote[The state representation is the Merkle root, see @glossary.] is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
 
 // @Mark: Do we want to build the L2 server in Haskell or in Rust? 
 // Pros:
@@ -185,15 +193,15 @@ The Kairos node is the backend interface, through which external clients (@kairo
 
 ==== Prover <prover>
 
-The Prover is a separate service that exposes a _prove_ and a _verify_ endpoint, which will mainly be used by the Kairos node (@kairos-node) to prove batches of transfers. Under the hood, the Prover utilizes a zero-knowledge proving system that computes the account balances resulting from the transfers within a batch and a prove of correct computation.
+The Prover is a separate service that exposes a _prove_ and a _verify_ endpoint, which will mainly be used by the L2 node (@l2-node) to prove batches of transfers. Under the hood, the Prover utilizes a zero-knowledge proving system that computes the account balances resulting from the transfers within a batch and a prove of correct computation.
 
-==== Database <database>
+==== Data Store <data-store>
 
-The database is a persistent storage that stores the performed transfers and the account balances whose state is stored on the blockchain. To achieve more failsafe and reliable availability of the data, it is replicated sufficiently often. In the case of failure, standbys (replicas) can be used as new primary stores @data-redundancy.
+The data store is a persistent storage that stores the performed transfers and the account balances whose state is stored on the blockchain. To achieve more failsafe and reliable availability of the data, it is replicated sufficiently often. In the case of failure, standbys (replicas) can be used as new primary stores @data-redundancy.
 
 ==== Kairos State/ Verifier Contract <contracts>
 
-The Kairos State and Verifier Contract are responsible for verifying and performing updates of the Merkle root of account balances. They can be two separate contracts or a single contract with several endpoints. The important thing is that the state update only happens if the updated state was verified successfully beforehand. The contracts are called by the Kairos node by creating according transactions and submitting them to a Casper node.
+The Kairos State and Verifier Contract are responsible for verifying and performing updates of the Merkle root of account balances. They can be two separate contracts or a single contract with several endpoints. The important thing is that the state update only happens if the updated state was verified successfully beforehand. The contracts are called by the L2 node by creating according transactions and submitting them to a Casper node.
 
 In order for the Merkle tree root to have an initial value, the Kairos State Contract will be initialized with an deposit. This initial deposit then becomes the balance of the system.
 
@@ -211,7 +219,7 @@ In order for the Merkle tree root to have an initial value, the Kairos State Con
 
 The following sections describe the APIs of the previously described components.
 
-=== Kairos Node (L2 Server) <kairos-node-api>
+=== L2 Node <l2-node-api>
 #table(
   columns: (auto, auto),
   [Endpoint],[Description],
@@ -254,16 +262,16 @@ The CLI offers the following commands:
   [Command],[Description],
   [`accounts`], [Returns all Kairos (L2) account balances],
   [`accounts <accountId>`], [Returns a users Kairos account balance],
-  [`deposit <from-address> <amount> <key_pair>`], [Creates a deposit request for the Kairos node's deposit endpoint],
-  [`withdraw <to-address> <amount> <key_pair>`], [Creates a withdraw request for the Kairos node's withdraw endpoint],
-  [`transfer <from-address> <to-address> <amount> <key_pair>`], [Creates a withdraw request for the Kairos node's withdraw endpoint],
+  [`deposit <from-address> <amount> <key_pair>`], [Creates a deposit request for the L2 node's deposit endpoint],
+  [`withdraw <to-address> <amount> <key_pair>`], [Creates a withdraw request for the L2 node's withdraw endpoint],
+  [`transfer <from-address> <to-address> <amount> <key_pair>`], [Creates a withdraw request for the L2 node's withdraw endpoint],
   // TODO revisit verify
   [`verify <Vector of Transfers>`], [Verifies batched transfers]
 )
 
 == Data
 
-=== Kairos CLI/ Kairos Node <kairos-node-data>
+=== Kairos CLI/ L2 Node <l2-node-data>
 ==== Deposit (L1)
 - Depositor's address
 - Depositor's signature
@@ -313,11 +321,11 @@ The following two sequence diagrams show how these individual components interac
 
 Depositing funds to user `Bob`'s account is divided into three phases, which are modelled in the following sequence diagrams.
 
-In the first phase (@deposit-client-submit) users submit their deposit requests through the Kairos CLI to the Kairos node (L2 server), which updates the Merkle root and creates a _Deploy_. This _Deploy_ contains a _Session_ to execute the validation of this Merkle tree update, perform the state transition and transfer the funds from the users purse to the Kairos purse. This _Deploy_ also needs to be signed by the user before submitting, which can be accomplished by calling the Casper CLI.
+In the first phase (@deposit-client-submit) users submit their deposit requests through the Kairos CLI to the L2 node, which updates the Merkle root and creates a _Deploy_. This _Deploy_ contains a _Session_ to execute the validation of this Merkle tree update, perform the state transition and transfer the funds from the users purse to the Kairos purse. This _Deploy_ also needs to be signed by the user before submitting, which can be accomplished by calling the Casper CLI.
 
 After submitting, the L1 smart contracts take care of validating the new Merkle root, updating the Kairos state, and transferring the funds (@deposit-deploy-execution).
 
-Lastly (@deposit-notify), the Kairos node gets notified after the _Deploy_ was processed successfully. The node then commits the updated state to the database. After sufficient time has passed, the user can query its account balance using the Kairos CLI.
+Lastly (@deposit-notify), the L2 node gets notified after the _Deploy_ was processed successfully. The node then commits the updated state to the data store. After sufficient time has passed, the user can query its account balance using the Kairos CLI.
 
 #page(flipped: true)[
   #figure(
@@ -350,13 +358,13 @@ Lastly (@deposit-notify), the Kairos node gets notified after the _Deploy_ was p
 
 Transfering funds from user `Bob` to a user `Alice` can be divided into four phases, which are modelled in the following sequence diagrams.
 
-In the first phase (@transfer-submit) users submit their transactions through the Kairos CLI to the Kairos Node (L2 server), which accumulates them and checks for independence. In addition, the Kairos node will check that the batch proof which is going to be computed next, has the same value for the `Kairos counter` as the submitted transaction.
+In the first phase (@transfer-submit) users submit their transactions through the Kairos CLI to the L2 node, which accumulates them and checks for independence. In addition, the L2 node will check that the batch proof which is going to be computed next, has the same value for the `Kairos counter` as the submitted transaction.
 
-After `t` seconds or `n` transactions (@transfer-prove), the Kairos node creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
+After `t` seconds or `n` transactions (@transfer-prove), the L2 node creates a proof and the according _Deploy_ which will execute the validation and the state transition on-chain.
 
 After submitting, the L1 smart contracts take care of first validating the proof and updating the state (@transfer-execute).
 
-Lastly (@transfer-notify), the Kairos node gets notified when the _Deploy_ was processed successfully. The node then commits the updated state to the database. After sufficient time has passed, the users can query their account balances using the Kairos CLI
+Lastly (@transfer-notify), the L2 node gets notified when the _Deploy_ was processed successfully. The node then commits the updated state to the data store. After sufficient time has passed, the users can query their account balances using the Kairos CLI
 
 #page(flipped: true)[
 #figure(
