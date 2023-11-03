@@ -31,19 +31,17 @@
 
 = Introduction
 
-// @harry
-
-The Casper blockchain's ecosystem yearns for a scaling solution to achieve a higher transaction throughput and continue to stay competitive. As a first step towards providing a trustless scaling solution, the goal of the initial version 0.1 of the Kairos project is to build a zero-knowledge (ZK) _validium_ for payment transactions in a second layer (L2). This system will both enable a higher transaction throughput and lower gas fees. Here, _validium_ refers to a rollup where the data, such as account balances, are stored on L2 rather than on the Casper blockchain directly (L1).
+The Casper blockchain's ecosystem yearns for a scaling solution to achieve a higher transaction throughput and continue to stay competitive. As a first step towards providing a trustless scaling solution, the goal of the initial version 0.1 of the Kairos project is to build a zero-knowledge (ZK) _validium_ @validium-vs-rollup for payment transactions in a second layer (L2). This system will both enable a higher transaction throughput and lower gas fees. Here, _validium_ refers to a rollup where the data, such as account balances, are stored on L2 rather than on the Casper blockchain directly (L1).
 
 Additionally, Kairos V0.1 serves two other major purposes:
 
 - It is the first step towards a cheap and frictionless NFT (non-fungible token) minting and transfer system aiding Casper to become _the_ blockchain to push the digital art industry forward.
 
-- The concise size and complexity of its scope allows us to explore challenges and the problem space of building an L2 solution that leverages zero-knowledge technology and integrates with Casper's L1. Furthermore, it allows the team to collaborate and grow together by building a production-grade system.
+- The conciseness and complexity of its scope allow us to explore the problem space of L2 solutions which leverage zero-knowledge technology and integrate with Casper's L1. Furthermore, it allows the team to collaborate and grow together by building a production-grade system.
 
 Kairos V0.1 will support very few simple interactions and features. Users will be able to deposit and withdraw funds by interacting with an L1 smart contract controlled by Kairos. Transfers of funds to other participants will be serviced by the L2 and verified and stored by the L1. In the remainder of this document, we will detail the requirements of such a system.
 
-In @overview (Product Overview) we describe the high-level features that Kairos V0.1 will support. @requirements specifies the requirements based on the described interactions and features. Next, in @architecture (Architecture) we propose an architecture of this initial version, together with the components interfaces and their interactions. We conclude the document with threat models and a glossary, which clarifies the terminology used throughout this document. Note that this specification comes with a number of blogposts detailing some of the design considerations in more detail, as listed in the bibliography.
+In @overview (Product Overview) we describe the high-level features that Kairos V0.1 will support. @requirements specifies the requirements based on the described interactions and features. Next, in @architecture (Architecture) we propose an architecture of this initial version, together with the component interfaces and their interactions. We conclude the document with threat models and a glossary, which clarifies the terminology used throughout this document. Note that this specification comes with a number of blogposts detailing some of the design considerations in more detail, as listed in the bibliography @compare-zk-provers @trustless-cli.
 
 = Product Overview<overview>
 
@@ -132,7 +130,7 @@ Based on the product overview given in the previous section, this section aims t
 - *[tag:FRD02]* Transaction data should be written by known, verified entities only
 - *[tag:FRD03]* Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
 - *[tag:FRD04]* Transaction data should not be written if the verification of the proof of the interactions fails
-- *[tag:FRD05]* Transaction data should be stored redundantly
+- *[tag:FRD05]* Transaction data should be stored redundantly @data-redundancy
 
 == Non-functional requirements
 
@@ -143,6 +141,7 @@ These are qualitative requirements, such as "it should be fast" and could be ben
 - *[tag:NRB02]* The CLI should load fast
 - *[tag:NRB03]* The CLI should respond on user interactions fast
 - *[tag:NRB04]* The CLI should be designed in a user friendly way
+- *[tag:NRB05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential transaction throughput.]
 
 = Architecture <architecture>
 
@@ -172,7 +171,7 @@ The Kairos CLI offers a simple user interface (UI) which provides commands to al
 
 As stated in the introduction of this section, Kairos V0.1 has a client-server architecture. Therefore the Kairos node acts as a centralized L2. The reasoning behind this decision, potential dangers, and our methods for dealing with these dangers are explained in @centralized-L2.
 
-The Kairos node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) to persist the account balances, whose state representation is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances.
+The Kairos node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a database (@database) to persist the account balances, whose state representation is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
 
 // @Mark: Do we want to build the L2 server in Haskell or in Rust? 
 // Pros:
@@ -191,7 +190,7 @@ The Prover is a separate service that exposes a _prove_ and a _verify_ endpoint,
 
 ==== Database <database>
 
-The database is a persistent storage that stores the performed transfers and the account balances whose state is stored on the blockchain. To achieve more failsafe and reliable availability of the data, it is replicated sufficiently often. In the case of failure, standbys (replicas) can be used as new primary stores.
+The database is a persistent storage that stores the performed transfers and the account balances whose state is stored on the blockchain. To achieve more failsafe and reliable availability of the data, it is replicated sufficiently often. In the case of failure, standbys (replicas) can be used as new primary stores @data-redundancy.
 
 ==== Kairos State/ Verifier Contract <contracts>
 
@@ -217,7 +216,7 @@ The following sections describe the APIs of the previously described components.
 #table(
   columns: (auto, auto),
   [Endpoint],[Description],
-  [`GET /counter`], [Returns the Kairos counter, a mechanism that prevents the usage of transfers more than one time without the users permission. It has to be added to each new L2 transaction in order to be accepted by the Kairos node.],
+  [`GET /counter`], [Returns the Kairos counter, a mechanism that prevents the usage of transfers more than one time without the users permission. It has to be added to each new L2 transaction in order to be accepted by the Kairos node. @uniqueness],
   [`GET /accounts/:accountID`], [Returns a single user's L2 account balance],
   [`GET /accounts`], [Returns the current Kairos state, i.e. all L2 account balances],
   [`POST /transfer`], [Takes an L2 transfer in JSON format, and returns a TxID],
@@ -235,7 +234,7 @@ The following sections describe the APIs of the previously described components.
   [- Verify that this amount of tokens can be sent, and move it from the sender's L1 account to the purse owned by Kairos \
   - Verify the sender's signature \
   - Verify the new Merkle root given public inputs and metadata \
-  - Update the systems on-chain state
+  - Update the system's on-chain state
   ],
   [`POST withdrawal(Receiver's public key, token ID, token amount, new Merkle root, metadata needed to verify the merkle root, receiver's signature)`],
   [- Move the appropriate amount of tokens from the purse owned by Kairos to the receiver's L1 account \
@@ -245,7 +244,7 @@ The following sections describe the APIs of the previously described components.
   ],
   [`POST ZKV:(ZKV, new Merkle root)`],
   [- Verify ZKV \
-  - Update the systems on-chain state
+  - Update the system's on-chain state
   ]
 )
 
@@ -285,11 +284,12 @@ The CLI offers the following commands:
 - Token amount
 - Token ID, i.e. currency
 - Sender's signature
+- Kairos counter
 
 === Kairos State/ Verifier Contract <contracts-data>
-- Current Merkle root, representing the Kairos system's state;
-- Kairos counter, a mechanism that prevents the usage of transfers more than one time without the users permission. See @uniqueness
-- Its own account balance, which amounts to the total sum of all the Validium account balances.
+- Current Merkle root, representing the Kairos system's state
+- Kairos counter
+- Its own account balance, which amounts to the total sum of all the Validium account balances
 
 === Prover
 
@@ -299,17 +299,17 @@ The zero knowledge proofs for transfer transaction consist of the following:
 - Verify: Signature
 
 For the ZK rollup:
-- Public inputs: Old and new Merkle root, Kairos counter (a mechanism that prevents the usage of transfers more than one time without the users permission. See @uniqueness)
+- Public inputs: Old and new Merkle root and the Kairos counter
 - Private inputs: The list of L2 transactions and their ZKPs, as well as the full old Merkle tree
 - Verify:
   - The ZKPs don't clash, i.e. they all have separate senders and receivers
   - All ZKPs are valid
-  - All L2 transactions include as a public input the last Merkle root posted on L1 by L2. This Merkle root itself is taken as a public input to the batch proof.
+  - All L2 transactions include the same Kairos counter as the batch proof
   - The old Merkle root is correctly transformed into the new Merkle root through applying all the L2 transactions
 
 == Component Interaction
 
-The following two sequence diagrams show how these individual components interact together to process a users `deposit` and `transfer` request.
+The following two sequence diagrams show how these individual components interact together to process a user's `deposit` and `transfer` request.
 
 === Deposit Sequence Diagram
 
@@ -319,7 +319,7 @@ In the first phase (@deposit-client-submit) users submit their deposit requests 
 
 After submitting, the L1 smart contracts take care of validating the new Merkle root, updating the Kairos state, and transferring the funds (@deposit-deploy-execution).
 
-Lastly (@deposit-notify), the Kairos node gets notified after the _Deploy_ was processed successfully. The node then commits the updated state to the database. After sufficient time has passed, the user can query its account balance using the Kairos CLI
+Lastly (@deposit-notify), the Kairos node gets notified after the _Deploy_ was processed successfully. The node then commits the updated state to the database. After sufficient time has passed, the user can query its account balance using the Kairos CLI.
 
 #page(flipped: true)[
   #figure(
@@ -405,7 +405,7 @@ Brief descriptions:
 - L1: The Casper blockchain as it currently runs.
 - L2: A layer built on top of the Casper blockchain, which leverages Casper's consensus algorithm and existing infrastructure for security purposes while adding scaling and/or privacy benefits
 
-== ZKP
+== Zero Knowledge Proof
 
 In recent decades, a new industry has evolved around the concept of zero knowledge proofs (ZKPs). In essence, the goal of this industry is to allow party A to prove to party B that they are in possession of information X without revealing this information to party B. In practice, this is accomplished by party A generating some proof, called a zero knowledge proof, based on information X, in such a way as to allow party B to verify that the proof (that party A possesses information X). In addition, this zero knowledge proof cannot be used ,in order to gain any information about X other than party A's possession of the information, hence the term "zero knowledge".
 
@@ -425,11 +425,5 @@ We will now briefly explain how to construct a Merkle tree and compute the Merkl
     Merkle tree
   ],
 ) <merkle-tree-figure>
-
-== ZK Rollup
-
-A ZK Rollup is the simplest way to create a zero knowledge-based L2 scaling solution on top of a blockchain.
-
-== ZK Validium
 
 #bibliography("bibliography.yml")

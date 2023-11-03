@@ -6,8 +6,6 @@ Useful reference links:
 - https://docs.starkware.co/starkex/architecture/solution-architecture.html
 
 Next actions:
-- Rewrite diagrams (Marijan)
-- Finish the glossary
 - Turn the `blogposts/` folder into blogposts
 
 The projects:
