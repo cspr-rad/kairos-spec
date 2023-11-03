@@ -45,7 +45,7 @@ In @overview (Product Overview) we describe the high-level features that Kairos 
 
 = Product Overview<overview>
 
-To have a common denominator on the scope of Kairos V0.1, this section describes the product application and high-level features it has to provide.
+To have a common denominator on the scope of Kairos V0.1, this section describes the high-level features it has to support.
 
 == Product Application
 
@@ -58,6 +58,12 @@ The target audience comprises users familiar with blockchain technology and appl
 The product's backend will be deployed on modern powerfull machines equipped with a powerful graphics processing unit (GPU) and a large amount of working memory as well as persistent disk space. The machines will have continuous access to the Internet.
 
 The CLI will be deployed on modern, potentially less powerfull hardware.
+
+=== Constraints <constraints>
+
+The product should be a centralized solution for this initial version 0.1.
+
+The utilized proving system should be zero knowledge.
 
 == Features
 
@@ -121,15 +127,15 @@ Based on the product overview given in the previous section, this section aims t
 === Query account balances
 
 - *[tag:F03-00]* A user should be able to see its L2 account balance immediately when it's queried through the CLI
-- *[tag:F03-01]* Anyone should be able to see any L2 account balances when querying the CLI or API
+- *[tag:F03-01]* Anyone should be able to obtain any L2 account balances when querying the CLI or API
 - *[tag:F03-02]* Account balances should be written by known, verified entities only
 - *[tag:F03-03]* Account balances should be updated immediately after the successful verification of correct deposit/withdraw/transfer interactions
 - *[tag:F03-04]* Account balances should not be updated if the verification of the proof of the interactions fails
 - *[tag:F03-05]* Account balances should should be stored redundantly @data-redundancy
 
 === Query transaction data
-- *[tag:F04-00]* A user should be able to see its L2 transactions immediately when it's queried through the CLI
-- *[tag:F04-01]* Anyone should be able to see any L2 transactions when querying the CLI or API
+- *[tag:F04-00]* A user should be able to see its L2 transactions immediately when they are queried through the CLI
+- *[tag:F04-01]* Anyone should be able to obtain any L2 transactions when querying the CLI or API
 - *[tag:F04-02]* Transaction data should be written by known, verified entities only
 - *[tag:F04-03]* Transaction data should be written immediately after the successful verification of correct deposit/withdraw/transfer interactions
 - *[tag:F04-04]* Transaction data should not be written if the verification of the proof of the interactions fails
@@ -143,16 +149,17 @@ Based on the product overview given in the previous section, this section aims t
 
 These are qualitative requirements, such as "it should be fast" and could be benchmarked.
 
-- *[tag:00]* The application should not leak any private nor sensitive informations like private keys
-- *[tag:01]* The backend API needs to be designed in a way such that it's easy to swap out a client implementation
-- *[tag:02]* The CLI should start fast
-- *[tag:03]* The CLI should respond on user interactions fast
-- *[tag:04]* The CLI should be designed in a user friendly way
-- *[tag:05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential transaction throughput.]
+- *[tag:NF00]* The application should not leak any private nor sensitive informations like private keys
+- *[tag:NF01]* The backend API needs to be designed in a way such that it's easy to swap out a client implementation
+- *[tag:NF02]* The CLI should start fast
+- *[tag:NF03]* The CLI should respond on user interactions fast
+- *[tag:NF04]* The CLI should be designed in a user friendly way
+- *[tag:NF05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential transaction throughput.]
+- *[tag:NF06]* The whole system should be easy to extend with new features
 
 = A suggested architecture <architecture>
 
-Kairos's architecture is a typical client-server architecture, where the server (backend) has access to a blockchain network. The client is a typical CLI application. The backend consists of 6 components, whose roles are described in more detail in @architecture-components. @components-diagram-figure displays the interfaces and interactions between the components of the system.
+The features and reqirements described in the previous sections, suggest two core actors in the system. A CLI and a L2 node, implementing the client-server pattern. The L2 node is not a monolyth, it interacts with various other components described in more deail in the following @architecture-components.
 
 #figure(
   image("components_diagram.svg", width: 100%),
@@ -162,9 +169,9 @@ Kairos's architecture is a typical client-server architecture, where the server 
 ) <components-diagram-figure>
 
 == Architecture Components <architecture-components>
-=== Kairos CLI (CLI client) <kairos-cli>
+=== CLI (CLI client) <cli>
 
-The Kairos CLI offers a simple user interface (UI) which provides commands to allow a user to deposit, transfer and withdraw funds allocated in their Kairos account. Once a user submits either of the transactions, the client delegates the bulk of the work to the L2 node (@l2-node). It can also be used to verify past state changes and to query account balances.
+The client CLI offers a simple user interface (UI) providing commands to allow a user to deposit, transfer and withdraw funds allocated in their L2 account. Once a user performs any of the interactions, the client delegates the bulk of the work to the L2 node (@l2-node). The client CLI can moreover be used to verify past state changes and to query account balances as well as transfers.
 
 // Web UI is now post-version 0.1
 // == Web UI
@@ -172,13 +179,12 @@ The Kairos CLI offers a simple user interface (UI) which provides commands to al
 // Note: The integration with Casper's L1 wallet shouldn't be difficult. There is an SDK in Typescript, which compiles to Javascript, and hence the small number of interactions we require with the L1 wallet will be implementable in anything else that compiles to or uses Javascript, whether that be Elm, Yesod, Typescript, Purescript..
 // Proposal: If the L2 server is implemented in Haskell, we could use Yesod. Otherwise our preferred choice would be Elm.
 
-=== Backend
 
-==== L2 Node <l2-node>
+=== L2 Node <l2-node>
 
-As stated in the introduction of this section, Kairos V0.1 has a client-server architecture. Therefore the L2 node is centralized. The reasoning behind this decision, potential dangers, and our methods for dealing with these dangers are explained in @centralized-L2.
+As constrained in @constraints, the L2 node is centralized. The detailed reasoning behind this decision, potential dangers, and our methods for dealing with these dangers are explained in @centralized-L2.
 
-The L2 node is the backend interface, through which external clients (@kairos-cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a data store(@data-store) to persist the account balances, whose state representation #footnote[The state representation is the Merkle root, see @glossary.] is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create the relevant transactions on L1. These transactions call the respective endpoints of the smart contracts described in @contracts to do so. For performing and batching transfers the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
+The L2 node is the interface through which external clients (@cli) can submit deposits, transfers, or withdrawals of funds. It is moreover connected to a data store (@data-store) to persist the account balances, whose state representation #footnote[The state representation is the Merkle root, see @glossary.] is maintained on-chain. State transitions of the account balances need to be verified and performed on-chain, requiring the node to create respective transactions on L1 using the L1's software development kit (SDK). These transactions in turn, call the respective endpoints of smart contracts described in @contracts to do so. To execute and batch transfers, the node utilizes a proving system provided by the Prover service (@prover). For deposits and withdrawals, the node creates according Merkle tree updates of the account balances @merkle-tree-updates.
 
 // @Mark: Do we want to build the L2 server in Haskell or in Rust? 
 // Pros:
@@ -193,17 +199,17 @@ The L2 node is the backend interface, through which external clients (@kairos-cl
 
 ==== Prover <prover>
 
-The Prover is a separate service that exposes a _prove_ and a _verify_ endpoint, which will mainly be used by the L2 node (@l2-node) to prove batches of transfers. Under the hood, the Prover utilizes a zero-knowledge proving system that computes the account balances resulting from the transfers within a batch and a prove of correct computation.
+The Prover is a separate service that exposes a _batchProve_ and a _batchVerify_ endpoint, which will mainly be utilized by the L2 node (@l2-node) to prove batches of transfers. Under the hood, the Prover utilizes a zero-knowledge proving system that computes the account balances resulting from the transfers within a batch and a proof of correct computation.
 
 ==== Data Store <data-store>
 
-The data store is a persistent storage that stores the performed transfers and the account balances whose state is stored on the blockchain. To achieve more failsafe and reliable availability of the data, it is replicated sufficiently often. In the case of failure, standbys (replicas) can be used as new primary stores @data-redundancy.
+The data store is a persistent storage that stores the performed transfers and the account balances whose state representation is stored on the blockchain. To achieve more failsafe and reliable availability of the data, it is replicated sufficiently often. In the case of failure, standbys (replicas) can be used as new primary stores (@data-redundancy).
 
-==== Kairos State/ Verifier Contract <contracts>
+==== L1 State/ Verifier Contract <contracts>
 
-The Kairos State and Verifier Contract are responsible for verifying and performing updates of the Merkle root of account balances. They can be two separate contracts or a single contract with several endpoints. The important thing is that the state update only happens if the updated state was verified successfully beforehand. The contracts are called by the L2 node by creating according transactions and submitting them to a Casper node.
+The L1 State and Verifier Contracts are responsible for verifying and performing updates of the Merkle root of account balances. They can either be two separate contracts or a single contract with several endpoints. The important thing is that the state update only happens if the updated state was verified successfully beforehand. The contracts are called by the L2 node by creating according transactions and submitting them to a L1 node.
 
-In order for the Merkle tree root to have an initial value, the Kairos State Contract will be initialized with an deposit. This initial deposit then becomes the balance of the system.
+In order for the Merkle tree root to have an initial value, the State Contract will be initialized with a deposit. This initial deposit then becomes the balance of the system.
 
 // TODO: Where does the ZK verification happen?
 // This document currently silently assumes verification _can_ happen within the verifying smart contract. Is this the case? Answering that question will require a deep-dive into Risc0 or whicheven ZK prover we end up picking.
@@ -217,21 +223,36 @@ In order for the Merkle tree root to have an initial value, the Kairos State Con
 
 == APIs
 
-The following sections describe the APIs of the previously described components.
+The following section proposes a possible API of the previously described components.
+
+=== CLI
+
+#table(
+  columns: (auto, auto, auto, auto),
+  [Name],[Arguments],[Return Value],[Description],
+  [getAccount],[accountId: AccountID],[balance: UnsignedINT],[Returns a user's L2 account balance. The `UnsignedINT` type should to be a type that allows for safe money computations],
+  [transfer],[sender: AccountID, recipient: AccountID, amount: UnsignedINT, nonce: Nonce, keyPair: KeyPair],[transferId: TransferID],[Creates, signs and submits a L2 transfer to the L2 node],
+  [getTransfer],[transferId: TransferID],[transfer: TransferState],[Returns the status of a given transfer: Cancelled, ZKP in progress, batch proof in progress, or "posted on L1 with blockhash X"],
+  [deposit],[depositor: AccountID, amount: UnsignedINT, keyPair: KeyPair],[transaction: Transaction],[Creates a L1 deposit transacion, by asking the L2 node to create an according L1 transaction for us, signing it on the client side and then submitting it to L1 through the L2 node],
+  [withdraw],[withdrawer: AccountID, amount: UnsignedINT, keyPair: KeyPair],[transaction: Transaction],[Creates a L1 withdraw transacion, by asking the L2 node to create an according L1 transaction for us, signing it on the client side and then submitting it to L1 through the L2 node],
+  [verify],[proof: Proof, publicInputs: PublicInputs],[result: VerifyResult],[Returns whether a proof is legitimate or not]
+)
+
 
 === L2 Node <l2-node-api>
 #table(
-  columns: (auto, auto),
-  [Endpoint],[Description],
-  [`GET /counter`], [Kairos counter, see @glossary],
-  [`GET /accounts/:accountID`], [Returns a single user's L2 account balance],
-  [`POST /transfer`], [Takes an L2 transfer in JSON format, and returns a TxID],
-  [`GET /transfer/:TxID`], [Returns the status of a given transfer: Cancelled, ZKP in progress, batch proof in progress, or "posted on L1 with blockhash X"],
-  [`GET /deposit`], [Takes a JSON request for an L1 deposit and calculates the new Merkle root and accompanying data needed to verify the new Merkle root, see @glossary],
-  [`GET /withdraw`], [Takes a JSON request for an L1 withdrawal and calculates the new Merkle root and accompanying data needed to verify the new Merkle root]
+  columns: (auto, auto, auto, auto),
+  [Name],[Arguments],[Return Value],[Description],
+  [getAccount],[accountId: AccountID],[balance: UnsignedINT],[Returns a user's L2 account balance. The `UnsignedINT` type should to be a type that allows for safe money computations],
+  [transfer],[sender: AccountID, recipient: AccountID, amount: UnsignedINT, nonce: Nonce, signature: Signature, senderPubKey: PubKey],[transferId: TransferID],[Schedules an L2 transfer, and returns a TxID],
+  [getTransfer],[transferId: TransferID],[transfer: TransferState],[Returns the status of a given transfer: Cancelled, ZKP in progress, batch proof in progress, or "posted on L1 with blockhash X"],
+  [deposit],[depositor: AccountID, amount: UnsignedINT],[transaction: Transaction],[Creates a L1 deposit transacion containing an according Merkle tree root update and accompanying metadata needed to verify it, based on the depositor's account ID and the amount. The returned transaction is a L1 transaction that has to be signed by the depositor.],
+  [withdraw],[withdrawer: AccountID, amount: UnsignedINT],[transaction: Transaction],[Creates a L1 withdraw transacion containing an according Merkle tree root update and accompanying metadata needed to verify it, based on the withdrawer's account ID and the amount. The returned transaction is a L1 transaction that has to be signed by the withdrawer.],
+  [submitTransaction],[signedTransaction: SignedTransaction],[submitResult: SubmitResult],[Forwards a signed L1 transaction and submits it to the L1 for execution.],
+  [verify],[proof: Proof, publicInputs: PublicInputs],[result: VerifyResult],[Returns whether a proof is legitimate or not]
 )
 
-=== Kairos State/ Verifier Contract <contracts-api>
+=== L1 State/ Verifier Contract <contracts-api>
 
 #table(
   columns: (auto, auto),
@@ -252,21 +273,6 @@ The following sections describe the APIs of the previously described components.
   [- Verify batch proof \
   - Update the system's on-chain state
   ]
-)
-
-=== CLI
-
-The CLI offers the following commands:
-#table(
-  columns: (auto, auto),
-  [Command],[Description],
-  [`accounts`], [Returns all Kairos (L2) account balances],
-  [`accounts <accountId>`], [Returns a users Kairos account balance],
-  [`deposit <from-address> <amount> <key_pair>`], [Creates a deposit request for the L2 node's deposit endpoint],
-  [`withdraw <to-address> <amount> <key_pair>`], [Creates a withdraw request for the L2 node's withdraw endpoint],
-  [`transfer <from-address> <to-address> <amount> <key_pair>`], [Creates a withdraw request for the L2 node's withdraw endpoint],
-  // TODO revisit verify
-  [`verify <Vector of Transfers>`], [Verifies batched transfers]
 )
 
 == Data
