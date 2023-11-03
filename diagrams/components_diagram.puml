@@ -1,5 +1,9 @@
 @startuml
-node "KairosNode" {
+node "CLI" {
+}
+
+node "L2 Node" {
+  [L1 SDK]
   port 443
   () "transfer"
   () "verify"
@@ -10,48 +14,48 @@ node "KairosNode" {
 }
 
 node "Prover" {
-  () "prove"
-  () "verify" as pVerify
+  port 443 as proverPort
   () "batchProve"
   () "batchVerify"
 }
 
-database "Database - primary" {
+database "Data store - primary" {
   folder "Balances" {
   }
   folder "Transactions" {
   }
 }
-database "Database - standby 1" {
+database "Data store - standby 1" {
 }
-database "Database - standby 2" {
+database "Data store - standby 2" {
 }
-cloud "Casper Blockchain" {
+cloud "L1" {
   [VerifierContract]
-  [KairosStateContract]
+  [StateContract]
 }
 
-"KairosCli" --> "443"
+"CLI" --> "443"
 
-"transfer"  --> "Prover"
-"transfer"  --> "Database - primary"
-"transfer"  --> "KairosStateContract"
+"transfer"  --> "proverPort"
+"transfer"  --> "Data store - primary"
+"transfer"  --> "L1 SDK"
 
 
-"deposit"  --> "KairosStateContract"
-"deposit"  --> "Database - primary"
+"deposit"  --> "L1 SDK"
+"deposit"  --> "Data store - primary"
 
-"withdraw"  --> "KairosStateContract"
-"withdraw"  --> "Database - primary"
+"withdraw"  --> "L1 SDK"
+"withdraw"  --> "Data store - primary"
 
-"verify" --> "Prover"
+"verify" --> "proverPort"
 
-"getBalance"  --> "Database - primary"
+"getBalance"  --> "Data store - primary"
 
-"getTransactions"  --> "Database - primary"
+"getTransactions"  --> "Data store - primary"
 
-"Database - primary" --> "Database - standby 1"
-"Database - primary" --> "Database - standby 2"
+"Data store - primary" --> "Data store - standby 1"
+"Data store - primary" --> "Data store - standby 2"
 
-"KairosStateContract" --> "VerifierContract"
+"L1 SDK" --> L1
+"StateContract" --> "VerifierContract"
 @enduml
