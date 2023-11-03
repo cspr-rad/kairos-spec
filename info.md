@@ -6,7 +6,8 @@ Useful reference links:
 - https://docs.starkware.co/starkex/architecture/solution-architecture.html
 
 Next actions:
-- Turn the `blogposts/` folder into blogposts
+- Revisit sequence diagrams (Marijan)
+- Write 1-2 blogposts (Nick)
 
 The projects:
 - Split up the work into separate projects & ask the team to get started

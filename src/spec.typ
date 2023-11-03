@@ -63,7 +63,7 @@ Users should be able to transfer CSPR tokens from their Kairos account to anothe
 
 === Query account balances
 
-Anyone should be able to query the Kairos account balances of available CSPR tokens at any given time through a CLI. In particular, users can also query their personal account balance.
+Anyone should be able to query their Kairos account balances through a CLI.
 
 === Verification
 
@@ -117,7 +117,6 @@ Based on the product overview given in the previous section, this section aims t
 === Query account balances
 
 - *[tag:FRA00]* A user should be able to see its account balance immediately when it's queried through the CLI
-- *[tag:FRA01]* Anyone should be able to see all account balances when querying the CLI or API
 
 === Verification
 
@@ -143,7 +142,7 @@ These are qualitative requirements, such as "it should be fast" and could be ben
 - *[tag:NRB04]* The CLI should be designed in a user friendly way
 - *[tag:NRB05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential transaction throughput.]
 
-= Architecture <architecture>
+= A suggested architecture <architecture>
 
 Kairos's architecture is a typical client-server architecture, where the server (backend) has access to a blockchain network. The client is a typical CLI application. The backend consists of 6 components, whose roles are described in more detail in @architecture-components. @components-diagram-figure displays the interfaces and interactions between the components of the system.
 
@@ -218,7 +217,6 @@ The following sections describe the APIs of the previously described components.
   [Endpoint],[Description],
   [`GET /counter`], [Kairos counter, see @glossary],
   [`GET /accounts/:accountID`], [Returns a single user's L2 account balance],
-  [`GET /accounts`], [Returns the current Kairos state, i.e. all L2 account balances],
   [`POST /transfer`], [Takes an L2 transfer in JSON format, and returns a TxID],
   [`GET /transfer/:TxID`], [Returns the status of a given transfer: Cancelled, ZKP in progress, batch proof in progress, or "posted on L1 with blockhash X"],
   [`GET /deposit`], [Takes a JSON request for an L1 deposit and calculates the new Merkle root and accompanying data needed to verify the new Merkle root, see @glossary],
@@ -397,34 +395,12 @@ Lastly (@transfer-notify), the Kairos node gets notified when the _Deploy_ was p
 ) <transfer-notify>
 ]
 
-= Threat model
-
 = Glossary <glossary>
 
-Brief descriptions:
 - L1: The Casper blockchain as it currently runs.
 - L2: A layer built on top of the Casper blockchain, which leverages Casper's consensus algorithm and existing infrastructure for security purposes while adding scaling and/or privacy benefits
 - Kairos counter: A mechanism that prevents the usage of L2 transactions more than once without the user's permission. It is added to each L2 transaction, which is verified by the batch proof and L1 smart contract. For an in-depth explanation, see @uniqueness.
-
-== Zero Knowledge Proof
-
-In recent decades, a new industry has evolved around the concept of zero knowledge proofs (ZKPs). In essence, the goal of this industry is to allow party A to prove to party B that they are in possession of information X without revealing this information to party B. In practice, this is accomplished by party A generating some proof, called a zero knowledge proof, based on information X, in such a way as to allow party B to verify that the proof (that party A possesses information X). In addition, this zero knowledge proof cannot be used ,in order to gain any information about X other than party A's possession of the information, hence the term "zero knowledge".
-
-This general concept has many applications for two specific reasons: Privacy and scaling. Firstly, zero knowledge proofs allow you to share partial information, retaining your privacy. For example, I could share my birthday in an encoded way (e.g. hashed) and generate a zero knowledge proof that my age is higher than 21, thereby only revealing to you the fact that I am older than 21, and not what my actual age is. Similarly, I could prove to you that I have the password associated to a given Facebook account without actually having to reveal my password.
-
-The second feature of zero knowledge proofs is scalability. Imagine information X is a large amount of data, then it is possible to generate a ZKP proving party A possesses data X, such that the ZKP itself is much smaller than the data X. This feature of ZKPs is particularly interesting to blockchains, as they experience an accute problem: Each transaction posted to a blockchain must, for most blockchains, be verified by each node. This provides a lot of duplicate work and thereby prevents most blockchains from scaling. One solution to this problem is to leverage ZKPs, where one server collects a set of transactions, generates proofs for them and then batches these proofs into one so-called batch proof. This batch proof can then be posted on the blockchain itself ("L1"), together with the related blockchain's state change. This concept constitutes an L2 scaling solution blockchains.
-
-== Merkle tree
-
-A Merkle tree is a cryptographic concept to generate a hash for a set of data. It allows for efficient and secure verification of the contents of large data structures. In addition, Merkle trees allow to quickly recompute the hash (called a "Merkle root") when the data changes locally, e.g. if only one element of a list of data points changes.
-
-We will now briefly explain how to construct a Merkle tree and compute the Merkle root (the "hash" of the data) given a list of data points, as shown in figure @merkle-tree-figure. First, for each data point, we compute the hash and note that down. These hashes form the leafs of the Merkle tree. Then, in each layer of the tree, two neighboring hashes are combined and hashed again, assigning the resulting value to this node. Eventually the tree ends in one node, the value of which is named the Merkle root.
-
-#figure(
-  image("merkle-tree.svg", width: 80%),
-  caption: [
-    Merkle tree
-  ],
-) <merkle-tree-figure>
+- A zero knowledge proof (ZKP) is a proof generated by person A which proves to person B that A is in possession of certain information X without revealing X itself to B. These ZKPs provide some of the most exciting ways to build L2s with privacy controls and scalability. @zkp
+- Merkle trees are a cryptographic concept to generate a hash given a dataset. It allows for efficient and secure verification of the contents of large data strutures. @merkle-tree
 
 #bibliography("bibliography.yml")

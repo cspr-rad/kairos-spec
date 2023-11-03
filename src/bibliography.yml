@@ -45,3 +45,13 @@ validium-vs-rollup:
   title: "ZK Validium vs. Rollup"
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/validium-vs-rollup.md
+
+merkle-tree:
+  type: wikipedia
+  title: "Merkle tree"
+  url: https://en.wikipedia.org/wiki/Merkle_tree
+
+zkp:
+  type: wikipedia
+  title: "Zero knowledge proof"
+  url: https://en.wikipedia.org/wiki/Zero-knowledge_proof
