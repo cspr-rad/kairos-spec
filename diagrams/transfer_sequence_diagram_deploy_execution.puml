@@ -2,40 +2,39 @@
 autoactivate on
 actor "Bob :: User" as Bob
 box "L2-stack" #LightBlue
-participant KairosCli
-participant CasperCli
-participant KairosNode
-participant CasperCliBackend
-participant Database
+participant ClientCli
+participant L1Sdk
+participant L2Node
+participant DataStore
 participant Prover
-participant CasperNode
+participant L1Node
 end box
 box "on-chain" #LightGreen
 participant TransferSession
-participant KairosStateContract
+participant StateContract
 end box
 
-activate CasperNode
-activate KairosNode
+activate L1Node
+activate L2Node
 
-note over CasperNode, TransferSession
+note over L1Node, TransferSession
 At some point the deploy gets executed on-chain.
 end note
 
-CasperNode -> TransferSession: call()
+L1Node -> TransferSession: call()
 
-note over TransferSession, KairosStateContract
+note over TransferSession, StateContract
 This is where we verify the proof,
 we obviously need to provide the public inputs
 end note
 
-TransferSession -> KairosStateContract: verify_transfer_entrypoint(\n\tnew_account_balances_root_hash,\n\tproof,\n\tVector<{sender, receiver, amount}\n)
+TransferSession -> StateContract: verify_transfer_entrypoint(\n\tupdated_account_balances_root_hash,\n\tproof,\n\tVector<{sender, receiver, amount, token_id}\n)
 
-note over KairosStateContract, KairosStateContract
+note over StateContract, StateContract
 If proof is Ok then
 end note
-KairosStateContract -> KairosStateContract: update_state_entrypoint(new_account_balances_root_hash)
-KairosStateContract --> KairosStateContract: Ok
-KairosStateContract --> TransferSession: Ok 
-TransferSession --> CasperNode: end call()
+StateContract -> StateContract: update_state_entrypoint(updated_account_balances_root_hash)
+StateContract --> StateContract: Ok
+StateContract --> TransferSession: Ok 
+TransferSession --> L1Node: end call()
 @enduml

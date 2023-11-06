@@ -2,34 +2,33 @@
 autoactivate on
 actor "Bob :: User" as Bob
 box "L2-stack" #LightBlue
-participant KairosCli
-participant CasperCli
-participant KairosNode
-participant CasperCliBackend
-participant Database
+participant ClientCli
+participant L1Sdk
+participant L2Node
+participant DataStore
 participant Prover
-participant CasperNode
+participant L1Node
 end box
 box "on-chain" #LightGreen
 participant TransferSession
-participant KairosStateContract
+participant StateContract
 end box
 
-activate CasperNode
-activate KairosNode
+activate L1Node
+activate L2Node
 
-KairosNode -> CasperNode: subscribe(DeployProcessed)
-Bob -> KairosCli: transfer(from: Bob, to: Alice, amount, key_pair)
+L2Node -> L1Node: subscribe(OnDeployProcessed)
+Bob -> ClientCli: transfer(sender: Bob, recipient: Alice, amount, token_id, key_pair)
 
-note over KairosCli, KairosNode
+note over ClientCli, L2Node
 This happens multiple times
 for different users,
-the KairosNode optimizes transfers
+the L2Node optimizes transfers
 end note 
 
-KairosCli -> KairosNode: POST /transfer/{user: Bob, user: Alice, amount, signature, public_key}
-KairosNode -> KairosNode: verify_signature
-KairosNode --> KairosNode: Ok
-KairosNode --> KairosCli: Ok
-KairosCli --> Bob: Ok
+ClientCli -> L2Node: transfer(sender: Bob, recipient: Alice, amount, token_id, signature, public_key)
+L2Node -> L2Node: verify_signature
+L2Node --> L2Node: Ok
+L2Node --> ClientCli: Ok
+ClientCli --> Bob: Ok
 @enduml

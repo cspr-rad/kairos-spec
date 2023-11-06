@@ -2,35 +2,34 @@
 autoactivate on
 actor "Bob :: User" as Bob
 box "L2-stack" #LightBlue
-participant KairosCli
-participant CasperCli
-participant KairosNode
-participant CasperCliBackend
-participant Database
+participant ClientCli
+participant L1Sdk
+participant L2Node
+participant DataStore
 participant Prover
-participant CasperNode
+participant L1Node
 end box
 box "on-chain" #LightGreen
 participant DepositSession
-participant KairosStateContract
+participant StateContract
 end box
 
-activate CasperNode
-activate KairosNode
+activate L1Node
+activate L2Node
 
-note over CasperNode, DepositSession
+note over L1Node, DepositSession
 At some point the deploy gets executed on-chain.
 end note
 
-CasperNode -> DepositSession: call()
-DepositSession -> KairosStateContract: verify_deposit_entrypoint(\n\tnew_account_balance,\n\told_accout_balance,\n\tnew_account_balances_root_hash,\n\tsibling_hashes,\n\tuser,\n\tamount\n)
-note over KairosStateContract, KairosStateContract
+L1Node -> DepositSession: call()
+DepositSession -> StateContract: verify_deposit_entrypoint(\n\tupdated_account_balances_root_hash,\n\tupdate_metadata,\n\tdepositor,\n\tamount,\n\ttoken_id\n)
+note over StateContract, StateContract
 if ok then
 end note
-KairosStateContract -> KairosStateContract: update_state_entrypoint(new_account_balances_root_hash)
-KairosStateContract --> KairosStateContract: Ok
-KairosStateContract --> DepositSession: Ok 
-DepositSession -> DepositSession: transfer_from_purse_to_purse(user_purse, kairos_purse, amount)
+StateContract -> StateContract: update_state_entrypoint(\n\tupdated_account_balances_root_hash\n)
+StateContract --> StateContract: Ok
+StateContract --> DepositSession: Ok 
+DepositSession -> DepositSession: transfer_from_purse_to_purse(\n\tdepositor_purse,\n\tsystem_purse,\n\tamount,\n\ttoken_id\n)
 DepositSession --> DepositSession: Ok
-DepositSession --> CasperNode: end call()
+DepositSession --> L1Node: end call()
 @enduml
