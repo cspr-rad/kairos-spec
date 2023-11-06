@@ -1,32 +1,94 @@
 # Ensuring L2 transaction uniqueness
 
-When designing an L2 on top of a blockchain, one important consideration is to
-ensure L2 transaction uniqueness. This means that any L2 transaction which is
-posted to an L2 node, cannot be read later and resubmitted without the original
-signees' approval. For example, if person A pays person B $50, we must ensure
-that person B cannot reuse the corresponding L2 transaction in order to receive
-a second $50.
+When designing an ZK-based L2 on top of a blockchain, one important
+consideration is to ensure L2 transaction uniqueness. This means that any L2
+transaction which is posted to an L2 node, cannot be read later and resubmitted
+without the original signees' approval. For example, if person A pays person B
+$50, we must ensure that person B cannot reuse the corresponding L2 transaction
+in order to receive $50 a second time.
 
 The solution to this problem is to add some data to each L2 transaction which
-confirms the uniqueness.
+confirms the uniqueness, and to check this piece of data either in the batch
+proof or the L1 smart contract. The real question is, what data should be added?
+Naively, there are two types of solutions: We can convey information about the
+world, or about the state of the L2.
 
-In order to confirm that the right people sign off on the data odded to the L2
-transaction, this data is included in the signatures, i.e. it is included in the
-bytestring to be signed.
+Let us consider passing along some information about the state of the world
+first, independent from any blockchain concepts. An example of this would be
+adding a timestamp to each L2 transaction. The batch proof can then take as a
+public input the timestamp when it is computed, and 
 
-We must ensure that each L2 transaction which is posted to the L2 server, can only be used on the L1 once. This can be accomplished in many ways, which generally fall into two categories:
-+ Add something to the L2 transaction about the state of the world.
-+ Add something to the L2 transaction about the state of the Validium.
+Several problems:
+1. Time is a very complex concept. There are timezones, leap seconds etc.
+2. Time doesn't translate very well to blockchains. In a decentralized L2, each
+   node would have a different timestamp at which it records a given batch
+   proof.
+3. The time issue is very sensitive. One requirement would be that (almost) any
+   transaction submitted correctly, would be accepted by the batch proof, to
+   avoid having to recompute and resign L2 transactions on a regular basis. On
+   the other hand, we also require that not a single L2 transaction can ever be
+   resubmitted to a different batch proof. The combination of these two
+   requirements means that the verification in the batch proof, based on the
+   timestamp of the L2 transaction and the timestamp of the batch proof, can
+   never be wrong. This is sufficiently stringent requirement to kill the idea
+   of using timestamps.
+4. These issues are not specific to time, but more generally apply: Few
+   real-world concepts map neatly enough onto blockchain concepts to be able to
+   use them here in enforcing L2 transaction uniqueness.
 
-The former option is difficut to accomplish, as there are few real-world concepts which translate into the blockchain world easily. For example, naively speaking, time would be a great option: What if we add a timestamp to each L2 transaction? There are two problems with a suggestion like this:
-- Time is a very complex concept in the blockchain world. Which `currentTime` should the timestamp be compared to by a casper-node? There is no well-defined time at which a block is added to the blockchain, as each node does so at a different time.
-- We must ensure that the bounds on the timestamp are loose enough such that no transactions meant to go into a given batch proof are refused, while never allowing a transaction which was added to the last batch proof to be added to a new one. This requirement of having no mistakes on either end, is so stringent that timestamps don't offer enough information.
+The other suggestion was to include some information about the L2's state when
+submmitting a new L2 transaction. For example, we could use some form of hash of
+the L2 state, like a Merkle root in case the data is stored as a Merkle tree.
+However, the L2 state is not unique. This means that any data which depends on
+the L2 state will also not be unique, potentially leading to trouble. In
+addition, the L2 state changes very quickly, whereas anything that goes into
+each L2 transaction must be slower to change, i.e. stay the same at least one
+second every time. Imagine each L2 transaction changes the L2 state in such a
+way that the next L2 transaction should take into account (e.g. by including an
+updated Merkle tree). We would then have to reduce our parallel transaction
+throughput to become sequential, as no two L2 transactions can be computed and
+submitted independently. For more information, see the Casper Association
+blogpost about sequential throughput.
 
-The alternative is to add a piece of information X about the Validium's state to each L2 transaction. The batch proof can then include that piece of information as a public input, and check that all L2 transactions have that same public input. However, we must make sure that X is unique, meaning that even if the Validium reverts back to an old state, no old L2 transactions can be reused against the will of the person who signed them. Therefore, we decided to make use of [logical time](https://en.wikipedia.org/wiki/Logical_clock) analogous to [lamport timestamps](https://en.wikipedia.org/wiki/Lamport_timestamp). Meaning that X will be a counter, initialized at 0 and increasing by 1 every time a batch proof is posted to the L1. As such, the batch proof and Validium smart contract can verify perfectly whether a given L2 transaction fits into its rollup, while also providing a simple and clear user interface.
+Based on this analysis, we can draw two conclusions:
+- The data X to be added to the L2 transactions should be dependent on something
+  unique, i.e. not the L2 state
+- X should not change too quickly, insinuating depending on L1 rather than L2
+- The data should represents something clear and consistent, i.e. not time or
+  any real-world concepts which don't map to the blockchain world easily.
+  Preferably discrete concepts, as opposed to continuous ones, would be favored.
 
-# Two phases of the server
+This brought us to a new idea: What about [logical
+time](https://en.wikipedia.org/wiki/Logical_clock)? We can track L2-L1
+interactions using a counter, and use the value of this counter both as part of
+the L2 transactions, a public input to the batch proof so the L2 transactions
+can be verified, and the L1 smart contract in order to verify the batch proof's
+claimed counter value with the L1's reality. One clear thing this counter can
+track is the number of times the L2 posts a batch proof onto the L1. This
+provides an elegant and concise solution to the problem. In the Kairos
+specification, this counter is referred to as the Kairos counter.
 
-The L2 server accumulates a queue of L2 transactions which can be posted into the same batch proof. Based upon a number of limits #footnote[Two examples of such limits would be the number of transactions posted into one batch proof, and the time window which is compiled into one batch prof. The latter limit is necessary in order to allow a sensible sequential throughput as well.] the server will start computing a batch proof based on its current queue. Any new transactions must now set their Validium counter to one higher than before, in order to fit into the next batch proof rather than the current one. This will be communicated by the L2 server through a clear error.
+In order to confirm that the right people sign off on the counter added to the
+L2 transaction, the counter is included in the signatures, i.e. in the
+bytestring to be signed. This prevents anyone from resubmitting old
+transactions.
+
+As a sidenote, the Kairos counter system has an important effect on the L2
+nodes, namely that they have to verify each L2 transaction comes in with the
+correct counter in order to be accepted into the next batch proof to be
+computed. This requires an extra endpoint on the L2 nodes in order for users to
+query the Kairos counter value they should add to their L2 transactions. In
+particular, after a number of seconds S or a number of L2 transactions N, the L2
+node must close off the next batch proof's L2 transaction queue so its
+computation can start, given that batch proof computations cannot easily be
+added to iteratively. In addition, if the Kairos counter value of a submitted L2
+transaction is incorrect, the L2 node should provide a reasonable error message
+explaining the issue.
+
+In conclusion, a new danger must be handled by ZK-based L2s, namely to provide a
+mechanism to enforce L2 transactions to be unique in their posting on L1. In
+order to accomplish this, we discovered the Kairos counter, and will add this
+concept both to the L2 transactions, batch proofs and L1 smart contract.
 
 
 
