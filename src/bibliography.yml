@@ -55,3 +55,9 @@ zkp:
   type: wikipedia
   title: "Zero knowledge proof"
   url: https://en.wikipedia.org/wiki/Zero-knowledge_proof
+
+safe-money:
+  type: blogpost
+  title: How to deal with money in software
+  author: Tom Sydney Kerckhove
+  url: https://cs-syd.eu/posts/2022-08-22-how-to-deal-with-money-in-software
