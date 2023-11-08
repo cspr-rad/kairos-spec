@@ -42,28 +42,59 @@ data structures. In addition, Merkle trees allow to quickly recompute the Merkle
 root when the data changes locally, e.g. if only one element of a list of data
 points changes.
 
-TODO
+ADD FIGURE 2: "merkle-tree.svg"
 
-We will now briefly explain how to construct a Merkle tree and compute the
-Merkle root (the "hash" of the data) given a list of data points, as shown in
-figure @merkle-tree-figure. First, for each data point, we compute the hash and
-note that down. These hashes form the leafs of the Merkle tree. Then, in each
-layer of the tree, two neighboring hashes are combined and hashed again,
-assigning the resulting value to this node. Eventually the tree ends in one
-node, the value of which is named the Merkle root.
+Digging into the specifics, a Merkle tree is quite simple to construct. You
+start with a dataset in the form of a list of data points. Each data point is
+turned into a bytestring and hashed. To create each next level of the tree,
+hashes are paired up, added together and hashed again. The final resulting node,
+i.e. the top of the tree, is the Merkle root.
 
 ## How to update without ZK?
 
-- How to update without ZK?
-  * Note: Deposits & withdrawals only change one leaf, so only the hashes the
-    updated leaf interasts with are required in order to verify the Merkle root
-  * Describe example tree update
-  * Reduce to metadata (hashes & directions) and explain verification in
-    formulae
-  * Describe time and space complexity
+Let us start by noting that deposits and withdrawals only change one leaf.
+Therefore, not the entire Merkle tree is affected, but only the hashes relate to
+this one leaf. Let us look at figure 2 for an example. As we can see here,
+computing the new Merkle root exclusively requires the values of A1' and A2,
+which themselves require H1 and D2'.
 
-## How to add and delete leaves and rebalance Merkle tree?
+ADD FIGURE 2: "merkle-tree.svg" & "merkle-tree-updated.svg"
+caption: "How to update a single leaf of a Merkle tree"
 
+The only thing left to note, is that we can simplify the aim from
+> prove that the Merkle tree update was executed legitimately"
+to
+> prove that there is a Merkle tree with root R and leaf D2 which transforms
+> into a Merkle root with root R' when replacing leaf D2 by D2'.
+
+As it turns out, this is a much simpler aim. In particular, we now see that all
+the values in the Merkle tree are irrelevant to this aim except for the ones
+mentioned previously: D2, D2', H1 and A2. Given these values, we can then
+compute
+
+$ "H2" = "hash"("D2"), "A1" = "hash"("H1", "H2") $
+$ "H2'" = "hash"("D2'"), "A1'" = "hash"("H1", "H2'") $
+
+and verify that, indeed,
+$ R = "hash"("A1", "A2"), "R'" = "hash"("A1'", "A2"). $
+
+This proves that the claim is correct, i.e. that there is a Merkle tree with
+root R and leaf D2 which transforms into a Merkle tree with root R' when D2 is
+replaced by D2'.
+
+Practically speaking, this means that deposits and withdrawals can stay away
+from the world of ZK and instead include the following metadata:
+$ { [(H1, Left), (A2, Right)], D2}. $
+Here, the `Left` refers to the fact that `H1` is to the left of `H2` and `H2'`.
+Given this metadata, the L1 smart contract can then compute the new Merkle root
+R' and update its state, since it has access to the difference between D2' and
+D2 (i.e. the amount of money deposited in the transaction) and the old Merkle
+root R (from its own state.
+
+As you can see, both the time and space complexity of this verification are
+`O(log_2(N))`, where `N` is the number of elements in the data set. The only
+assumption made here is that the Merkle tree is balanced, which will be
+discussed in a separate blogpost.
 
 ## Conclusion
 
@@ -71,42 +102,6 @@ In conclusion, we can update the Merkle tree for deposits and withdrawals
 without requiring ZK proofs, but still allowing the L1 to verify the execution
 occured appropriately. This simplifies some of the design of Kairos V0.1, as can
 be seen in its specification.
-
-# Old writings
-
-Figures: "merkle-tree.svg" & "merkle-tree-updated.svg"
-caption: "How to update a single leaf of a Merkle tree"
-
-Let us look at @merkle-tree-update-figure-algorithm as an example of a
-single-leaf Merkle tree update. As we can see, the datum D2 is updated to D2'.
-As a result, H2, A1 and R each get updated. The deposit transaction itself will
-include by necessity D2, D2', R and R', in order to provide the smart contract
-with all the information necessary in order to execute the right processes. In
-addition, the smart contract must verify that changing D2 to D2' does indeed
-lead to the update of the Merkle tree from root R to root R'. Note now that in
-order to verify this claim, we don't require the entire Merkle tree. Rather, all
-we need are values H1 and A2 and the directionality (i.e. the fact that H1 is to
-the left of H2, whereas A2 is to the right of A1, in the Merkle tree). Hence,
-the required metadata is
-$ {
-  hashes: [(H1, Left), (A2, Right)],
-  root: R'
-}$
-
-Given this metadata, we can now check that indeed for
-
-$ "H2" = "hash"("D2"), "A1" = "hash"("H1", "H2") $
-$ "H2'" = "hash"("D2'"), "A1'" = "hash"("H1", "H2'") $
-
-it is true that
-$ R = "hash"("A1", "A2"), "R'" = "hash"("A1'", "A2"). $
-
-For a general balanced Merkle tree with $N$ leaves, this requires $log^2(N)$
-hashes with their directionality, and the new Merkle root, to be passed to the
-Validium smart contract in order to allow for verification.
-
-Note: This should be implemented and tested as well for cases where a leaf must
-be added/removed, rather than updated.
 
 
 
