@@ -1,4 +1,34 @@
-== Validium vs. Rollup
+# Validium vs. Rollup
+
+Introduction:
+- Context for ZKR vs. ZKV
+  * The blockchain industry is highly focused on scaling solutions right now
+  * One of the most promising options is to build a ZK-based L2
+  * Important question: What do you still put on the L1?
+  * Option 1: ZKRs put the data and state update proofs on L1
+  * Option 2: ZKVs only put state hashes on state update proofs on L1
+  * We will discuss an important note on the difficulty of building rollups
+
+Overview:
+- We need substantial throughput, but usually only parallelized throughput is
+  increased
+- Increasing sequential throughput is either dangerous or very limited (~1 Tx/s)
+- This measn we need to make sure transactions are parallelized, each
+  interacting with a different part of the blockchain
+- Hence the blockchain will have many parts, i.e. wallets and smart contracts
+  (e.g. sharding)
+- This requires lots of data to be stored
+- Few blockchains can store all that data in one smart contract, which would be
+  necessary in order to build a ZKR-based L2
+- Finally, state updates get expensive (gas fees), which takes away one of the
+  main benefits of building ZK-based L2s in the first place
+- Hence, ZKRs are mostly useful for very specific projects and purposes, which
+  can then interact with other projects through e.g. Polygon CDK's
+  interoperability
+- For us, we want a big system that can support all of the Casper blockchain's
+  future transactions, as well as digital art (NFT minting & transfers) and
+  eventually many L2 dApps, which means we don't fit within the ZKR use case.
+  Hence we require a ZKV.
 
 As mentioned in the introduction, a ZK rollup is an L2 solution where the state
 is stored on the L1, while state updates are performed by the L2. A ZK proof,
