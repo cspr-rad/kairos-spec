@@ -136,44 +136,43 @@ to describe testable, functional requirements the system needs to meet.
   should be accounted correctly
 - *[tag:F00-01]* Depositing an amount of `tokens`, where `tokens < MIN_AMOUNT`
   should not be executed at all
-- *[tag:F00-02]* A user depositing any valid amount to its `L2 account` should
+- *[tag:F00-02]* A user depositing any valid amount to their `L2 account` should
   only succeed if the user has signed the deposit transaction
 - *[tag:F00-03]* A user depositing any valid amount with a proper signature to
-  another users account should fail
-- *[tag:F00-04]* When a user submits a deposit request, the request cannot be used
-  more than one time without the users approval
+  another user's account should fail
+- *[tag:F00-04]* A deposit request shall not be replayable.
 
 === Withdraw Tokens From L2 System
 
-- *[tag:F01-00]* Withdrawing an amount of `tokens`, where `users L2 account
+- *[tag:F01-00]* Withdrawing an amount of `tokens`, where `user's L2 account
    balance >= tokens > MIN_AMOUNT` should be accounted correctly
 - *[tag:F01-01]* Withdrawing an amount of `tokens`, where `tokens < MIN_AMOUNT`
   should not be executed at all
-- *[tag:F01-02]* Withdrawing an amount of `tokens`, where `tokens > users L2
+- *[tag:F01-02]* Withdrawing an amount of `tokens`, where `tokens > user's L2
    account balance` should not be possible
-- *[tag:F01-03]* Withdrawing a valid amount from the users L2 account should be
+- *[tag:F01-03]* Withdrawing a valid amount from the user's L2 account should be
   possible without the intermediary operator of the system
-- *[tag:F01-04]* Withdrawing a valid amount from the users L2 account should only
+- *[tag:F01-04]* Withdrawing a valid amount from the user's L2 account should only
   succeed if the user has signed the withdraw transaction
-- *[tag:F01-05]* Withdrawing a valid amount from another users L2 account should
+- *[tag:F01-05]* Withdrawing a valid amount from another user's L2 account should
   not be possible
 - *[tag:F01-06]* When a user submits a withdraw request, the request cannot be
-  used more than one time without the users approval
+  used more than one time without the user's approval
 
 === Transfer Tokens Within the L2 System
 
-- *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `users L2 account
+- *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `user's L2 account
    balance >= tokens > MIN_AMOUNT` should be accounted correctly
 - *[tag:F02-01]* Transfering an amount of `CSPR tokens`, where `tokens <
    MIN_AMOUNT` should not be executed at all
-- *[tag:F02-02]* Transfering an amount of `CSPR tokens`, where `tokens > users L2
+- *[tag:F02-02]* Transfering an amount of `CSPR tokens`, where `tokens > user's L2
    account balance` should not be possible
 - *[tag:F02-03]* Transfering a valid amount to another user that does not have a
   registered L2 account yet should be possible.
 - *[tag:F02-04]* Transfering a valid amount to another user sbould only succeed if
   the user owning the funds has signed the transfer transaction
 - *[tag:F02-05]* When a user submits a transfer request, the request cannot be
-  used more than one time without the users approval
+  used more than one time without the user's approval
 
 === Query Account Balances
 
@@ -474,10 +473,10 @@ through the client CLI to the L2 node. The L2 node creates an L1 transaction
 (_Deploy_) containing the according Merkle root update and the update metadata,
 which can be used to verify that the update was done correctly. More precisely,
 the _Deploy_ contains a _Session_ that executes the validation of the Merkle
-tree update, performs the state transition and transfer the funds from the users
-L1 account (purse) to the systems L1 account. This _Deploy_ needs to be signed
-by the user before submitting, this is achieved by making use of the L1's SDK on
-the client-side.
+tree update, performs the state transition and transfer the funds from the
+user's L1 account (purse) to the systems L1 account. This _Deploy_ needs to be
+signed by the user before submitting, this is achieved by making use of the L1's
+SDK on the client-side.
 
 After submitting, the L1 smart contracts take care of validating the new Merkle
 root, updating the system's state, and transferring the funds
