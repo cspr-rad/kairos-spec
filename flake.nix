@@ -52,7 +52,14 @@
           treefmt = {
             projectRootFile = ".git/config";
             programs.nixpkgs-fmt.enable = true;
-            settings.formatter = { };
+            settings.formatter = {
+              typst-fmt = {
+                command = "${pkgs.typst-fmt}/bin/typstfmt";
+                options = [
+                ];
+                includes = [ "*.typ" ];
+              };
+            };
           };
           packages = {
             inherit kairos-spec diagrams;
