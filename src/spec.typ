@@ -73,12 +73,12 @@ applications built on top of the Casper blockchain.
 
 === Operating Environment
 
-The product's backend will be deployed on modern powerfull machines equipped
-with a powerful graphics processing unit (GPU) and a large amount of working
-memory as well as persistent disk space. The machines will have continuous
-access to the Internet.
+The product's backend will be deployed on modern powerful machines equipped with
+a powerful graphics processing unit (GPU) and a large amount of working memory
+as well as persistent disk space. The machines will have continuous access to
+the Internet.
 
-The CLI will be deployed on modern, potentially less powerfull hardware.
+The CLI will be deployed on modern, potentially less powerful hardware.
 
 === Constraints <constraints>
 
@@ -146,11 +146,11 @@ to describe testable, functional requirements the system needs to meet.
 === Withdraw money from L2 system
 
 - *[tag:F01-00]* Withdrawing an amount of `tokens`, where `users L2 account
-  balance >= tokens > MIN_AMOUNT` should be accounted correctly
+   balance >= tokens > MIN_AMOUNT` should be accounted correctly
 - *[tag:F01-01]* Withdrawing an amount of `tokens`, where `tokens < MIN_AMOUNT`
   should not be executed at all
 - *[tag:F01-02]* Withdrawing an amount of `tokens`, where `tokens > users L2
-  account balance` should not be possible
+   account balance` should not be possible
 - *[tag:F01-03]* Withdrawing a valid amount from the users L2 account should be
   possible without the intermediary operator of the system
 - *[tag:F01-04]* Withdrawing a valid amount from the users L2 account should only
@@ -163,11 +163,11 @@ to describe testable, functional requirements the system needs to meet.
 === Transfer money within the L2 system
 
 - *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `users L2 account
-  balance >= tokens > MIN_AMOUNT` should be accounted correctly
+   balance >= tokens > MIN_AMOUNT` should be accounted correctly
 - *[tag:F02-01]* Transfering an amount of `CSPR tokens`, where `tokens <
-  MIN_AMOUNT` should not be executed at all
+   MIN_AMOUNT` should not be executed at all
 - *[tag:F02-02]* Transfering an amount of `CSPR tokens`, where `tokens > users L2
-  account balance` should not be possible
+   account balance` should not be possible
 - *[tag:F02-03]* Transfering a valid amount to another user that does not have a
   registered L2 account yet should be possible.
 - *[tag:F02-04]* Transfering a valid amount to another user sbould only succeed if
@@ -431,11 +431,11 @@ components.
   [],
   [- Verifies that the transaction cointains the same amount of tokens used to update
       the account balance\
-    - Moves the amount from the depositor's L1 account to the account owned by the
-      system\
-    - Verifies the depositor's signature\
-    - Verifies the new Merkle root given the public inputs and metadata\
-    - Updates the system's on-chain state on successfull verification
+      - Moves the amount from the depositor's L1 account to the account owned by the
+        system\
+      - Verifies the depositor's signature\
+      - Verifies the new Merkle root given the public inputs and metadata\
+      - Updates the system's on-chain state on successfull verification
   ],
   [verify_withdraw],
   [withdrawer: AccountID, amount: UnsignedINT, tokenId: TokenID,
@@ -444,18 +444,18 @@ components.
   [],
   [- Verifies that the transaction moves the same amount of tokens used to update the
       account balance\
-    - Moves the amount from the account owned by the system to the withdrawer's L1
-      account\
-    - Verifies the withdrawer's signature\
-    - Verifies the new Merkle root given the public inputs and metadata\
-    - Updates the system's on-chain state on successfull verification
+      - Moves the amount from the account owned by the system to the withdrawer's L1
+        account\
+      - Verifies the withdrawer's signature\
+      - Verifies the new Merkle root given the public inputs and metadata\
+      - Updates the system's on-chain state on successfull verification
   ],
   [verify_transfers],
   [proof: Proof, publicInputs: PublicInputs],
   [],
   [- Verifies that the proof computed from performing batch transfers on the L2 is
       valid\
-    - Updates the system's on-chain state on successfull verification
+      - Updates the system's on-chain state on successfull verification
   ],
 )
 
