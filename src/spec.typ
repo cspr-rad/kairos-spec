@@ -133,91 +133,97 @@ to describe testable, functional requirements the system needs to meet.
 === Deposit Tokens Into L2 System
 
 - *[tag:F00-00]* Depositing an amount of `tokens`, where `tokens >= MIN_AMOUNT`
-  should be accounted correctly
+  must be accounted correctly: `new_account_balance = old_account_balance +
+  tokens`
 - *[tag:F00-01]* Depositing an amount of `tokens`, where `tokens < MIN_AMOUNT`
-  should not be executed at all
-- *[tag:F00-02]* A user depositing any valid amount to their `L2 account` should
-  only succeed if the user has signed the deposit transaction
-- *[tag:F00-03]* A user depositing any valid amount with a proper signature to
-  another user's account should fail
+  must not be executed at all
+- *[tag:F00-02]* A user depositing any valid amount (condition stated in F00-00)
+  to their `L2 account` must only succeed if the user has signed the deposit
+  transaction
+- *[tag:F00-03]* A user depositing any amount with a proper signature to another
+  user's account must fail
 - *[tag:F00-04]* A deposit request shall not be replayable.
 
 === Withdraw Tokens From L2 System
 
 - *[tag:F01-00]* Withdrawing an amount of `tokens`, where `user's L2 account
-   balance >= tokens > MIN_AMOUNT` should be accounted correctly
+   balance >= tokens > MIN_AMOUNT` must be accounted correctly:
+  `new_account_balance = old_account_balance - tokens`
 - *[tag:F01-01]* Withdrawing an amount of `tokens`, where `tokens < MIN_AMOUNT`
-  should not be executed at all
+  must not be executed at all
 - *[tag:F01-02]* Withdrawing an amount of `tokens`, where `tokens > user's L2
    account balance` should not be possible
-- *[tag:F01-03]* Withdrawing a valid amount from the user's L2 account should be
-  possible without the intermediary operator of the system
-- *[tag:F01-04]* Withdrawing a valid amount from the user's L2 account should only
-  succeed if the user has signed the withdrawal transaction
-- *[tag:F01-05]* Withdrawing a valid amount from another user's L2 account should
-  not be possible
-- *[tag:F01-06]* When a user submits a withdrawal request, the request cannot be
-  used more than one time without the user's approval
+- *[tag:F01-03]* Withdrawing a valid amount (condition stated in F01-00, F01-02)
+  from the user's L2 account must be possible without the intermediary operator of
+  the system
+- *[tag:F01-04]* Withdrawing a valid amount (condition stated in F01-00, F01-02)
+  from the user's L2 account must succeed if the user has signed the withdrawal
+  transaction
+- *[tag:F01-05]* Withdrawing any amount from another user's L2 account must not be
+  possible
+- *[tag:F01-06]* A withdrawal request shall not be replayable.
 
 === Transfer Tokens Within the L2 System
 
-- *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `user's L2 account
-   balance >= tokens > MIN_AMOUNT` should be accounted for correctly
-- *[tag:F02-01]* Transfering an amount of `CSPR tokens`, where `tokens <
-   MIN_AMOUNT` should not be executed at all
-- *[tag:F02-02]* Transfering an amount of `CSPR tokens`, where `tokens > user's L2
-   account balance` should not be possible
-- *[tag:F02-03]* Transfering a valid amount to another user that does not have a
-  registered L2 account yet should be possible.
-- *[tag:F02-04]* Transfering a valid amount to another user should only succeed if
-  the user owning the funds has signed the transfer transaction
-- *[tag:F02-05]* When a user submits a transfer request, the request cannot be
-  used more than one time without the user's approval
+- *[tag:F02-00]* Transfering an amount of `tokens` from `user1` to `user2`, where
+  `user1's L2 account
+   balance >= tokens > MIN_AMOUNT` must be accounted correctly:
+  `new_account_balance_user1 = old_account_balance_user1 - tokens` and
+  `new_account_balance_user2 = old_account_balance_user2 - tokens`
+- *[tag:F02-01]* Transfering an amount of `tokens`, where `tokens <
+   MIN_AMOUNT` must not be executed at all
+- *[tag:F02-02]* Transfering an amount of `tokens`, where `tokens > user's L2
+   account balance` must not be possible
+- *[tag:F02-03]* Transfering a valid amount (condition F02-00) to another user
+  that does not have a registered L2 account yet must be possible.
+- *[tag:F02-04]* Transfering a valid amount (condition F02-00) to another user
+  should only succeed if the user owning the funds has signed the transfer
+  transaction
+- *[tag:F02-05]* A transfer request shall not be replayable.
 
 === Query Account Balances
 
-- *[tag:F03-00]* A user should be able to see their L2 account balance immediately
-  when it's queried through the CLI
-- *[tag:F03-01]* Anyone should be able to obtain any L2 account balances when
+- *[tag:F03-00]* A user must be able to see their L2 account balance when it's
+  queried through the CLI
+- *[tag:F03-01]* Anyone must be able to obtain any L2 account balances when
   querying the CLI or API
-- *[tag:F03-02]* Account balances should be written by known, verified entities
-  only
-- *[tag:F03-03]* Account balances should be updated immediately after the
-  successful verification of correct deposit/withdraw/transfer interactions
-- *[tag:F03-04]* Account balances should not be updated if the verification of the
+- *[tag:F03-02]* Account balances must be written by known, verified entities only
+- *[tag:F03-03]* Account balances must be updated immediately after the successful
+  verification of correct deposit/withdraw/transfer interactions
+- *[tag:F03-04]* Account balances must not be updated if the verification of the
   proof of the interactions fails
-- *[tag:F03-05]* Account balances should be stored redundantly @data-redundancy
+- *[tag:F03-05]* Account balances must be stored redundantly @data-redundancy
 
 === Query Transaction Data
-- *[tag:F04-00]* A user should be able to see its L2 transactions immediately when
-  they are queried through the CLI
-- *[tag:F04-01]* Anyone should be able to obtain any L2 transactions when querying
+- *[tag:F04-00]* A user must be able to see its L2 transactions when they are
+  queried through the CLI
+- *[tag:F04-01]* Anyone must be able to obtain any L2 transactions when querying
   the CLI or API
-- *[tag:F04-02]* Transaction data should be written by known, verified entities
-  only
-- *[tag:F04-03]* Transaction data should be written immediately after the
-  successful verification of correct deposit/withdraw/transfer interactions
-- *[tag:F04-04]* Transaction data should not be written if the verification of the
+- *[tag:F04-02]* Transaction data must be written by known, verified entities only
+- *[tag:F04-03]* Transaction data must be written immediately after the successful
+  verification of correct deposit/withdraw/transfer interactions
+- *[tag:F04-04]* Transaction data must not be written if the verification of the
   proof of the interactions fails
-- *[tag:F04-05]* Transaction data should be stored redundantly @data-redundancy
+- *[tag:F04-05]* Transaction data must be stored redundantly @data-redundancy
 
 === Verification
 
-- *[tag:F05-00]* Anyone should be able to query and verify proofs of the system's
+- *[tag:F05-00]* Anyone must be able to query and verify proofs of the system's
   state changes caused by deposit/withdraw/transfer interactions at any given time
+
 == Non-functional Requirements
 
 These are qualitative requirements.
 
-- *[tag:NF00]* The application should not leak any private or sensitive
-  information like private keys
-- *[tag:NF01]* The backend API needs to be designed in a way such that it's easy
-  to swap out a client implementation
+- *[tag:NF00]* The application must not leak any private or sensitive information
+  like private keys
+- *[tag:NF01]* The backend API must be designed in such a way that it's easy to
+  swap out a client implementation
 - *[tag:NF02]* The CLI should respond to user interactions immediately
 - *[tag:NF03]* The CLI should be designed in a user-friendly way
 - *[tag:NF04]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential
     transaction throughput.]
-- *[tag:NF05]* The whole system should be easy to extend with new features
+- *[tag:NF05]* The whole system must be easy to extend with new features
 
 = A Suggested Architecture <architecture>
 
