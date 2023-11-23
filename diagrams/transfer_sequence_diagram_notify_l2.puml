@@ -21,10 +21,10 @@ note over L1Node, L2Node
 After the deploy gets processed we get notified
 end note
 
-L1Node -> L2Node: eventHandler(event :: OnDeployProcessed)
+L1Node -> L2Node: event_handler(event :: OnDeployProcessed)
 L2Node -> DataStore: insert_transfers(Vector<{sender, receiver, amount, token_id}>)
 DataStore --> L2Node: Ok
-L2Node --> L2Node: end eventHandler
+L2Node --> L2Node: end event_handler
 
 note over ClientCli, L2Node
 After sufficient time the user can query the balance

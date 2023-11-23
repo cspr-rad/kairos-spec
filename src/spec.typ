@@ -23,7 +23,7 @@
 
 = Introduction
 
-The Casper blockchain's ecosystem yearns for a scaling solution to achieve a
+The Casper blockchain's ecosystem is in need of a scaling solution to achieve a
 higher transaction throughput and continue to stay competitive. As a first step
 towards providing a trustless scaling solution, the goal of the initial version
 0.1 of the Kairos project is to build a zero-knowledge (ZK) _validium_ @validium-vs-rollup for
@@ -32,16 +32,16 @@ higher transaction throughput and lower gas fees. Here, _validium_ refers to a
 rollup where the data, such as account balances, are stored on L2 rather than on
 the Casper blockchain directly (L1).
 
-Additionally, Kairos V0.1 serves two other major purposes:
+Additionally, Kairos V0.1 serves two other purposes:
 
 - It is the first step towards a cheap and frictionless NFT (non-fungible token)
   minting and transfer system aiding Casper to become _the_ blockchain to push the
   digital art industry forward.
 
 - The conciseness and complexity of its scope allow us to explore the problem
-  space of L2 solutions which leverage zero-knowledge technology and integrate
-  with Casper's L1. Furthermore, it allows the team to collaborate and grow
-  together by building a production-grade system.
+  space of L2 solutions that leverage zero-knowledge technology and integrate with
+  Casper's L1. Furthermore, it allows the team to collaborate and grow together by
+  building a production-grade system.
 
 Kairos V0.1 will support very few simple interactions and features. Users will
 be able to deposit and withdraw funds by interacting with an L1 smart contract
@@ -51,11 +51,11 @@ we will detail the requirements of such a system.
 
 In @overview (Product Overview) we describe the high-level features that Kairos
 V0.1 will support. @requirements specifies the requirements based on the
-described interactions and features. Next, in @architecture (Architecture) we
+described interactions and features. Next, in @architecture (Architecture), we
 propose an architecture of this initial version, together with the component
 interfaces and their interactions. We conclude the document with threat models
 and a glossary, which clarifies the terminology used throughout this document.
-Note that this specification comes with a number of blogposts detailing some of
+Note that this document is accompanied by several blog posts detailing some of
 the design considerations in more detail, as listed in the bibliography
 @compare-zk-provers @trustless-cli.
 
@@ -84,7 +84,7 @@ The CLI will be deployed on modern, potentially less powerful hardware.
 
 The product should be a centralized solution for this initial version 0.1.
 
-The utilized proving system should be zero knowledge.
+The used proving system should be zero knowledge.
 
 == Features
 
@@ -96,7 +96,7 @@ their L2 account at any given time through a command line interface (CLI).
 === Withdraw Tokens From L2 System
 
 *[tag:F01]*: Users should be able to withdraw tokens from their L2 account to
-their L1 account any given time through a CLI. This interaction should not
+their L1 account at any given time through a CLI. This interaction should not
 require the approval of the operator (#link(
   "https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals",
 )[see Ethereum's validium]).
@@ -153,30 +153,30 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F01-03]* Withdrawing a valid amount from the user's L2 account should be
   possible without the intermediary operator of the system
 - *[tag:F01-04]* Withdrawing a valid amount from the user's L2 account should only
-  succeed if the user has signed the withdraw transaction
+  succeed if the user has signed the withdrawal transaction
 - *[tag:F01-05]* Withdrawing a valid amount from another user's L2 account should
   not be possible
-- *[tag:F01-06]* When a user submits a withdraw request, the request cannot be
+- *[tag:F01-06]* When a user submits a withdrawal request, the request cannot be
   used more than one time without the user's approval
 
 === Transfer Tokens Within the L2 System
 
 - *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `user's L2 account
-   balance >= tokens > MIN_AMOUNT` should be accounted correctly
+   balance >= tokens > MIN_AMOUNT` should be accounted for correctly
 - *[tag:F02-01]* Transfering an amount of `CSPR tokens`, where `tokens <
    MIN_AMOUNT` should not be executed at all
 - *[tag:F02-02]* Transfering an amount of `CSPR tokens`, where `tokens > user's L2
    account balance` should not be possible
 - *[tag:F02-03]* Transfering a valid amount to another user that does not have a
   registered L2 account yet should be possible.
-- *[tag:F02-04]* Transfering a valid amount to another user sbould only succeed if
+- *[tag:F02-04]* Transfering a valid amount to another user should only succeed if
   the user owning the funds has signed the transfer transaction
 - *[tag:F02-05]* When a user submits a transfer request, the request cannot be
   used more than one time without the user's approval
 
 === Query Account Balances
 
-- *[tag:F03-00]* A user should be able to see its L2 account balance immediately
+- *[tag:F03-00]* A user should be able to see their L2 account balance immediately
   when it's queried through the CLI
 - *[tag:F03-01]* Anyone should be able to obtain any L2 account balances when
   querying the CLI or API
@@ -186,8 +186,7 @@ to describe testable, functional requirements the system needs to meet.
   successful verification of correct deposit/withdraw/transfer interactions
 - *[tag:F03-04]* Account balances should not be updated if the verification of the
   proof of the interactions fails
-- *[tag:F03-05]* Account balances should should be stored redundantly
-  @data-redundancy
+- *[tag:F03-05]* Account balances should be stored redundantly @data-redundancy
 
 === Query Transaction Data
 - *[tag:F04-00]* A user should be able to see its L2 transactions immediately when
@@ -206,34 +205,30 @@ to describe testable, functional requirements the system needs to meet.
 
 - *[tag:F05-00]* Anyone should be able to query and verify proofs of the system's
   state changes caused by deposit/withdraw/transfer interactions at any given time
-
 == Non-functional Requirements
 
-These are qualitative requirements, such as "it should be fast" and could be
-benchmarked.
+These are qualitative requirements.
 
-- *[tag:NF00]* The application should not leak any private nor sensitive
-  informations like private keys
+- *[tag:NF00]* The application should not leak any private or sensitive
+  information like private keys
 - *[tag:NF01]* The backend API needs to be designed in a way such that it's easy
   to swap out a client implementation
-- *[tag:NF02]* The CLI should start fast
-- *[tag:NF03]* The CLI should respond on user interactions fast
-- *[tag:NF04]* The CLI should be designed in a user friendly way
-- *[tag:NF05]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential
+- *[tag:NF02]* The CLI should respond to user interactions immediately
+- *[tag:NF03]* The CLI should be designed in a user-friendly way
+- *[tag:NF04]* The L2 should support a high parallel transaction throughput #footnote[Read @sequential-throughput for more insight into parallel vs. sequential
     transaction throughput.]
-- *[tag:NF06]* The whole system should be easy to extend with new features
+- *[tag:NF05]* The whole system should be easy to extend with new features
 
 = A Suggested Architecture <architecture>
 
 To give the reader an idea of what a system defined in the previous sections
-might look like. This section proposes a possible architecture. The features and
+might look like, this section proposes a possible architecture. The features and
 requirements described previously suggest two core components in the system. A
 CLI and an L2 node implementing the client-server pattern. The L2 node should
 not be monolithic but rather obey the principle of separation of concerns to
-allow for easier extensibility and replacement of components in the future. For
-that reason, the L2 node unifies various other components described in more
-detail in the following @architecture-components and exposes them through a
-single API.
+allow for easier extensibility and replacement of components in the future.
+Therefore, the L2 node unifies various other components described in more detail
+in the following @architecture-components and exposes them through a single API.
 
 #figure(image("components_diagram.svg", width: 100%), caption: [
   Components diagram
@@ -242,11 +237,11 @@ single API.
 == Architecture Components <architecture-components>
 === Client CLI <cli>
 
-The client CLI's user interface (UI) is comprised of commands allowing a user to
+The client CLI's user interface (UI) is comprised of commands allowing users to
 deposit, transfer, and withdraw funds allocated in their L2 account. Once a user
 executes any of the commands, the client delegates the bulk of the work to the
 L2 node (@l2-node). Moreover, the client CLI can be used to verify past state
-changes and to query account balances as well as transfers.
+changes and to query account balances and transfers.
 
 // Web UI is now post-version 0.1
 // == Web UI
@@ -286,27 +281,27 @@ according Merkle tree updates of the account balances @merkle-tree-updates.
 === Prover <prover>
 
 The Prover is a separate service that exposes a _batchProve_ and a _batchVerify_ endpoint,
-which will mainly be utilized by the L2 node (@l2-node) to prove batches of
-transfers. Under the hood, the Prover utilizes a zero-knowledge proving system
-that computes the account balances resulting from the transfers within a batch
-and a proof of correct computation.
+mainly used by the L2 node (@l2-node) to prove batches of transfers. Under the
+hood, the Prover uses a zero-knowledge proving system that computes the account
+balances resulting from the transfers within a batch and a proof of correct
+computation.
 
 === Data Store <data-store>
 
 The data store is a persistent storage that stores the performed transfers and
 the account balances whose state representation is stored on the blockchain. To
 achieve more failsafe and reliable availability of the data, it is replicated
-sufficiently often by so-called standby's (replicas). In the case of failure,
+sufficiently often by so-called standbys (replicas). In the case of failure,
 standbys can be used as new primary stores (@data-redundancy).
 
 === L1 State/ Verifier Contract <contracts>
 
 The L1 State and Verifier Contracts are responsible for verifying and performing
 updates of the Merkle root of account balances. They can be two separate
-contracts or a single contract with several endpoints. The important thing is
-that the state update only happens if the updated state was verified
-successfully beforehand. The contracts are called by the L2 node by creating
-according transactions and submitting them to an L1 node.
+contracts or a single contract with several endpoints. A state update only
+happens if the updated state was verified successfully beforehand. The contracts
+are called by the L2 node by creating according transactions and submitting them
+to an L1 node.
 
 For the Merkle tree root to have an initial value, the State Contract will be
 initialized with a deposit. This initial deposit then becomes the balance of the
@@ -338,8 +333,8 @@ components.
   [get_balance],
   [accountId: AccountID],
   [balance: UnsignedINT],
-  [Returns a user's L2 account balance. The `UnsignedINT` type should be a type
-    that allows for safe money computations (Read @safe-money)],
+  [Returns a user's L2 account balance. The UnsignedINT type should be a type that
+    allows for safe money computations (Read @safe-money)],
   [transfer],
   [sender: AccountID, recipient: AccountID, amount: UnsignedINT, token_id: TokenID,
     nonce: Nonce, key_pair: KeyPair],
@@ -364,7 +359,7 @@ components.
     according L1 transaction for us, afterward signing it on the client-side and
     then submitting it to L1 through the L2 node],
   [verify],
-  [proof: Proof, public_nputs: PublicInputs],
+  [proof: Proof, public_inputs: PublicInputs],
   [result: VerifyResult],
   [Returns whether a proof is legitimate or not],
 )
@@ -379,8 +374,8 @@ components.
   [get_balance],
   [accountId: AccountID],
   [balance: UnsignedINT],
-  [Returns a user's L2 account balance. The `UnsignedINT` type should be a type
-    that allows for safe money computations (Read @safe-money)],
+  [Returns a user's L2 account balance. The UnsignedINT type should be a type that
+    allows for safe money computations (Read @safe-money)],
   [transfer],
   [sender: AccountID, recipient: AccountID, amount: UnsignedINT, token_id: TokenID,
     nonce: Nonce, signature: Signature, sender_pub_key: PubKey],
@@ -428,13 +423,13 @@ components.
     updated_account_balances: MerkleRootHash, update_metadata:
     MerkleRootUpdateMetadata, signature: Signature],
   [],
-  [- Verifies that the transaction cointains the same amount of tokens used to update
+  [- Verifies that the transaction contains the same amount of tokens used to update
       the account balance\
       - Moves the amount from the depositor's L1 account to the account owned by the
         system\
       - Verifies the depositor's signature\
       - Verifies the new Merkle root given the public inputs and metadata\
-      - Updates the system's on-chain state on successfull verification
+      - Updates the system's on-chain state on successful verification
   ],
   [verify_withdraw],
   [withdrawer: AccountID, amount: UnsignedINT, tokenId: TokenID,
@@ -447,21 +442,21 @@ components.
         account\
       - Verifies the withdrawer's signature\
       - Verifies the new Merkle root given the public inputs and metadata\
-      - Updates the system's on-chain state on successfull verification
+      - Updates the system's on-chain state on successful verification
   ],
   [verify_transfers],
   [proof: Proof, publicInputs: PublicInputs],
   [],
   [- Verifies that the proof computed from performing batch transfers on the L2 is
       valid\
-      - Updates the system's on-chain state on successfull verification
+      - Updates the system's on-chain state on successful verification
   ],
 )
 
 == Component Interaction
 
-The following two sequence diagrams show how these individual components
-interact together to process a user's `deposit` and `transfer` request.
+Figures 2 and 3 show sequence diagrams for processing a user's deposit and
+transfer requests, respectively.
 
 === Deposit Sequence Diagram
 
