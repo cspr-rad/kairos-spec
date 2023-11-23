@@ -1,5 +1,5 @@
 #let title = [
-  Kairos: Zero-knowledge Casper Transaction scaling
+  Kairos: Zero-knowledge Casper Transaction Scaling
 ]
 #let time_format = "[weekday] [month repr:long] [day padding:none], [year]"
 #set page(paper: "a4", numbering: "1", margin: (x: 3.2cm, y: 4.0cm))
@@ -88,12 +88,12 @@ The utilized proving system should be zero knowledge.
 
 == Features
 
-=== Deposit money into L2 system
+=== Deposit Money Into L2 System
 
 *[tag:F00]*: Users should be able to deposit tokens from their L1 account to
 their L2 account at any given time through a command line interface (CLI).
 
-=== Withdraw money from L2 system
+=== Withdraw Money From L2 System
 
 *[tag:F01]*: Users should be able to withdraw tokens from their L2 account to
 their L1 account any given time through a CLI. This interaction should not
@@ -101,18 +101,18 @@ require the approval of the operator (#link(
   "https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals",
 )[see Ethereum's validium]).
 
-=== Transfer money within the L2 system
+=== Transfer Money Within the L2 System
 
 *[tag:F02]*: Users should be able to transfer tokens from their L2 account to
 another user's L2 account at any given time through a CLI.
 
-=== Query account balances
+=== Query Account Balances
 
 *[tag:F03]*: Anyone should be able to query any L2 account balances at any given
 time through a CLI. In particular, users can also query their personal L2
 account balance.
 
-=== Query transaction data
+=== Query Transaction Data
 
 *[tag:F04]*: Anyone should be able to query any L2 transactions at any given
 time through a CLI.
@@ -128,9 +128,9 @@ i.e. a machine-readable way.
 Based on the product overview given in the previous section, this section aims
 to describe testable, functional requirements the system needs to meet.
 
-== Functional requirements
+== Functional Requirements
 
-=== Deposit money into L2 system
+=== Deposit Money Into L2 System
 
 - *[tag:F00-00]* Depositing an amount of `tokens`, where `tokens >= MIN_AMOUNT`
   should be accounted correctly
@@ -143,7 +143,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F00-04]* When a user submits a deposit request, the request cannot be used
   more than one time without the users approval
 
-=== Withdraw money from L2 system
+=== Withdraw Money From L2 System
 
 - *[tag:F01-00]* Withdrawing an amount of `tokens`, where `users L2 account
    balance >= tokens > MIN_AMOUNT` should be accounted correctly
@@ -160,7 +160,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F01-06]* When a user submits a withdraw request, the request cannot be
   used more than one time without the users approval
 
-=== Transfer money within the L2 system
+=== Transfer Money Within the L2 System
 
 - *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `users L2 account
    balance >= tokens > MIN_AMOUNT` should be accounted correctly
@@ -175,7 +175,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F02-05]* When a user submits a transfer request, the request cannot be
   used more than one time without the users approval
 
-=== Query account balances
+=== Query Account Balances
 
 - *[tag:F03-00]* A user should be able to see its L2 account balance immediately
   when it's queried through the CLI
@@ -190,7 +190,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F03-05]* Account balances should should be stored redundantly
   @data-redundancy
 
-=== Query transaction data
+=== Query Transaction Data
 - *[tag:F04-00]* A user should be able to see its L2 transactions immediately when
   they are queried through the CLI
 - *[tag:F04-01]* Anyone should be able to obtain any L2 transactions when querying
@@ -208,7 +208,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F05-00]* Anyone should be able to query and verify proofs of the system's
   state changes caused by deposit/withdraw/transfer interactions at any given time
 
-== Non-functional requirements
+== Non-functional Requirements
 
 These are qualitative requirements, such as "it should be fast" and could be
 benchmarked.
@@ -224,7 +224,7 @@ benchmarked.
     transaction throughput.]
 - *[tag:NF06]* The whole system should be easy to extend with new features
 
-= A suggested architecture <architecture>
+= A Suggested Architecture <architecture>
 
 To give the reader an idea of what a system defined in the previous sections
 might look like. This section proposes a possible architecture. The features and
