@@ -27,3 +27,10 @@ In order to build the `*.dot` diagrams, we use [Graphviz](https://graphviz.org/)
 dot -Tsvg diagrams/merkle-tree.dot > merkle-tree.svg
 ```
 
+# Formatting
+To format Nix and Typst run:
+```
+nix fmt
+```
+
+More formatters can be added by adding more formatters to the `treefmt.settings.formtatters` attribute-set analogous to `typst-fmt`.
