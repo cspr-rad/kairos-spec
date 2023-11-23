@@ -88,12 +88,12 @@ The utilized proving system should be zero knowledge.
 
 == Features
 
-=== Deposit Money Into L2 System
+=== Deposit Tokens Into L2 System
 
 *[tag:F00]*: Users should be able to deposit tokens from their L1 account to
 their L2 account at any given time through a command line interface (CLI).
 
-=== Withdraw Money From L2 System
+=== Withdraw Tokens From L2 System
 
 *[tag:F01]*: Users should be able to withdraw tokens from their L2 account to
 their L1 account any given time through a CLI. This interaction should not
@@ -101,7 +101,7 @@ require the approval of the operator (#link(
   "https://ethereum.org/en/developers/docs/scaling/validium/#deposits-and-withdrawals",
 )[see Ethereum's validium]).
 
-=== Transfer Money Within the L2 System
+=== Transfer Tokens Within the L2 System
 
 *[tag:F02]*: Users should be able to transfer tokens from their L2 account to
 another user's L2 account at any given time through a CLI.
@@ -130,7 +130,7 @@ to describe testable, functional requirements the system needs to meet.
 
 == Functional Requirements
 
-=== Deposit Money Into L2 System
+=== Deposit Tokens Into L2 System
 
 - *[tag:F00-00]* Depositing an amount of `tokens`, where `tokens >= MIN_AMOUNT`
   should be accounted correctly
@@ -143,7 +143,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F00-04]* When a user submits a deposit request, the request cannot be used
   more than one time without the users approval
 
-=== Withdraw Money From L2 System
+=== Withdraw Tokens From L2 System
 
 - *[tag:F01-00]* Withdrawing an amount of `tokens`, where `users L2 account
    balance >= tokens > MIN_AMOUNT` should be accounted correctly
@@ -160,7 +160,7 @@ to describe testable, functional requirements the system needs to meet.
 - *[tag:F01-06]* When a user submits a withdraw request, the request cannot be
   used more than one time without the users approval
 
-=== Transfer Money Within the L2 System
+=== Transfer Tokens Within the L2 System
 
 - *[tag:F02-00]* Transfering an amount of `CSPR tokens`, where `users L2 account
    balance >= tokens > MIN_AMOUNT` should be accounted correctly
