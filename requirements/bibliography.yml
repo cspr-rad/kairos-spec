@@ -46,6 +46,12 @@ validium-vs-rollup:
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/validium-vs-rollup.md
 
+validium:
+  type: blogpost
+  title: "Validium"
+  author: Ethereum
+  url: https://ethereum.org/en/developers/docs/scaling/validium
+
 merkle-tree:
   type: wikipedia
   title: "Merkle tree"
