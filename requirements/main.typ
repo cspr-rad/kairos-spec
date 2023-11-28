@@ -134,7 +134,7 @@ to describe testable, functional requirements the system needs to meet.
 
 - *[tag:F00-00]* Depositing an amount of `tokens`, where `tokens >= MIN_AMOUNT`
   must be accounted correctly: `new_account_balance = old_account_balance +
-  tokens`
+   tokens`
 - *[tag:F00-01]* Depositing an amount of `tokens`, where `tokens < MIN_AMOUNT`
   must not be executed at all
 - *[tag:F00-02]* A user depositing any valid amount (condition stated in F00-00)

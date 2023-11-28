@@ -19,18 +19,25 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          kairos-spec = pkgs.runCommand "kairos-spec"
-            {
-              nativeBuildInputs = with pkgs; [
-                typst
-              ];
-            }
-            ''
-              mkdir -p $out
-              cp -r ${self'.packages.diagrams}/* .
-              cp ${./src}/* .
-              typst compile spec.typ $out/spec.pdf
-            '';
+          requirements =
+            let
+              name = "requirements";
+            in
+            pkgs.runCommand name
+              {
+                nativeBuildInputs = with pkgs; [
+                  typst
+                ];
+              }
+              ''
+                mkdir -p $out
+                cp -r ${self'.packages.diagrams}/* .
+                cp ${./${name}}/* .
+                typst compile main.typ $out/${name}.pdf
+              '';
+
+                typst compile ${name}.typ $out/${name}.pdf
+              '';
           diagrams = pkgs.runCommand "diagrams" { nativeBuildInputs = with pkgs; [ plantuml graphviz ]; }
             ''
               mkdir -p $out
@@ -62,8 +69,8 @@
             };
           };
           packages = {
-            inherit kairos-spec diagrams;
-            default = self'.packages.kairos-spec;
+            inherit requirements diagrams;
+            default = self'.packages.kairos-requirements;
           };
           devShells.default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
