@@ -10,13 +10,29 @@
 )
 #show link: underline
 
-#align(center, text(21pt)[
-  *#title*
+#align(
+  center,
+  text(
+    21pt,
+  )[
+    *#title*
 
-  Marijan Petricevic, Nick Van den Broeck
+    Requirements
 
-  #datetime.today().display(time_format)
-])
+    #align(
+      center,
+      text(
+        12pt,
+      )[
+        Marijan Petricevic, Nick Van den Broeck, Mark Greenslade, Tom Sydney Kerckhove,
+        Matthew Doty, Avi Dessauer, Jonas Pauli, Andrzej Bronski, Quinn Dougherty, Chloe
+        Kever
+      ],
+    )
+
+    #datetime.today().display(time_format)
+  ],
+)
 
 #outline(title: "Contents", indent: auto)
 #pagebreak()
