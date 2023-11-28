@@ -36,7 +36,6 @@
                 typst compile main.typ $out/${name}.pdf
               '';
 
-                typst compile ${name}.typ $out/${name}.pdf
               '';
           diagrams = pkgs.runCommand "diagrams" { nativeBuildInputs = with pkgs; [ plantuml graphviz ]; }
             ''
@@ -71,6 +70,7 @@
           packages = {
             inherit requirements diagrams;
             default = self'.packages.kairos-requirements;
+            default = self'.packages.requirements;
           };
           devShells.default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [

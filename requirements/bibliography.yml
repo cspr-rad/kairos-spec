@@ -1,44 +1,26 @@
-uniqueness:
-    type: Blogpost
-    title: "L2 transaction uniqueness"
-    author: Nick Van den Broeck
-    url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/L2-Tx-uniqueness.md
-
 centralized-L2:
   type: Blogpost
-  title: "Why build a centralized L2?"
+  title: "Why Build a Centralized L2?"
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/centralized-l2.md
 
 compare-zk-provers:
   type: blogpost
-  title: "ZK provers: A comparison"
+  title: "ZK Provers: A Comparison"
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/compare-zk-provers.md
 
 data-redundancy:
   type: blogpost
-  title: "Data redundancy"
+  title: "Data Redundancy"
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/data-redundancy.md
 
-merkle-tree-updates:
-  type: blogpost
-  title: "Merkle trees: How to update without a zero-knowledge proof?"
-  author: Nick Van den Broeck
-  url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/merkle-tree-updates.md
-
 sequential-throughput:
   type: blogpost
-  title: "Sequential through of L2 ZK Validia"
+  title: "Sequential Throughput of L2 ZK Validia"
   author: Nick Van den Broeck
   url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/sequential-throughput.md
-
-trustless-cli:
-  type: blogpost
-  title: "CLI: Adding a trustless mode"
-  author: Nick Van den Broeck
-  url: https://github.com/cspr-rad/kairos-spec/blob/main/blogposts/trustless-cli.md
 
 validium-vs-rollup:
   type: blogpost
@@ -52,18 +34,13 @@ validium:
   author: Ethereum
   url: https://ethereum.org/en/developers/docs/scaling/validium
 
-merkle-tree:
-  type: wikipedia
-  title: "Merkle tree"
-  url: https://en.wikipedia.org/wiki/Merkle_tree
-
 zkp:
   type: wikipedia
-  title: "Zero knowledge proof"
+  title: "Zero Knowledge Proof"
   url: https://en.wikipedia.org/wiki/Zero-knowledge_proof
 
 safe-money:
   type: blogpost
-  title: How to deal with money in software
+  title: How to Deal With Money in Software
   author: Tom Sydney Kerckhove
   url: https://cs-syd.eu/posts/2022-08-22-how-to-deal-with-money-in-software
