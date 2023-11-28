@@ -36,7 +36,23 @@
                 typst compile main.typ $out/${name}.pdf
               '';
 
+          design =
+            let
+              name = "design";
+            in
+            pkgs.runCommand name
+              {
+                nativeBuildInputs = with pkgs; [
+                  typst
+                ];
+              }
+              ''
+                mkdir -p $out
+                cp -r ${self'.packages.diagrams}/* .
+                cp ${./${name}}/* .
+                typst compile main.typ $out/${name}.pdf
               '';
+
           diagrams = pkgs.runCommand "diagrams" { nativeBuildInputs = with pkgs; [ plantuml graphviz ]; }
             ''
               mkdir -p $out
@@ -68,8 +84,7 @@
             };
           };
           packages = {
-            inherit requirements diagrams;
-            default = self'.packages.kairos-requirements;
+            inherit requirements diagrams design;
             default = self'.packages.requirements;
           };
           devShells.default = pkgs.mkShell {
