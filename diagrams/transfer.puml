@@ -1,0 +1,89 @@
+@startuml
+autoactivate on
+actor "Bob :: User" as Bob
+box "L2-stack" #LightBlue
+participant ClientCli
+participant L1Sdk
+participant L2Node
+participant DataStore
+participant Prover
+participant L1Node
+end box
+box "on-chain" #LightGreen
+participant TransferSession
+participant StateContract
+end box
+
+activate L1Node
+activate L2Node
+
+L2Node -> L1Node: subscribe(OnDeployProcessed)
+Bob -> ClientCli: transfer(sender: Bob, recipient: Alice, amount, token_id, key_pair)
+
+note over ClientCli, L2Node
+This happens multiple times
+for different users,
+the L2Node optimizes transfers
+end note 
+
+ClientCli -> L2Node: transfer(sender: Bob, recipient: Alice, amount, token_id, signature, public_key)
+L2Node -> L2Node: verify_signature
+L2Node --> L2Node: Ok
+L2Node --> ClientCli: Ok
+ClientCli --> Bob: Ok
+
+note over L2Node, Prover
+Once every x seconds or n transfers
+end note
+L2Node -> Prover: prove(transfer(Vector<{sender, receiver, amount, token_id}>))
+Prover --> L2Node: (updated_account_balances, proof)
+
+note over L2Node
+What we create here is a "deploy" that will execute our transfer session on-chain.
+The transfer session verifies that the proof is valid, given the public inputs.
+If validation is successful, we update the state using the proper
+contract entrypoint.
+In the next diagram (Deploy Execution), you will see what happens
+once the transfer session gets executed on-chain.
+end note
+L2Node -> L2Node: create_transfer_deploy(\n\tupdated_account_balances_root_hash,\n\tproof,\n\tVector<{sender, receiver, amount}>\n)
+L2Node --> L2Node: transfer_deploy :: Deploy
+
+L2Node -> L1Sdk: sign_deploy(transfer_deploy, system_secret_key)
+L1Sdk --> L2Node: signed_transfer_deploy :: SignedDeploy
+
+L2Node -> L1Node: account_put_deploy(signed_transfer_deploy)
+L1Node --> L2Node: account_put_deploy_result
+
+L1Node -> TransferSession: call()
+
+note over TransferSession, StateContract
+This is where we verify the proof,
+we obviously need to provide the public inputs
+end note
+
+TransferSession -> StateContract: verify_transfer_entrypoint(\n\tupdated_account_balances_root_hash,\n\tproof,\n\tVector<{sender, receiver, amount, token_id}\n)
+
+note over StateContract, StateContract
+If proof is Ok then
+end note
+StateContract -> StateContract: update_state_entrypoint(updated_account_balances_root_hash)
+StateContract --> StateContract: Ok
+StateContract --> TransferSession: Ok 
+TransferSession --> L1Node: end call()
+
+L1Node -> L2Node: event_handler(event :: OnDeployProcessed)
+L2Node -> DataStore: insert_transfers(Vector<{sender, receiver, amount, token_id}>)
+DataStore --> L2Node: Ok
+L2Node --> L2Node: end event_handler
+
+note over ClientCli, L2Node
+After sufficient time the user can query the balance
+end note
+Bob -> ClientCli: get_balance
+ClientCli -> L2Node: get_balance(user: Bob)
+L2Node -> DataStore: get_balance(user: Bob)
+DataStore --> L2Node: balance
+L2Node --> ClientCli: balance
+ClientCli --> Bob: balance
+@enduml

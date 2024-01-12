@@ -1,0 +1,75 @@
+@startuml
+autoactivate on
+actor "Bob :: User" as Bob
+box "L2-stack" #LightBlue
+participant ClientCli
+participant L1Sdk
+participant L2Node
+participant DataStore
+participant Prover
+participant L1Node
+end box
+box "on-chain" #LightGreen
+participant DepositSession
+participant StateContract
+end box
+
+activate L1Node
+activate L2Node
+
+L2Node -> L1Node: subscribe(OnDeployProcessed)
+Bob -> ClientCli: deposit(depositor: Bob, amount, token_id, key_pair)
+ClientCli -> L2Node: deposit(depositor: Bob, amount, token_id)
+
+L2Node -> L2Node: update_merkle_tree(depositor, amount, token_id)
+L2Node --> L2Node: (updated_account_balances_root_hash,\n update_metadata)
+note over L2Node, L2Node
+What we create here is a deploy that will execute the deposit session.
+In the session we check whether the token amount in the transaction
+is equal to the amount that was used to create the updated_account_balance_root_hash.
+Moreover, we use the VerifyContract to check whether the Merkle-tree update
+was done correctly. See deposit sequence diagram - deploy execution
+end note
+L2Node -> L2Node: create_deposit_deploy(\n\tupdated_account_balance_root_hash,\n\tupdate_metadata,\n\tdepositor,\n\tamount\n\ttoken_id\n)
+L2Node --> L2Node: deposit_deploy :: Deploy
+L2Node --> ClientCli: deposit_deploy :: Deploy
+
+ClientCli -> L1Sdk: sign_deploy(deposit_deploy, secret_key)
+L1Sdk --> ClientCli: signed_deposit_deploy :: SignedDeploy
+
+ClientCli -> L2Node: /deploy/forward/(signed_deposit_deploy :: SignedDeploy)
+L2Node -> L1Node: account_put_deploy(signed_verify_deposit_deploy :: SignedDeploy)
+L1Node --> L2Node: account_put_deploy_result
+L2Node --> ClientCli: account_put_deploy_result
+ClientCli --> Bob: account_put_deploy_result
+
+L1Node -> DepositSession: call()
+DepositSession -> StateContract: verify_deposit_entrypoint(\n\tupdated_account_balances_root_hash,\n\tupdate_metadata,\n\tdepositor,\n\tamount,\n\ttoken_id\n)
+note over StateContract, StateContract
+if ok then
+end note
+StateContract -> StateContract: update_state_entrypoint(\n\tupdated_account_balances_root_hash\n)
+StateContract --> StateContract: Ok
+StateContract --> DepositSession: Ok 
+DepositSession -> DepositSession: transfer_from_purse_to_purse(\n\tdepositor_purse,\n\tsystem_purse,\n\tamount,\n\ttoken_id\n)
+DepositSession --> DepositSession: Ok
+DepositSession --> L1Node: end call()
+
+L1Node -> L2Node: event_handler(event :: OnDeployProcessed)
+L2Node -> L1Node: query_balance()
+L1Node --> L2Node: query_balance_result
+
+L2Node -> DataStore: insert_deposit(user: Bob, amount, token_id)
+DataStore --> L2Node: Ok
+L2Node --> L2Node: end event_handler
+
+note over ClientCli, L2Node
+After sufficient time the user can query the balance
+end note
+Bob -> ClientCli: get_balance
+ClientCli -> L2Node: get_balance(user: Bob)
+L2Node -> DataStore: get_balance(user: Bob)
+DataStore --> L2Node: balance
+L2Node --> ClientCli: balance
+ClientCli --> Bob: balance
+@enduml
