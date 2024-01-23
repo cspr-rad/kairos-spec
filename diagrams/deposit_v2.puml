@@ -1,0 +1,70 @@
+@startuml
+autoactivate on
+actor "Bob :: User" as Bob
+box "L2-stack" #LightBlue
+participant ClientCli
+participant L1Sdk
+participant L2Node
+participant DataStore
+participant Prover
+participant L1Node
+end box
+box "on-chain" #LightGreen
+participant DepositSession
+participant StateContract
+end box
+
+activate L1Node
+activate L2Node
+
+L2Node -> L1Node: subscribe(DeployProcessed)
+Bob -> ClientCli: deposit(Amount, TokenId, KeyPair)
+ClientCli -> L2Node: deposit(depositor :: PubKey, Amount, TokenId)
+
+L2Node -> L2Node: create_deposit_deploy(\n\tdepositor :: PubKey,\n\tAmount\n\tTokenId\n)
+
+L2Node -> DataStore: register_pending_deposit(DeployHash, Timestamp, depositor :: PubKey, Amount, TokenId)
+DataStore --> L2Node: Result<(), Err>
+
+L2Node --> L2Node: deposit_deploy_res :: Result<Deploy, Err>
+L2Node --> ClientCli: deposit_deploy_res :: Result<Deploy, Err>
+
+ClientCli -> L1Sdk: sign_deploy(deposit_deploy :: Deploy, SecKey)
+L1Sdk --> ClientCli: signed_deposit_deploy :: SignedDeploy
+
+ClientCli -> L2Node: /deposit/deploy/forward/(signed_deposit_deploy :: SignedDeploy)
+L2Node -> L2Node: verify_deploy_hash(signed_deposit_deploy :: SignedDeploy)
+L2Node -> DataStore: get_pending_deposit(signed_deposit_deploy.deploy_hash)
+DataStore --> L2Node: Deposit
+L2Node --> L2Node: Ok
+L2Node -> L1Node: account_put_deploy(signed_verify_deposit_deploy :: SignedDeploy)
+L1Node --> L2Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-transactional/#account_put_deploy_result AccountPutDeployResult]]
+L2Node --> ClientCli: DeployHash
+ClientCli --> Bob: DeployHash
+
+L1Node -> DepositSession: call()
+DepositSession -> DepositSession: transfer_from_purse_to_purse()
+DepositSession --> DepositSession: Ok
+DepositSession -> StateContract: register_deposit(DeployHash)
+StateContract --> DepositSession: Ok
+DepositSession --> L1Node: end call()
+
+L1Node -> L2Node: event_handler(event :: DeployProcessed)
+L2Node -> L2Node: verify_deploy_event(event :: DeployProcessed)
+L2Node -> DataStore: get_pending_deposit(event.deploy_hash)
+DataStore --> L2Node: Deposit
+note over L2Node, L1Node
+We can't trust the events emmitted by L1 so we additionally query another L1 node to make sure the deploy actually got processed.
+end note
+L2Node -> L1Node: query_deploy(event.deploy_hash)
+L1Node --> L2Node: query_deploy_result
+L2Node --> L2Node: Ok
+
+note over L2Node, DataStore
+Add this deploy to the next batch. Funds are not available until the batch proof is verified.
+end note
+L2Node -> DataStore: update_to_scheduled(event.deploy_hash)
+DataStore --> L2Node: Ok
+L2Node --> L2Node: end event_handler
+
+@enduml
