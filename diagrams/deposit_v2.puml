@@ -52,7 +52,7 @@ DepositSession --> L1Node: end call()
 L1Node -> L2Node: event_handler(event :: DeployProcessed)
 L2Node -> L2Node: verify_deploy_event(event :: DeployProcessed)
 L2Node -> DataStore: get_pending_deposit(event.deploy_hash)
-DataStore --> L2Node: Deposit
+DataStore --> L2Node: deposit :: Deposit
 note over L2Node, L1Node
 We can't trust the events emmitted by L1 so we additionally query another L1 node to make sure the deploy actually got processed.
 end note
@@ -63,7 +63,7 @@ L2Node --> L2Node: Ok
 note over L2Node, DataStore
 Add this deploy to the next batch. Funds are not available until the batch proof is verified.
 end note
-L2Node -> DataStore: update_to_scheduled(event.deploy_hash)
+L2Node -> DataStore: schedule_transaction(deposit :: Transaction)
 DataStore --> L2Node: Ok
 L2Node --> L2Node: end event_handler
 
