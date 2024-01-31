@@ -22,6 +22,9 @@ L2Node -> L1Node: subscribe(DeployProcessed)
 note over L2Node, Prover
 Once every x seconds or n transfers
 end note
+
+L2Node -> L2Node: submit_batch()
+
 note over L2Node, Prover
 All the parameters are public inputs, and should be provided by the Data Availability layer.
 end note
@@ -38,6 +41,11 @@ L1Sdk --> L2Node: SignedDeploy
 L2Node -> L1Node: account_put_deploy(SignedDeploy)
 L1Node --> L2Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-transactional/#account_put_deploy_result AccountPutDeployResult]]
 
+L2Node -> DataStore: create_snapshot(state_root_hash_l1_t+1)
+DataStore --> L2Node: Ok
+
+L2Node --> L2Node: Ok
+
 L1Node -> BatchProofSession: call()
 
 note over BatchProofSession, StateContract
@@ -45,16 +53,14 @@ This is where we verify the proof,
 we obviously need to provide the public inputs
 end note
 
-BatchProofSession -> StateContract: verify_batch_proof_entrypoint(\n\tVector<(Transaction, PubKey, Signature)>,\n\tstate_root_hash_l1_t,\n\tstate_root_hash_l1_t+1,\n\tstate_tree_nodes,\n\tProof\n)
+BatchProofSession -> StateContract: verify_batch_proof_entrypoint(\n\tVector<(Transaction, PubKey, Signature)>,\n\tbalances_root_hash_t,\n\tbalances_root_hash_l1_t+1,\n\tbalances_tree_nodes,\n\tProof\n)
 
 note over StateContract, StateContract
 If proof is Ok and public inputs are as expected, then
 end note
-StateContract -> StateContract: storage::update_state_root_hash(tstate_root_hash_l1_t+1)
+StateContract -> StateContract: storage::update(balances_root_hash_reference, balances_root_hash_l1_t+1)
 StateContract --> StateContract: Ok
-StateContract -> StateContract: storage::increase(num_processed_deposits_reference, num_deposits_in_batch)
-StateContract --> StateContract: Ok
-StateContract -> StateContract: storage::update_processed_batches(processed_batch_dict_reference, state_root_hash_l1_t+1)
+StateContract -> StateContract: storage::increase(last_processed_deposit_index_res, num_deposits_in_batch)
 StateContract --> StateContract: Ok
 StateContract --> BatchProofSession: Ok 
 BatchProofSession --> L1Node: end call()
@@ -64,20 +70,12 @@ L1Node -> L2Node: event_handler(event :: DeployProcessed)
 L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#chain-get-state-root-hash chain_get_state_root_hash]]()
 L1Node --> L2Node: root_hash_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#chain_get_state_root_hash_result ChainGetStateRootHashResult]]
 
-L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query-global-state query_global_state]](root_hash_res.root_hash, num_deposits_reference)
-L1Node --> L2Node: num_deposits_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query_global_state_result QueryGlobalStateResult]]
+L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query-global-state query_global_state]](root_hash_res.root_hash, balances_root_hash_reference)
+L1Node --> L2Node: balances_root_hash_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query_global_state_result QueryGlobalStateResult]]
 
-L2Node -> DataStore: insert_transfers(Vector<{sender, receiver, amount, token_id}>)
+
+L2Node -> DataStore: mark_snapshot_verified(balances_root_hash_res.stored_value)
 DataStore --> L2Node: Ok
 L2Node --> L2Node: end event_handler
 
-note over ClientCli, L2Node
-After sufficient time the user can query the balance
-end note
-Bob -> ClientCli: get_balance
-ClientCli -> L2Node: get_balance(user: Bob)
-L2Node -> DataStore: get_balance(user: Bob)
-DataStore --> L2Node: balance
-L2Node --> ClientCli: balance
-ClientCli --> Bob: balance
 @enduml
