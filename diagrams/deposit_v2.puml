@@ -39,9 +39,9 @@ L1Node -> DepositSession: call()
 DepositSession -> DepositSession: transfer_from_purse_to_purse(\n\tdepositor :: PubKey,\n\tl2_purse :: PubKey,\n\tAmount, TokenId\n)
 DepositSession --> DepositSession: Ok
 DepositSession -> StateContract: register_deposit(\n\tdepositor :: PubKey,\n\tAmount,\n\tTokenId\n)
-StateContract -> StateContract: storage::increment(num_deposits_reference)
+StateContract -> StateContract: storage::increment(last_deposit_index_reference)
 StateContract --> StateContract: Ok
-StateContract -> StateContract: storage::write_dict(\n\tunprocessed_deposits_reference,\n\tnum_deposits_reference,\n\t(depositor :: PubKey,Amount, TokenId)\n)
+StateContract -> StateContract: storage::write_dict(\n\tunprocessed_deposits_reference,\n\tlast_deposit_index_reference,\n\t(depositor :: PubKey, Amount, TokenId)\n)
 StateContract --> StateContract: Ok
 StateContract --> DepositSession: Ok
 DepositSession --> L1Node: end call()
@@ -53,10 +53,13 @@ end note
 L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#chain-get-state-root-hash chain_get_state_root_hash]]()
 L1Node --> L2Node: root_hash_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#chain_get_state_root_hash_result ChainGetStateRootHashResult]]
 
-L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query-global-state query_global_state]](root_hash_res.root_hash, num_deposits_reference)
-L1Node --> L2Node: num_deposits_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query_global_state_result QueryGlobalStateResult]]
+L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query-global-state query_global_state]](root_hash_res.root_hash, last_deposit_index_reference)
+L1Node --> L2Node: last_deposit_index_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query_global_state_result QueryGlobalStateResult]]
 
-loop for every unprocessed_deposit determined using num_deposits_res.stored_value
+L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query-global-state query_global_state]](root_hash_res.root_hash, last_processed_deposit_index_reference)
+L1Node --> L2Node: last_processed_deposit_index_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#query_global_state_result QueryGlobalStateResult]]
+
+loop for every unprocessed_deposit from last_processed_deposit_index_res.stored_value until last_deposit_index_res.stored_value
 
 L2Node -> L1Node: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#state-get-dictionary-item state_get_dictionary_item]](root_hash_res.root_hash, unprocessed_deposit_reference)
 L1Node --> L2Node: deposit_res :: [[https://docs.casper.network/developers/json-rpc/json-rpc-informational/#state-get-dictionary-item StateGetDictionaryItemResult]]
