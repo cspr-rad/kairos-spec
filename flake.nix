@@ -53,6 +53,23 @@
                 typst compile main.typ $out/${name}.pdf
               '';
 
+          test-strategy =
+            let
+              name = "test-strategy";
+            in
+            pkgs.runCommand name
+              {
+                nativeBuildInputs = with pkgs; [
+                  typst
+                ];
+              }
+              ''
+                mkdir -p $out
+                cp -r ${self'.packages.diagrams}/* .
+                cp ${./${name}}/* .
+                typst compile main.typ $out/${name}.pdf
+              '';
+
           diagrams = pkgs.runCommand "diagrams" { nativeBuildInputs = with pkgs; [ plantuml graphviz ]; }
             ''
               mkdir -p $out
@@ -84,7 +101,7 @@
             };
           };
           packages = {
-            inherit requirements diagrams design;
+            inherit requirements diagrams design test-strategy;
             default = self'.packages.requirements;
           };
           devShells.default = pkgs.mkShell {
