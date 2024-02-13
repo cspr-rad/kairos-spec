@@ -61,18 +61,29 @@ and a correct representation of the on-chain state through a data availability
 layer, but it's also important to test the system under normal and abnormal
 conditions to verify its stability and to validate its capacity.
 
+= Definitions
+
+== Testing Levels
+=== Unit Testing
+=== Integration Testing
+=== System Testing
+=== Accpetance Testing
+
 = Objectives
 
-== Correctness
+== Functional
+Evaluates the compliance of a component with functional requirements.
+- Measure thoroughness of functional testing using coverage measures
+=== Correctness
 Correctness is a essential objective that needs to be met before it makes sense
 ensuring all the other objectives. To not only ensure the correctness of the
 whole application but also make it easy to isolate and detect problems
 throughout the development cycle, testing is required in every single
 abstraction layer of the application.
 
-=== Test Types
+==== Test Types
 
-==== Unit Tests
+===== Unit Tests
 Unit tests aim to verify the correctness of the most primitive components/
 functions of the applications that usually occur in the lower-levels in the
 abstraction hierarchy. They can/ should be utilized for all the components/
@@ -80,7 +91,7 @@ functions in our system that do one thing at a time.
 
 It should be possible to run these tests locally and at latest in CI.
 
-===== Requirements
+====== Requirements
 - When possible, low-level components/ functions should be implemented in a way to
   do only one thing at a time such that they can be tested in isolation.
 - When possible, low-level components/ functions should be pure i.e. not depend or
@@ -89,21 +100,21 @@ It should be possible to run these tests locally and at latest in CI.
   common cases.
 - It has to be possible to run these tests locally fast.
 
-==== Property Tests
+===== Property Tests
 They have a similar granularity to unit tests, and test specific input-output
 relationships of a component/function using a large amount of randomized and
 border-case data.
 
 It should be possible to run these tests locally and at latest in CI.
 
-===== Requirements
+====== Requirements
 - When possible, low-level components/ functions should be implemented in a way to
   do only one thing at a time such that they can be tested in isolation.
 - Input data should be possible to generate, a relationship between input and
   output has to be expressed.
 - It has to be possible to run these tests locally fast.
 
-==== Integration Tests
+===== Integration Tests
 Integration tests should be applied on many levels of the systems. Whenever two
 or more components are used together:
 - a function that forms an abstraction over `n` low-level functions
@@ -127,7 +138,7 @@ In Kairos there are four integrations to external components:
 
 It should be possible to run these tests locally and at latest in CI.
 
-===== Requirements
+====== Requirements
 - When possible, lower-level components/ functions should be pure i.e. not depend
   or modify global or external state.
 - Functions that depend on external components should try to do only one thing at
@@ -144,7 +155,7 @@ It should be possible to run these tests locally and at latest in CI.
 - The speed of execution of these tests should be proportional to the complexity.
   i.e. the more complex, the more execution time is acceptable.
 
-==== End-to-end Tests
+===== End-to-end Tests
 End-to-end tests are used to validate real user scenarios and workflows with the
 system. Ideally this system is as close to the production scenario as possible.
 This means that all configurations should be the production configurations. For
@@ -153,7 +164,7 @@ document work.
 
 It should be possible to run these tests locally and at latest in CI.
 
-===== Requirements
+====== Requirements
 - The Kairos stack comprised of the CLI, server, data-store, and L1 deployable in
   an automated fashion.
 - A way to execute real user scenarios and workflows in an automated fashion.
@@ -161,14 +172,16 @@ It should be possible to run these tests locally and at latest in CI.
 - The speed of execution of these tests should be proportional to the complexity.
   i.e. the more complex, the more execution time is acceptable.
 
-== Always Deployable
-Our system should be in an always deployable state.=== Test Types
-We can achieve this objective by implementing all the previously mentioned test
-types for the correctness objective, if we decide to package our stack with Nix
-and configure it using NixOS. However there is a way we can prove deployability
-in an isolated way through smoke tests.
+=== Always Deployable
+Our system should be in an always deployable state.=== Test Types We can achieve
+this objective by implementing all the previously mentioned test types for the
+correctness objective, if we decide to package our stack with Nix and configure
+it using NixOS. However there is a way we can prove deployability in an isolated
+way through smoke tests.
 
-==== Smoke test
+=== Evaluating Effects of Changes
+
+===== Smoke test
 Smoke tests verify that the system starts up successfully without crashing, that
 the system is reachable, that essential functionality works and that the
 integrated external components work too.
@@ -184,12 +197,22 @@ physical machine.
   i.e. the more complex, the more execution time is acceptable.
 - It should be possible to run this test on a real physical machine.
 
-== Reliability
+  in an automated fashion.
+
+== Non-functional
+Testing the qualitiy characteristics of our component. May be aplied on all
+testing levels.
+
+Coverage could be measured by leveraging tagref where each non-functional goal
+gets a tag and in code we have to ensure that all tags have a concrete test
+referring to that tag.
+
+=== Reliability
 We want to ensure that our system operates consistently and reliably under
 normal and expected conditions. We want to
 
-=== Test Types
-==== Load Tests
+==== Test Types
+===== Load Tests
 Load tests focus on the consistency and reliability of our system under normal
 and anticipated conditions. We want to investigate how multiple (expected
 amounts of) users accessing our system concurrently affect our systems total
@@ -202,32 +225,60 @@ scenario.
 It should be possible to run these tests locally and at latest in CI, and for
 more precise results on physical hardware.
 
-===== Requirements
+====== Requirements
 - Means to isolate the performance metrics for each individual component of our
   system. For Kairos in the case of total execution time we will need means to m
 - A way to deploy the Kairos stack in a virtual cluster in an automated fashion.
 - A way to deploy the Kairos stack onto physical hardware in an automated fashion.
 - A way to execute a large amount of concurrent real user scenarios and workflows
-  in an automated fashion.
 
-== Scalability
-==== Volume Tests
-===== Requirements
+=== Resiliency
+==== Test Types
+===== Volume Tests/ Stress tests
 
-== Performance
+=== Portability
 
-== Security
-=== Test Types
-==== Attack Tests
-===== Requirements
-==== Audit Tests
-===== Requirements
+=== Usability
 
-== Maintainability
-=== Test Types
+=== Scalability
+==== Test Types
+===== Volume Tests
+====== Requirements
 
-== Compliance with Regulations
-=== Test Types
+=== Performance
+
+=== Security
+==== Test Types
+===== Attack Tests
+====== Requirements
+===== Audit Tests
+====== Requirements
+
+=== Operability
+
+=== Maintainability
+==== Test Types
+
+=== Compliance with Regulations
+==== Test Types
+
+== White-box Testing
+- coverage
+
+== Change Related Testing
+By testing changes we want to reveal how/whether a change changed the
+functionality, the quality and the structure of a component.
+
+=== Confirmation Testing
+When a test fails or a defect is reported we will need to (be able to) re-run or
+write a test that replicates the defect.==== Requirements
+- being able to re-run tests
+- it's important to ensure that steps that lead to a failure are carried exactly
+  the same way as described in the defect report. using the same inputs, data,
+  environment
+
+=== Anti-Regression Testing
+In order to reveal how/whether a change
 
 = Risc Analysis
 
