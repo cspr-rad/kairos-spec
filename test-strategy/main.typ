@@ -53,96 +53,172 @@
 Kairos is a layer 2 (L2) zero-knowledge (ZK) rollup built on top of the layer 1
 (L1) Casper blockchain. A rollup's goal is to lower transaction costs and to
 increase the throughput of the underlying L1. In the case of Kairos, this is
-achieved by leveraging zero-knowledge proofs. Since the L2 will ideally increase
-the throughput of transactions, one has to expect that the nodes processing
-requests by users will be required to deal with a huge amount of traffic. This
-means it's not only important to ensure the correct execution of transactions
-and a correct representation of the on-chain state through a data availability
-layer, but it's also important to test the system under normal and abnormal
-conditions to verify its stability and to validate its capacity.
+achieved by leveraging zero-knowledge proofs. To verify the functional
+compliance of each specified interaction with Kairos, namely: deposit, transfer,
+withdraw, and querying the state; this documents goal is to define test
+objectives and to describe tests on different levels of the system using
+different testing types. Since the L2 will ideally increase the throughput of
+transactions, one has to expect that the nodes processing requests by users will
+be required to deal with a huge amount of traffic. This means it's not only
+important to ensure the correct execution of transactions and a correct
+representation of the on-chain state through a data availability layer, but it's
+also important to test the non-functional compliance of the system under normal
+and abnormal conditions to verify its stability and to validate its capacity.
 
-= Definitions
+= Testing Levels <testing-levels>
+== Component Testing
+Verifies the functioning, correctness, and compliance to requirements, of code
+that can be tested in isolation.
 
-== Testing Levels
-=== Unit Testing
-=== Integration Testing
-=== System Testing
-=== Accpetance Testing
+=== Test Objects
+Test the smallest thing that can be tested on its own: functions, modules, data
+structures, database models. The components that should be tested will most
+likely occur in the lower-levels of the system.
 
-= Objectives
+=== Test Responsibility
+The author of the module is required to write the respective tests.
 
-== Functional
-Evaluates the compliance of a component with functional requirements.
-- Measure thoroughness of functional testing using coverage measures
-=== Correctness
-Correctness is a essential objective that needs to be met before it makes sense
-ensuring all the other objectives. To not only ensure the correctness of the
-whole application but also make it easy to isolate and detect problems
-throughout the development cycle, testing is required in every single
-abstraction layer of the application.
+=== Requirements/ Preconditions
+- When possible, low-level components should be implemented in a way to do only
+  one thing at a time such that they can be tested in isolation.
+- When possible, low-level components/ functions should be pure i.e. not depend on
+  or modify global or external state. common cases.
+- It should be possible to run these tests locally fast.
+- It should be possible to randomly generate inputs data
+- Ideally the component should be designed in a way such that a relationship
+  between input and output data can be expressed.
 
-==== Test Types
+=== Functional Tests
+This section describes what tests will be conducted in order to verify the
+correctness and evaluate the compliance with functional requirements.
 
-===== Unit Tests
-Unit tests aim to verify the correctness of the most primitive components/
-functions of the applications that usually occur in the lower-levels in the
-abstraction hierarchy. They can/ should be utilized for all the components/
-functions in our system that do one thing at a time.
+==== Unit Tests
+Verify the the components correctness by testing its behavior, contract and
+invariants for the most common cases.
 
-It should be possible to run these tests locally and at latest in CI.
+The tests should provide confidence that the following defects are eliminated:
+- incorrect functionality
+- data flow problems
+- incorrect logic
 
-====== Requirements
-- When possible, low-level components/ functions should be implemented in a way to
-  do only one thing at a time such that they can be tested in isolation.
-- When possible, low-level components/ functions should be pure i.e. not depend or
-  modify global or external state.
-- Test the components/ functions behavior, contract and invariants for the most
-  common cases.
-- It has to be possible to run these tests locally fast.
+==== Property Tests
+Test specific input-output relationships of a component using a large amount of
+randomized and border-case data.
 
-===== Property Tests
-They have a similar granularity to unit tests, and test specific input-output
-relationships of a component/function using a large amount of randomized and
-border-case data.
+=== Non-functional Tests
+Measure the total execution time. Measure the memory consumption.
 
-It should be possible to run these tests locally and at latest in CI.
+=== White-box Tests
+The code coverage for each component under test should be at least 9X%.
 
-====== Requirements
-- When possible, low-level components/ functions should be implemented in a way to
-  do only one thing at a time such that they can be tested in isolation.
-- Input data should be possible to generate, a relationship between input and
-  output has to be expressed.
-- It has to be possible to run these tests locally fast.
+=== Change Related Tests
+Every unit or property test will be run automatically at latest in CI
+(regression test).
 
-===== Integration Tests
-Integration tests should be applied on many levels of the systems. Whenever two
-or more components are used together:
-- a function that forms an abstraction over `n` low-level functions
-- a function depending on a external component like a database
-- a function implementing a feature by utilizing several functions and external
-  components
-an integration test should be written. It is important to recognize that testing
-components that depend on external components should be tested against their
-real production instance. This allows us to have actual confidence about a test
-result and to be able to reason about it. Only when tested against production
-components and getting a positive test-result we can be sure that the interface
-of the componant is compatible with our component and that the runtime
-peculiarities of the external component are handled correctly by our component.
+=== Technology
+Use Rusts built-in test framework. Property test library TBD. These tests should
+be placed in a `test` module located in the same file of the components
+definition.
 
-In Kairos there are four integrations to external components:
+// ******************************************************************************
+
+== Component Integration Testing
+Tests the interaction/ interfaces between components.
+
+=== Test Objects
+Test components like functions, modules, data structures that integrate one or
+more component.
+
+=== Test Responsibility
+The author of the module is required to write the respective tests.
+
+=== Requirements
+- When possible, components should be implemented in a way to serve only one
+  purpose at a time.
+- When possible, components/ functions should be pure i.e. not depend on or modify
+  global or external state.
+- It has to be possible to run these tests locally.
+- The speed of execution of these tests should be proportional to the complexity.
+  i.e. the more complex, the more execution time is acceptable.
+
+=== Functional Tests
+This section describes what tests will be conducted in order to verify the
+correctness and evaluate the compliance with functional requirements.
+
+==== Incremental Integration Tests
+Verify whether the components integrates other components correctly by testing
+its behavior, contract and invariants for the most common cases.
+
+Incremental integration testing has the advantage that defects can be found
+early and be isolated easier.
+
+The tests should provide confidence that the following defects are eliminated:
+- incorrect data, missing data, or incorrect data encoding
+- incorrect sequencing or timing of interface calls
+- interface missmatch because of hidden invariants or contracts
+- failures in communication between components
+- unhandled or improperly handled failures in communication between components
+- incorrect assumptions about the meaning, units or boundaries of the data passed
+  between components
+
+==== Property Tests
+Test specific input-output relationships of a component using a large amount of
+randomized and border-case data for components that integrate multiple
+components.
+
+=== Non-functional Tests
+Measure the total execution time. Measure the memory consumption.
+
+==== Attack Tests
+This applies specifically to on-chain contracts. Its required to test the most
+common attack scenarios on a contract.
+
+=== White-box Tests
+The code coverage for each component under test should be at least 9X%.
+
+=== Change Related Tests
+Every integration or property test will be run automatically at latest in CI
+(regression test).
+
+=== Technology
+Use Rusts built-in test framework. Property test library TBD. These tests should
+be placed in a `test` module located in the same file of the components
+definition.
+
+// ******************************************************************************
+
+== System Integration Testing
+Test components like functions, modules, data structures that integrate one or
+more external systems.
+
+It is important to recognize that testing components that depend on external
+systems should be tested against their production interface/ instance. This
+gives true confidence about a test result and is a basis to be able to reason
+about it. Only when tested against production system and getting a positive
+test-result we can be sure that the interface of the system is compatible with
+our component and that the runtime peculiarities are handled correctly by our
+component.
+
+=== Test Objects
+Test components like functions, modules, data structures that integrate one or
+more external systems.
+
+In Kairos there are four integrations to external systems:
 - The Kairos CLI used to interact with the Kairos server.
 - The Kairos server reading/ updating the account-balances state on the L1, or
   forwarding deploys and waiting for their execution on-chain.
 - The Kairos server using the RISC0 VM to create a batch-proof.
 - The Kairos server using a data-store in order to provide data availability.
 
-It should be possible to run these tests locally and at latest in CI.
+=== Test Responsibility
+The author of the module is required to write the respective tests.
 
-====== Requirements
-- When possible, lower-level components/ functions should be pure i.e. not depend
-  or modify global or external state.
-- Functions that depend on external components should try to do only one thing at
-  a time.
+=== Requirements
+- When possible, components should be implemented in a way to serve only one
+  purpose at a time.
+- It has to be possible to run these tests locally.
+- The speed of execution of these tests should be proportional to the complexity.
+  i.e. the more complex, the more execution time is acceptable.
 - Functions that depend on external components should be tested against production
   instances of these external components. For Kairos we will need:
   - A clean state L1 network that can be launched in an automated manner, per
@@ -151,20 +227,65 @@ It should be possible to run these tests locally and at latest in CI.
     test-case
   - A clean state Kairos server that can be launched in an automated manner, per
     test-case
-- It has to be possible to run these tests locally.
-- The speed of execution of these tests should be proportional to the complexity.
-  i.e. the more complex, the more execution time is acceptable.
 
-===== End-to-end Tests
-End-to-end tests are used to validate real user scenarios and workflows with the
-system. Ideally this system is as close to the production scenario as possible.
-This means that all configurations should be the production configurations. For
-Kairos we want to test that all the user scenarios described in the requirements
-document work.
+=== Functional Tests
+This section describes what tests will be conducted in order to verify the
+correctness and evaluate the compliance with functional requirements.
 
-It should be possible to run these tests locally and at latest in CI.
+==== Incremental Integration Tests
+Verify whether the components integrates external systems correctly by testing
+its behavior, contract and invariants for the most common cases.
 
-====== Requirements
+Incremental integration testing has the advantage that defects can be found
+early and be isolated easier.
+
+The tests should provide confidence that the following defects are eliminated:
+- incorrect message structures between systems
+- incorrect data, missing data, or incorrect data encoding
+- incorrect sequencing or timing of interface calls
+- interface missmatch because of hidden invariants or contracts
+- failures in communication between systems
+- unhandled or improperly handled failures in communication between systems
+- incorrect assumptions about the meaning, units or boundaries of the data passed
+  between systems
+
+=== Non-functional Tests
+Measure the total execution time. Measure the memory consumption.
+
+=== White-box Tests
+The code coverage for each component under test should be at least 9X%.
+
+=== Change Related Tests
+Every integration test will be run automatically at latest in CI (regression
+test).
+
+=== Technology
+Use Rusts built-in test framework. These tests should be placed in a dedicated
+`test` module in a separate directory.
+
+// ******************************************************************************
+
+== System Testing
+This level of testing is concerned with the behavior of the whole system as
+defined by the scope of the project. It may include tests based on risk analysis
+reports, system, functional or software requirements specifications, business
+processes, use-cases or higher level descriptions of system behavior,
+interactions with the operating system and system resources. The focus is on
+**end-to-end** tasks that the system should perform. The test environment should
+correspond to the final production environment as much as possible. This means
+that all configurations should be the production configurations.
+
+=== Test Objects
+The production-like system and its stack as a whole and the configuration of the
+system.
+
+=== Test Responsibility
+Since we are going to likely implement these tests using NixOS tests to ensure a
+production like environment, someone capable of writing a NixOS test should
+write these together with other development team members who have in-depth
+knowledge about the aspect of the system that is being tested.
+
+=== Requirements
 - The Kairos stack comprised of the CLI, server, data-store, and L1 deployable in
   an automated fashion.
 - A way to execute real user scenarios and workflows in an automated fashion.
@@ -172,47 +293,33 @@ It should be possible to run these tests locally and at latest in CI.
 - The speed of execution of these tests should be proportional to the complexity.
   i.e. the more complex, the more execution time is acceptable.
 
-=== Always Deployable
-Our system should be in an always deployable state.=== Test Types We can achieve
-this objective by implementing all the previously mentioned test types for the
-correctness objective, if we decide to package our stack with Nix and configure
-it using NixOS. However there is a way we can prove deployability in an isolated
-way through smoke tests.
+=== Functional Tests
+This section describes what tests will be conducted in order to verify the
+correctness and evaluate the compliance with functional requirements.
 
-=== Evaluating Effects of Changes
-
-===== Smoke test
+=== Smoke Test
 Smoke tests verify that the system starts up successfully without crashing, that
 the system is reachable, that essential functionality works and that the
 integrated external components work too.
 
-It should be possible to run these tests locally and at latest in CI, or on a
-physical machine.
+They are a first step towards end-to-end tests.
 
-===== Requirements
-- The Kairos stack comprised of the CLI, server, data-store, and L1 deployable in
-  an automated fashion.
-- It has to be possible to run these tests locally.
-- The speed of execution of these tests should be proportional to the complexity.
-  i.e. the more complex, the more execution time is acceptable.
-- It should be possible to run this test on a real physical machine.
+==== End-to-end Tests
+End-to-end tests are used to validate real user scenarios and workflows with the
+system. For Kairos we want to test that all the user scenarios described in the
+requirements document work (deposit, transfer, withdraw, data availability
+queries).
 
-  in an automated fashion.
+The tests should provide confidence that the following defects are eliminated:
+- incorrect computations
+- incorrect or unexpected system behavior
+- incorrect control/data flows within the system
+- failure to properly and completely execute end-to-end functional tasks
+- failure of the system to work properly in the production environment
+- failure of the system to work as described in the documentation/ user manual
 
-== Non-functional
-Testing the qualitiy characteristics of our component. May be aplied on all
-testing levels.
-
-Coverage could be measured by leveraging tagref where each non-functional goal
-gets a tag and in code we have to ensure that all tags have a concrete test
-referring to that tag.
-
-=== Reliability
-We want to ensure that our system operates consistently and reliably under
-normal and expected conditions. We want to
-
-==== Test Types
-===== Load Tests
+=== Non-functional Tests
+==== Load Tests
 Load tests focus on the consistency and reliability of our system under normal
 and anticipated conditions. We want to investigate how multiple (expected
 amounts of) users accessing our system concurrently affect our systems total
@@ -225,60 +332,84 @@ scenario.
 It should be possible to run these tests locally and at latest in CI, and for
 more precise results on physical hardware.
 
+==== Volume Tests/ Stress tests
+todo
+
+==== Attack Tests
+todo
+
+=== White-box Tests
+Coverage by leveraging tagref. We need to match every single tag in the
+requirements doc which describes the functional requirements and use cases with
+a corresponding system test.
+
+==== Audit Test
+Use a tool that audits the dependencies of our project to uncover
+vulnerabilities
+
+=== Change Related Tests
+
+=== Technology
+Use Nix/NixOS to enable a reproducible, easy to deploy system configuration. Use
+NixOS tests for tests that dont require physical hardware to verify the expected
+behavior. Use NixOS to automatically provision and deploy physical machines to
+perform appropriate tests.
+
+// ******************************************************************************
+
+== Accpetance Testing
+=== Functional Tests
+=== Non-functional Tests
+=== White-box Tests
+=== Change Related Tests
+
+= Objectives
+
+== Correctness
+Correctness is a essential objective that needs to be met before it makes sense
+ensuring all the other objectives. To not only ensure the correctness of the
+whole application but also make it easy to isolate and detect problems
+throughout the development cycle, testing is required in every single
+abstraction layer of the application.
+
+== Always Deployable
+Our system should be in an always deployable state. Test Types We can achieve
+this objective by implementing all the previously mentioned test types for the
+correctness objective, if we decide to package our stack with Nix and configure
+it using NixOS. However there is a way we can prove deployability in an isolated
+way through smoke tests.
+
+== Reliability
+We want to ensure that our system operates consistently and reliably under
+normal and expected conditions. We want to
+
+== Resiliency
+
+== Portability
+
+== Usability
+
+== Scalability
+
+== Performance
+
+== Security
+
+== Operability
+
+== Maintainability
+
+== Compliance with Regulations
+
+/*
+===== Load Tests
 ====== Requirements
 - Means to isolate the performance metrics for each individual component of our
   system. For Kairos in the case of total execution time we will need means to m
 - A way to deploy the Kairos stack in a virtual cluster in an automated fashion.
 - A way to deploy the Kairos stack onto physical hardware in an automated fashion.
 - A way to execute a large amount of concurrent real user scenarios and workflows
-
-=== Resiliency
-==== Test Types
-===== Volume Tests/ Stress tests
-
-=== Portability
-
-=== Usability
-
-=== Scalability
-==== Test Types
-===== Volume Tests
-====== Requirements
-
-=== Performance
-
-=== Security
-==== Test Types
-===== Attack Tests
-====== Requirements
-===== Audit Tests
-====== Requirements
-
-=== Operability
-
-=== Maintainability
-==== Test Types
-
-=== Compliance with Regulations
-==== Test Types
-
-== White-box Testing
-- coverage
-
-== Change Related Testing
-By testing changes we want to reveal how/whether a change changed the
-functionality, the quality and the structure of a component.
-
-=== Confirmation Testing
-When a test fails or a defect is reported we will need to (be able to) re-run or
-write a test that replicates the defect.==== Requirements
-- being able to re-run tests
-- it's important to ensure that steps that lead to a failure are carried exactly
-  the same way as described in the defect report. using the same inputs, data,
-  environment
-
-=== Anti-Regression Testing
-In order to reveal how/whether a change
+*/
 
 = Risc Analysis
 
