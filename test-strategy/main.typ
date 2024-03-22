@@ -1,5 +1,5 @@
 #let title = [
-  Test Strategy
+  Test Plan
 ]
 #let time_format = "[weekday] [month repr:long] [day padding:none], [year]"
 #set page(paper: "a4", numbering: "1", margin: (x: 3.2cm, y: 4.0cm))
@@ -22,9 +22,8 @@
       text(
         12pt,
       )[
-        Marijan Petricevic, Nick Van den Broeck, Mark Greenslade, Tom Sydney Kerckhove,
-        Matthew Doty, Avi Dessauer, Jonas Pauli, Andrzej Bronski, Quinn Dougherty, Chloe
-        Kever
+        Marijan Petricevic, Mark Greenslade, Matthew Doty, Avi Dessauer, Jonas Pauli,
+        Andrzej Bronski, Quinn Dougherty
       ],
     )
 
@@ -64,6 +63,173 @@ important to ensure the correct execution of transactions and a correct
 representation of the on-chain state through a data availability layer, but it's
 also important to test the non-functional compliance of the system under normal
 and abnormal conditions to verify its stability and to validate its capacity.
+
+= Objectives
+This seaction describes high-level objectives (no particular order) we plan to
+reach with our testing efforts. We provide a short definition of each objective
+and a reason why it is relevant for the system. In the next section "Risk
+Analysis" (@risk-analysis) we will go into more detail on what risks are
+associated with every single objective, justifying why the objective is desired.
+The objectives also serve as a basis for accessing associated risks and picking
+the respective test approaches.
+
+== Correctness
+Correctness is a self explanatory and essential objective that needs to be met
+before it makes sense to ensure all the other objectives. Moreover, correctness
+on one level of our system affects correctness on other levels of our system,
+thus we need to test for correctness on every level of our system. This has also
+the benefit in that it makes it easy to isolate and detect problems throughout
+the development cycle.
+
+== Feature Complete
+We want to make sure that the specified requirements and features of our
+application are all implemented. Missing requirements or features could leave
+users of our system in a irrecoverable state and potentially cause financial
+damage.
+
+== Always Deployable
+The system should be in an always deployable state. In the beginnig of the
+development cycle this will ensure that the integration of all our systems
+components is working together as intended and it allows us to identify
+deployment issues early on. Later in the development cycle it will enable us to
+deploy potentially important fixes or improvements to the system very fast.
+
+== Availability
+The system should be always available. Unavailability of our system could cause
+financial damage to users.
+
+== Reliability
+We want to ensure that our system operates consistently and reliably under
+normal and expected conditions.
+
+== Resiliency
+We want to ensure that our system operates consistently and reliably under
+potentially abnormal and unexpected conditions.
+
+== Efficiency
+Our system should use it's resources efficiently with respect to the complexity
+of the executed task. For a user a more efficient use of resources has two
+implications:
+1. It improves the experience as the system should be more responsive and fast
+2. With respect to zero-knowledge proofs it benefits our users by enabling us to
+  charge less usage fees
+
+It has also implications on other objectives listed here like reliability,
+resiliency, performance, and scalability.
+
+== Performance
+Our system should be fast.
+
+== Portability
+Our system should be installable and usable on many different operating systems,
+hardware platforms or devices. The service side should be installable and usable
+in any environment whether in the cloud or on a self-hosted server.
+
+== Usability
+Our system should provide a good user experience for the targeted audience.
+
+== Scalability
+Our system should be scalable. TODO
+
+== Security
+Our system should be secure. An insecure system could cause financial damage
+either for the users or the operator.
+
+== Operability
+Our system should be easy to operate by system administrators. Tasks like
+deploying, upgrading, migrating, and/or recovering from failures of our system
+should be as easy as possible.
+
+== Maintainability
+Our system should be well documented, easy to extend, easily fixable. Developers
+should be able to be onboarded quickly.
+
+== Compliance with Regulations
+As our system will provide financial services we will want our system to comply
+with eventual regulations.
+
+= Risk Analysis <risk-analysis>
+In this chapter we will provide a list of specific product risks that could be
+caused by a possible failure or defect. Each risk is associated with one or more
+of the previously discussed objectives of our testing efforts. The list also
+gives an estimation of how likely it is that a risk will occur and how great the
+repsective impact could be. Given these two estimates we also assign a risk
+priority number. Additionally, the list provides mitigation and contingency
+approaches. Some of these mitigation approaches will be mostly covered by tests
+and technologies we use, which are covered in much more detail in the Testing
+Levels section (@testing-levels).
+
+The likelihood and impact risk level estimation is a number in the range between
+1 and 5, where:
+
+// typstfmt::off
+#table(
+  columns: 2,
+  [*Number*], [*Meaning*],
+  [1], [Very Low],
+  [2], [Low],
+  [3], [Medium],
+  [4], [High],
+  [5], [Very High],
+)
+// typstfmt::on
+
+The risk priority is the result of the multiplication of the estimated
+likelihood of the risk occuring and the impact.
+
+// typstfmt::off
+#page(flipped: true)[
+#table(
+  columns: 6,
+  [*Product Risk*], [*Likelihood*], [*Impact*], [*Risk Priority*], [*Mitigation*], [*Contingency*],
+  [*Correctness*], [], [], [], [], [],
+  [Financial damage for users/operator caused by wrong computations, overflows], [5], [5], [25], [Unit testing], [Administrator to undo changes???],
+  [*Always Deployable*], [], [], [], [], [],
+  [Security fixes can't be deployed to production right away], [5], [5], [25], [TODO], [TODO],
+  [Improvements/ new features can't be deployed to production when finished], [5], [5], [25], [TODO], [TODO],
+  [Developers have no feedback whether their code is compatible with the remaining system], [5], [5], [25], [TODO], [TODO],
+  [*Availability*], [], [], [], [], [],
+  [Users are not able to perform deposits], [5], [3], [15], [System testing], [Administrator to undo changes???],
+  [Users are not able to perform transfers], [5], [3], [15], [System testing], [Administrator to undo changes???],
+  [Users are not able to perform withdrawals], [5], [5], [25], [System testing], [Administrator to undo changes???],
+  [Users are not able to query the on-chain state], [5], [5], [25], [System testing], [Administrator to undo changes???],
+
+  [*Reliability*], [], [], [], [], [],
+  [Causes financial damage to the operators, if system is unusable under normal load], [5], [5], [25], [TODO], [],
+
+  [*Resiliency*], [], [], [], [], [],
+  [Financial damage for the operator caused taking down the system], [5], [5], [25], [TODO], [],
+
+  [*Efficiency*], [], [], [], [], [],
+
+  [*Performance*], [], [], [], [], [],
+
+  [*Portability*], [], [], [], [], [],
+  [Users are not able to install the CLI on their device], [5], [5], [25], [System testing], [Administrator to undo changes???],
+
+  [*Usability*], [], [], [], [], [],
+
+  [*Scalability*], [], [], [], [], [],
+
+  [*Security*], [], [], [], [], [],
+  [Financial damage caused by adversaries stealing funds], [5], [5], [25], [TODO], [],
+
+  [*Operability*], [], [], [], [], [],
+  [System admins struggle with deploying the system], [5], [5], [25], [TODO], [TODO],
+  [System admins struggle with upgrading the system], [5], [5], [25], [TODO], [TODO],
+  [System admins struggle with migrating the system], [5], [5], [25], [TODO], [TODO],
+  [System admins struggle with recovering after a defect occured in the system], [5], [5], [25], [TODO], [TODO],
+
+  [*Maintainability*], [], [], [], [], [],
+  [Higher costs for the operator to fix problems with/evolve the system], [5], [5], [25], [TODO], [TODO],
+  [Longer development cycles required to fix problems with/evolve the system], [5], [5], [25], [TODO], [TODO],
+  [Difficulty to find staff if developent is frustrating], [5], [5], [25], [TODO], [TODO],
+
+  [*Compliance with Reagulators*], [], [], [], [], [],
+  [Regulators ban the use of the system], [5], [5], [25], [TODO], [TODO],
+)
+]
+// typstfmt::on
 
 = Testing Levels <testing-levels>
 == Component Testing
@@ -348,10 +514,12 @@ Use a tool that audits the dependencies of our project to uncover
 vulnerabilities
 
 === Change Related Tests
+Every system test that can be run in CI (NixOS tests) will be run automatically
+at latest in CI (regression test)
 
 === Technology
 Use Nix/NixOS to enable a reproducible, easy to deploy system configuration. Use
-NixOS tests for tests that dont require physical hardware to verify the expected
+NixOS tests for tezts that dont require physical hardware to verify the expected
 behavior. Use NixOS to automatically provision and deploy physical machines to
 perform appropriate tests.
 
@@ -363,44 +531,6 @@ perform appropriate tests.
 === White-box Tests
 === Change Related Tests
 
-= Objectives
-
-== Correctness
-Correctness is a essential objective that needs to be met before it makes sense
-ensuring all the other objectives. To not only ensure the correctness of the
-whole application but also make it easy to isolate and detect problems
-throughout the development cycle, testing is required in every single
-abstraction layer of the application.
-
-== Always Deployable
-Our system should be in an always deployable state. Test Types We can achieve
-this objective by implementing all the previously mentioned test types for the
-correctness objective, if we decide to package our stack with Nix and configure
-it using NixOS. However there is a way we can prove deployability in an isolated
-way through smoke tests.
-
-== Reliability
-We want to ensure that our system operates consistently and reliably under
-normal and expected conditions. We want to
-
-== Resiliency
-
-== Portability
-
-== Usability
-
-== Scalability
-
-== Performance
-
-== Security
-
-== Operability
-
-== Maintainability
-
-== Compliance with Regulations
-
 /*
 ===== Load Tests
 ====== Requirements
@@ -411,7 +541,7 @@ normal and expected conditions. We want to
 - A way to execute a large amount of concurrent real user scenarios and workflows
 */
 
-= Risc Analysis
+= Contingency Plans
 
 = Performance Metrics
 == Total Execution Time and CPU Time
