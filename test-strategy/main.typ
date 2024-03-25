@@ -70,16 +70,16 @@ reach with our testing efforts. We provide a short definition of each objective
 and a reason why it is relevant for the system. In the next section "Risk
 Analysis" (@risk-analysis) we will go into more detail on what risks are
 associated with every single objective, justifying why the objective is desired.
-The objectives also serve as a basis for accessing associated risks and picking
-the respective test approaches.
+Both the objectives and the risk accessment together will serve as a basis for
+picking the respective test approaches.
 
 == Correctness
 Correctness is a self explanatory and essential objective that needs to be met
 before it makes sense to ensure all the other objectives. Moreover, correctness
 on one level of our system affects correctness on other levels of our system,
-thus we need to test for correctness on every level of our system. This has also
-the benefit in that it makes it easy to isolate and detect problems throughout
-the development cycle.
+thus we need to test for correctness on every level of our system. This
+additionally has the benefit that it makes it easy to isolate and detect
+problems throughout the development cycle.
 
 == Feature Complete
 We want to make sure that the specified requirements and features of our
@@ -88,7 +88,7 @@ users of our system in a irrecoverable state and potentially cause financial
 damage.
 
 == Always Deployable
-The system should be in an always deployable state. In the beginnig of the
+The system should be in an always deployable state. In the beginning of the
 development cycle this will ensure that the integration of all our systems
 components is working together as intended and it allows us to identify
 deployment issues early on. Later in the development cycle it will enable us to
@@ -96,40 +96,45 @@ deploy potentially important fixes or improvements to the system very fast.
 
 == Availability
 The system should be always available. Unavailability of our system could cause
-financial damage to users.
+financial damage to users, as well as trust issues towards the operators.
 
 == Reliability
 We want to ensure that our system operates consistently and reliably under
-normal and expected conditions.
+**normal and expected** conditions.
 
 == Resiliency
 We want to ensure that our system operates consistently and reliably under
-potentially abnormal and unexpected conditions.
+potentially **abnormal and unexpected** conditions.
 
 == Efficiency
 Our system should use it's resources efficiently with respect to the complexity
 of the executed task. For a user a more efficient use of resources has two
 implications:
 1. It improves the experience as the system should be more responsive and fast
-2. With respect to zero-knowledge proofs it benefits our users by enabling us to
-  charge less usage fees
+2. With respect to zero-knowledge proofs it benefits our users by enabling the
+  operator to charge less usage fees
 
 It has also implications on other objectives listed here like reliability,
 resiliency, performance, and scalability.
 
 == Performance
-Our system should be fast.
+Our system should be fast. This will improve the user experience of the system.
 
 == Portability
 Our system should be installable and usable on many different operating systems,
 hardware platforms or devices. The service side should be installable and usable
-in any environment whether in the cloud or on a self-hosted server.
+in any environment whether in the cloud or on a self-hosted server. This will
+allow the operator to target a bigger user audience, and make the operator
+independent from the available/ chosen infrastructure.
 
 == Usability
-Our system should provide a good user experience for the targeted audience.
+Our system should provide a good user experience for the targeted audience. This
+builds more confidence from users towards the operator and will help with a
+faster user adoption.
 
 == Scalability
-Our system should be scalable. TODO
+Our system should be scalable. This will enable the operator to increase/
+decrease the amount of infrastructure with respect to the demand.
 
 == Security
 Our system should be secure. An insecure system could cause financial damage
@@ -138,25 +143,30 @@ either for the users or the operator.
 == Operability
 Our system should be easy to operate by system administrators. Tasks like
 deploying, upgrading, migrating, and/or recovering from failures of our system
-should be as easy as possible.
+should be as easy as possible. This enables the operator to initially attract,
+hire and keep good staff, and it will enable the staff to do the aforementioned
+tasks fast and confidently.
 
 == Maintainability
 Our system should be well documented, easy to extend, easily fixable. Developers
-should be able to be onboarded quickly.
+should be able to be onboarded quickly. This enables the operator to attract,
+hire and keep good staff. The staff will be able to be productive on the project
+very fast.
 
 == Compliance with Regulations
 As our system will provide financial services we will want our system to comply
-with eventual regulations.
+with eventual regulations. Not fullfilling this objective will result in
+immediate financial loss for the operator.
 
 = Risk Analysis <risk-analysis>
 In this chapter we will provide a list of specific product risks that could be
 caused by a possible failure or defect. Each risk is associated with one or more
 of the previously discussed objectives of our testing efforts. The list also
 gives an estimation of how likely it is that a risk will occur and how great the
-repsective impact could be. Given these two estimates we also assign a risk
-priority number. Additionally, the list provides mitigation and contingency
-approaches. Some of these mitigation approaches will be mostly covered by tests
-and technologies we use, which are covered in much more detail in the Testing
+respective impact could be. Given these two estimates, a risk
+priority number is computed and assigned. Additionally, the list provides references to mitigation and contingency
+approaches. Most of these mitigation approaches will be covered by tests, processes,
+and technologies we use, which will be discussed in much more detail in the Testing
 Levels section (@testing-levels).
 
 The likelihood and impact risk level estimation is a number in the range between
@@ -175,7 +185,7 @@ The likelihood and impact risk level estimation is a number in the range between
 // typstfmt::on
 
 The risk priority is the result of the multiplication of the estimated
-likelihood of the risk occuring and the impact.
+likelihood of the risk occuring and the impact should the defect manifest.
 
 // typstfmt::off
 #page(flipped: true)[
@@ -183,42 +193,49 @@ likelihood of the risk occuring and the impact.
   columns: 6,
   [*Product Risk*], [*Likelihood*], [*Impact*], [*Risk Priority*], [*Mitigation*], [*Contingency*],
   [*Correctness*], [], [], [], [], [],
-  [Financial damage for users/operator caused by wrong computations, overflows], [5], [5], [25], [Unit testing], [Administrator to undo changes???],
+  [Incorrect or wrong computations could cause financial damage for users/operator, moreover cause long-term loss of trust and confidence in the operator], [5], [5], [25], [Unit testing], [Administrator to undo changes???],
+
   [*Always Deployable*], [], [], [], [], [],
-  [Security fixes can't be deployed to production right away], [5], [5], [25], [TODO], [TODO],
-  [Improvements/ new features can't be deployed to production when finished], [5], [5], [25], [TODO], [TODO],
-  [Developers have no feedback whether their code is compatible with the remaining system], [5], [5], [25], [TODO], [TODO],
+  [Security fixes can't be deployed to production right away. Causes a long-term loss of trust and confidence in the operator/system], [5], [5], [25], [TODO], [TODO],
+  [Improvements/ new features can't be deployed to production when finished. Causes potential loss of market-share because of competitors providing new features/improvements faster], [5], [5], [25], [TODO], [TODO],
+  [Developers have no feedback whether their code is compatible with the remaining system. Causes a longer development cycle.], [5], [5], [25], [TODO], [TODO],
+
   [*Availability*], [], [], [], [], [],
-  [Users are not able to perform deposits], [5], [3], [15], [System testing], [Administrator to undo changes???],
-  [Users are not able to perform transfers], [5], [3], [15], [System testing], [Administrator to undo changes???],
-  [Users are not able to perform withdrawals], [5], [5], [25], [System testing], [Administrator to undo changes???],
-  [Users are not able to query the on-chain state], [5], [5], [25], [System testing], [Administrator to undo changes???],
+  [Users are not able to perform deposits, transfers, withdrawals, and/or query the Data Availability layer. Causes financial damage for users/operator, moreover causes long-term loss of trust and confidence in the operator/system.], [5], [5], [25], [Monitoring], [TODO],
 
   [*Reliability*], [], [], [], [], [],
-  [Causes financial damage to the operators, if system is unusable under normal load], [5], [5], [25], [TODO], [],
+  [The system is not able to respond to a normal/expected amount of concurrent interactions. Causes users to lose trust and confidence in the system], [5], [5], [25], [TODO], [TODO],
 
   [*Resiliency*], [], [], [], [], [],
-  [Financial damage for the operator caused taking down the system], [5], [5], [25], [TODO], [],
+  [The system is not able to respond to a abnormal/unexpected amount of concurrent interactions. Causes users to lose trust and confidence in the system], [5], [5], [25], [TODO], [TODO],
+  [A DDOS attack by adversaries could take the system down, causing financial damage to the operator and a loss of trust and confidence in the operator/system], [5], [5], [25], [TODO], [],
 
   [*Efficiency*], [], [], [], [], [],
+  [Fees could be very high because of inefficient use of resources in the ZK context. Causes a loss of market share because competitors are cheaper], [3], [5], [15], [Benchmarking], [TODO],
 
   [*Performance*], [], [], [], [], [],
 
   [*Portability*], [], [], [], [], [],
-  [Users are not able to install the CLI on their device], [5], [5], [25], [System testing], [Administrator to undo changes???],
+  [Operator is unable to serve a broad audience. Causes a loss of market share to competitors.], [5], [5], [25], [TODO], [TODO],
+  [Operator is unable to run the system on different types of infrastructure. Increases the dependency of the operator on a specific type of infrastructure.], [5], [5], [25], [TODO], [TODO],
 
   [*Usability*], [], [], [], [], [],
+  [Users don't understand or find the UX unusable. Causes a loss of market share to competitors.], [5], [5], [25], [TODO], [TODO],
+  [Third party applications have a hard time extending the system. Causes a loss of market share to competitors because users like a specific extension.], [5], [5], [25], [TODO], [TODO],
 
   [*Scalability*], [], [], [], [], [],
+  [Operator is unable to serve a potentially high demand], [5], [5], [25], [TODO], [TODO],
 
   [*Security*], [], [], [], [], [],
-  [Financial damage caused by adversaries stealing funds], [5], [5], [25], [TODO], [],
+  [Financial damage for the user/operator caused by adversaries stealing funds], [5], [5], [25], [TODO], [],
+  [Users private data being leaked or stolen. Causes a loss of trust and confidence in the operator/system], [5], [5], [25], [TODO], [],
 
   [*Operability*], [], [], [], [], [],
   [System admins struggle with deploying the system], [5], [5], [25], [TODO], [TODO],
   [System admins struggle with upgrading the system], [5], [5], [25], [TODO], [TODO],
   [System admins struggle with migrating the system], [5], [5], [25], [TODO], [TODO],
   [System admins struggle with recovering after a defect occured in the system], [5], [5], [25], [TODO], [TODO],
+  [Difficult to find staff if administering the system is frustrating], [5], [5], [25], [TODO], [TODO],
 
   [*Maintainability*], [], [], [], [], [],
   [Higher costs for the operator to fix problems with/evolve the system], [5], [5], [25], [TODO], [TODO],
@@ -226,7 +243,7 @@ likelihood of the risk occuring and the impact.
   [Difficulty to find staff if developent is frustrating], [5], [5], [25], [TODO], [TODO],
 
   [*Compliance with Reagulators*], [], [], [], [], [],
-  [Regulators ban the use of the system], [5], [5], [25], [TODO], [TODO],
+  [Regulators ban the use of the system because of violated regulations], [5], [5], [25], [TODO], [TODO],
 )
 ]
 // typstfmt::on
